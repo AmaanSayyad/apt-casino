@@ -1,0 +1,76 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+
+# Production / deploy artifacts
+dist/
+.vercel
+
+# Environment (keep .env.example committed)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Logs & debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing / coverage
+coverage/
+.nyc_output/
+
+# Python (scripts, tooling)
+__pycache__/
+*.py[cod]
+.venv/
+.venv-*/
+venv/
+*.egg-info/
+
+# Aptos / Move
+.move/
+aptos-cli/
+move-contracts/build/
+
+# Solana / Anchor (also see solana-programs/.gitignore)
+target/
+.anchor/
+test-ledger/
+
+# Supabase local CLI (also see supabase/.gitignore)
+supabase/.branches
+supabase/.temp
+
+# Misc local / scratch
+*.local
+.cache/
+.turbo/
