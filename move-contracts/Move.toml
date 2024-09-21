@@ -1,0 +1,14 @@
+[package]
+name = "apt_casino"
+version = "1.0.0"
+upgrade_policy = "compatible"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "mainnet" }
+
+[addresses]
+apt_casino = "_"
+
+# Used only for `aptos move test` / `--dev` (not for publish)
+[dev-addresses]
+apt_casino = "0xcafe00000000000000000000000000000000000000000000000000000000cafe"
