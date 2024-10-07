@@ -1,0 +1,19 @@
+[package]
+name = "apt_casino"
+version = "0.1.0"
+description = "APT Casino Solana house vault + game audit log"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "apt_casino"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.30.1"
