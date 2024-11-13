@@ -1,0 +1,112 @@
+{
+  "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEtYkkKVhzAXbpqGt",
+  "metadata": {
+    "name": "apt_casino",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "APT Casino house vault + game audit log"
+  },
+  "instructions": [
+    {
+      "name": "initialize",
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
+      "accounts": [
+        { "name": "admin", "writable": true, "signer": true },
+        { "name": "config", "writable": true },
+        { "name": "vault", "writable": true },
+        { "name": "system_program" }
+      ],
+      "args": []
+    },
+    {
+      "name": "deposit",
+      "discriminator": [242, 35, 198, 137, 82, 225, 242, 182],
+      "accounts": [
+        { "name": "player", "writable": true, "signer": true },
+        { "name": "config" },
+        { "name": "vault", "writable": true },
+        { "name": "player_ledger", "writable": true },
+        { "name": "system_program" }
+      ],
+      "args": [{ "name": "amount", "type": "u64" }]
+    },
+    {
+      "name": "withdraw",
+      "discriminator": [183, 18, 70, 156, 148, 109, 161, 34],
+      "accounts": [
+        { "name": "admin", "signer": true },
+        { "name": "player", "writable": true },
+        { "name": "config", "writable": true },
+        { "name": "vault", "writable": true },
+        { "name": "player_ledger", "writable": true },
+        { "name": "system_program" }
+      ],
+      "args": [{ "name": "amount", "type": "u64" }]
+    },
+    {
+      "name": "admin_settle",
+      "discriminator": [138, 218, 221, 118, 96, 220, 75, 11],
+      "accounts": [
+        { "name": "admin", "writable": true, "signer": true },
+        { "name": "player" },
+        { "name": "config" },
+        { "name": "player_ledger", "writable": true },
+        { "name": "system_program" }
+      ],
+      "args": [{ "name": "delta", "type": "i64" }]
+    },
+    {
+      "name": "log_game",
+      "discriminator": [88, 40, 52, 238, 140, 186, 70, 236],
+      "accounts": [
+        { "name": "admin", "signer": true },
+        { "name": "player" },
+        { "name": "config", "writable": true }
+      ],
+      "args": [
+        { "name": "game_type", "type": "u8" },
+        { "name": "bet_lamports", "type": "u64" },
+        { "name": "payout_lamports", "type": "u64" },
+        { "name": "result_hash", "type": { "array": ["u8", 32] } },
+        { "name": "proof_reference", "type": { "array": ["u8", 32] } }
+      ]
+    },
+    {
+      "name": "set_paused",
+      "discriminator": [91, 60, 125, 192, 176, 225, 166, 218],
+      "accounts": [
+        { "name": "admin", "signer": true },
+        { "name": "config", "writable": true }
+      ],
+      "args": [{ "name": "paused", "type": "bool" }]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CasinoConfig",
+      "discriminator": [226, 198, 152, 143, 92, 106, 96, 163]
+    },
+    {
+      "name": "PlayerLedger",
+      "discriminator": [162, 127, 220, 127, 79, 123, 127, 139]
+    }
+  ],
+  "events": [
+    {
+      "name": "GamePlayedEvent",
+      "discriminator": [222, 127, 78, 123, 163, 231, 42, 180]
+    },
+    {
+      "name": "DepositEvent",
+      "discriminator": [120, 248, 61, 83, 31, 142, 107, 144]
+    }
+  ],
+  "errors": [
+    { "code": 6000, "name": "NotAuthorized", "msg": "Not authorized" },
+    { "code": 6001, "name": "InvalidGameType", "msg": "Invalid game type" },
+    { "code": 6002, "name": "InvalidAmount", "msg": "Invalid amount" },
+    { "code": 6003, "name": "InsufficientBalance", "msg": "Insufficient ledger balance" },
+    { "code": 6004, "name": "Overflow", "msg": "Math overflow" },
+    { "code": 6005, "name": "Paused", "msg": "Program is paused" }
+  ]
+}
