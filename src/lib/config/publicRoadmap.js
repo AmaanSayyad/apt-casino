@@ -1,0 +1,337 @@
+/**
+ * Public APT-Casino roadmap — curated from litepaper, pitch deck, tokenomics, and product surface.
+ * Seeded into Supabase `roadmap_items` via migration + `npm run seed:roadmap`.
+ * API falls back to this list when the table is empty.
+ */
+
+/** @typedef {'Platform'|'Governance'|'Partnership'|'Security'|'Community'|'Tournaments'} RoadmapCategory */
+/** @typedef {'planned'|'in_progress'} RoadmapStatus */
+
+/**
+ * @type {Array<{
+ *   id: string;
+ *   title: string;
+ *   excerpt: string;
+ *   category: RoadmapCategory;
+ *   status: RoadmapStatus;
+ *   link: string | null;
+ *   sortOrder: number;
+ * }>}
+ */
+export const PUBLIC_ROADMAP_ITEMS = [
+  {
+    id: 'a1000001-0001-4001-8001-000000000001',
+    title: 'APTC public launch on Bags',
+    excerpt:
+      'Fair SPL launch on Bags with transparent liquidity — initial 2% protocol buy (~20M APTC) at TGE, no VC unlock overhang.',
+    category: 'Platform',
+    status: 'in_progress',
+    link: '/litepaper#aptc-token',
+    sortOrder: 10,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000002',
+    title: 'Multichain connect wallet (Solana + Aptos)',
+    excerpt:
+      'One connect flow for Petra, Phantom, and Solana wallets — play chain switcher, house balances, and deposits without Aptos-only friction.',
+    category: 'Platform',
+    status: 'in_progress',
+    link: null,
+    sortOrder: 12,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000003',
+    title: 'Aptos mainnet games & treasury hardening',
+    excerpt:
+      'Move modules live on mainnet for Plinko, Mines, Roulette, and Wheel — bootstrap house state, relayer gasless UX, and production monitoring.',
+    category: 'Platform',
+    status: 'in_progress',
+    link: '/game',
+    sortOrder: 15,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000004',
+    title: 'Live streaming GA (Livepeer)',
+    excerpt:
+      'Creator streams on /live with auto-approve go-live, admin moderation, wallet-signed chat, and featured stream discovery on the homepage.',
+    category: 'Platform',
+    status: 'in_progress',
+    link: '/live',
+    sortOrder: 18,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000005',
+    title: 'GGR buyback transparency dashboard',
+    excerpt:
+      'Public 30-day GGR estimates, buyback split (burn / stakers / treasury / market), and env-driven economics — no black-box treasury moves.',
+    category: 'Platform',
+    status: 'in_progress',
+    link: '/dashboard',
+    sortOrder: 20,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000006',
+    title: 'Accumulate protocol holding to 10% (100M APTC)',
+    excerpt:
+      'Post-TGE market purchases on Bags, Meteora, and open DEX until treasury holds 10% of max supply — funds community, LP, staking, and ops buckets.',
+    category: 'Governance',
+    status: 'in_progress',
+    link: '/litepaper#aptc-allocation',
+    sortOrder: 25,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000007',
+    title: 'APTC staking deposits live at TGE',
+    excerpt:
+      'Fixed-term stake pools on /stake with on-chain vault, APY display, and yield from 12% emissions bucket plus GGR staker share.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/stake',
+    sortOrder: 30,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000008',
+    title: 'Meteora & Bags liquidity depth',
+    excerpt:
+      'Deepen APTC/SOL pools and MM support so players and OTC users can size without moving thin books at launch.',
+    category: 'Partnership',
+    status: 'planned',
+    link: null,
+    sortOrder: 35,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000009',
+    title: 'Automated GGR → APTC buyback pipeline',
+    excerpt:
+      'Scheduled open-market buys from gross gaming revenue with configurable burn, staker, treasury, and market splits.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/litepaper#ggr-flywheel',
+    sortOrder: 40,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000010',
+    title: 'Public burn & buyback tracker',
+    excerpt:
+      'On-chain proof links for every buyback tranche — circulating supply, cumulative burn, and staker distributions updated weekly.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/dashboard',
+    sortOrder: 45,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000011',
+    title: 'Volume Cup Season 2',
+    excerpt:
+      'Seasonal high-volume leaderboard with APTC prize pool from the community bucket — provably logged play events, no fabricated stats.',
+    category: 'Tournaments',
+    status: 'planned',
+    link: '/competition',
+    sortOrder: 50,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000012',
+    title: 'OTC lottery tiered tranches',
+    excerpt:
+      'SOL → discounted APTC with lock periods in multiple size tiers for power users who would otherwise stress launch liquidity.',
+    category: 'Community',
+    status: 'planned',
+    link: '/otc-lottery',
+    sortOrder: 55,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000013',
+    title: 'Referral leaderboard & win-share cards',
+    excerpt:
+      '14-day cliff APTC referral rewards with public leaderboard, milestone unlocks, and shareable ROI cards on withdrawals.',
+    category: 'Community',
+    status: 'planned',
+    link: '/referral',
+    sortOrder: 60,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000014',
+    title: 'Move contract third-party audit',
+    excerpt:
+      'Independent security review of Aptos game modules and treasury paths before scaling TVL and external integrations.',
+    category: 'Security',
+    status: 'planned',
+    link: '/litepaper#security',
+    sortOrder: 65,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000015',
+    title: 'Mobile-first game UX pass',
+    excerpt:
+      'Touch-optimized Plinko, Mines, Wheel, and Roulette — desktop-mode warnings retired where physics and layout are production-ready.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/game/plinko',
+    sortOrder: 70,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000017',
+    title: 'Responsible gaming controls',
+    excerpt:
+      'Session limits, cooldowns, and self-exclusion hooks — player protection without custodial lock-in of funds.',
+    category: 'Governance',
+    status: 'planned',
+    link: null,
+    sortOrder: 80,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000018',
+    title: 'Quarterly treasury transparency report',
+    excerpt:
+      'Published breakdown of GGR, buybacks, burns, staking emissions, and partnership grants — aligned with the 100M APTC allocation chart.',
+    category: 'Governance',
+    status: 'planned',
+    link: '/litepaper#aptc-allocation',
+    sortOrder: 85,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000019',
+    title: 'Bug bounty program',
+    excerpt:
+      'Immunefi-style scope for Move modules, withdrawal flows, and referral accounting as TVL scales past launch.',
+    category: 'Security',
+    status: 'planned',
+    link: null,
+    sortOrder: 90,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000020',
+    title: 'Telegram & Discord alert bots',
+    excerpt:
+      'Stream go-live, Volume Cup standings, and large buyback/burn notifications for holders who do not live on the site.',
+    category: 'Community',
+    status: 'planned',
+    link: null,
+    sortOrder: 95,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000021',
+    title: 'Sui chain adapter live',
+    excerpt:
+      'Third live play chain in the registry — Sui house balance mode, treasury env, and provably fair game API routes.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/litepaper#multichain-topology',
+    sortOrder: 100,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000022',
+    title: 'APTC holder governance (parameter votes)',
+    excerpt:
+      'Community votes on buyback %, burn ratio, referral cliff, and staking emission — starting with off-chain signaling, moving on-chain.',
+    category: 'Governance',
+    status: 'planned',
+    link: '/litepaper#roadmap',
+    sortOrder: 105,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000023',
+    title: 'EVM play chain (Base)',
+    excerpt:
+      'Server house balance on Base with the same chain registry pattern — unified profile and leaderboard across Solana, Aptos, and EVM.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/litepaper#multichain-topology',
+    sortOrder: 110,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000024',
+    title: 'Multilingual UI (EN · ES · PT)',
+    excerpt:
+      'Localized casino, stake, and referral flows for LATAM and EU communities — starting with high-traffic pages.',
+    category: 'Community',
+    status: 'planned',
+    link: null,
+    sortOrder: 115,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000025',
+    title: 'Developer SDK for provably-fair games',
+    excerpt:
+      'Open hub API for third-party builders to publish games with revenue share, shared RNG proofs, and APTC fee routing.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/litepaper#scope',
+    sortOrder: 120,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000026',
+    title: 'AI-generated player profile NFTs',
+    excerpt:
+      'Optional on-chain identity cards tied to play history and achievements — cosmetic first, no pay-to-win mechanics.',
+    category: 'Community',
+    status: 'planned',
+    link: '/profile',
+    sortOrder: 125,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000027',
+    title: 'Starknet & additional L2 adapters',
+    excerpt:
+      'Extend the chain registry to Starknet and select L2s with isolated treasuries and the same transparent fee model.',
+    category: 'Platform',
+    status: 'planned',
+    link: null,
+    sortOrder: 130,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000028',
+    title: 'Poker & table games expansion',
+    excerpt:
+      'Peer-style and house-banked table games with the same provably fair and multichain settlement patterns as arcade titles.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/game',
+    sortOrder: 135,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000029',
+    title: 'Multichain game marketplace',
+    excerpt:
+      'Largest transparent GambleFi hub — listed third-party games, creator revenue share, and unified APTC economics across chains.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/litepaper#roadmap',
+    sortOrder: 140,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000030',
+    title: 'Ecosystem wallet & data partners',
+    excerpt:
+      'Deeper integrations with DexScreener, major wallets, and analytics — co-marketing with Aptos, Solana, and Bags ecosystems.',
+    category: 'Partnership',
+    status: 'planned',
+    link: null,
+    sortOrder: 145,
+  },
+];
+
+export function mapPublicRoadmapToApi(items = PUBLIC_ROADMAP_ITEMS) {
+  return items.map((r) => ({
+    id: r.id,
+    title: r.title,
+    excerpt: r.excerpt,
+    category: r.category,
+    status: r.status,
+    statusLabel: r.status === 'in_progress' ? 'In progress' : 'Planned',
+    link: r.link,
+  }));
+}
+
+export function mapPublicRoadmapToDbRows(items = PUBLIC_ROADMAP_ITEMS) {
+  return items.map((r) => ({
+    id: r.id,
+    title: r.title,
+    excerpt: r.excerpt,
+    category: r.category,
+    status: r.status,
+    eta_date: null,
+    link: r.link,
+    sort_order: r.sortOrder,
+  }));
+}
