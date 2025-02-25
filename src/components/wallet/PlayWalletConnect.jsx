@@ -1,0 +1,249 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+import { useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
+import { useWallet as useAptosWallet } from '@aptos-labs/wallet-adapter-react';
+import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
+import { usePlayWallet } from '@/hooks/usePlayWallet';
+import { refillDemoBalance } from '@/store/balanceSlice';
+import { demoStartNativeAmount } from '@/lib/play/demoPlay';
+import { getPlayChainConfig } from '@/lib/chains/registry';
+import { CHAIN_UI } from '@/lib/chains/chainUi';
+import { explorerAddressUrl, solanaExplorerAddressUrl } from '@/lib/chains/explorer';
+import ChainConnectModal from './ChainConnectModal';
+
+function shorten(addr) {
+  if (!addr || addr.length < 10) return addr || '…';
+  return `${addr.slice(0, 4)}…${addr.slice(-4)}`;
+}
+
+function walletExplorerHref(chain, address) {
+  if (!address) return null;
+  return chain === 'solana' ? solanaExplorerAddressUrl(address) : explorerAddressUrl(chain, address);
+}
+
+/**
+ * @param {'dropdown' | 'sheet'} layout — `sheet` = full-width inline panel (mobile nav)
+ */
+export default function PlayWalletConnect({
+  onManageBalance,
+  balanceFormatted,
+  balanceSymbol,
+  isLoadingBalance,
+  layout = 'dropdown',
+}) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const dispatch = useDispatch();
+  const play = usePlayWallet();
+  const { disconnect: disconnectSolana } = useSolanaWallet();
+  const { disconnect: disconnectAptos } = useAptosWallet();
+  const config = getPlayChainConfig(play.chain);
+  const ui = CHAIN_UI[play.chain];
+  const symbol = balanceSymbol ?? config?.nativeSymbol ?? play.chain;
+  const balanceText = isLoadingBalance ? '…' : (balanceFormatted ?? '0.000');
+  const isSheet = layout === 'sheet';
+  const explorerHref = walletExplorerHref(play.chain, play.address);
+
+  useEffect(() => {
+    if (!menuOpen || isSheet) return;
+    const onPointerDown = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [menuOpen, isSheet]);
+
+  const handleDisconnect = async () => {
+    setMenuOpen(false);
+    try {
+      await disconnectSolana();
+    } catch {
+      /* ignore */
+    }
+    try {
+      await disconnectAptos();
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const handleRefillDemo = () => {
+    dispatch(refillDemoBalance());
+    setMenuOpen(false);
+    const amount = demoStartNativeAmount();
+    toast.success(`Demo balance refilled to ${amount} ${symbol}`);
+  };
+
+  if (!play.connected) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className={
+            isSheet
+              ? 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold uppercase tracking-widest text-white hover:bg-white/10 transition-colors'
+              : 'px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold uppercase tracking-widest border border-white/10 transition-all active:scale-95 whitespace-nowrap'
+          }
+        >
+          Connect wallet
+        </button>
+        <ChainConnectModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      </>
+    );
+  }
+
+  const triggerClass = isSheet
+    ? 'flex w-full items-center gap-3 rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] px-3 py-3 text-left transition-colors hover:border-violet-500/30'
+    : 'flex max-w-[min(100%,11rem)] sm:max-w-[13.5rem] items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 hover:bg-white/10 transition-colors';
+
+  const menuPanel = (
+    <div
+      role="menu"
+      className={
+        isSheet
+          ? 'mt-2 overflow-hidden rounded-xl border border-white/10 bg-[#12000e] shadow-lg shadow-black/40'
+          : 'absolute right-0 top-[calc(100%+6px)] z-[60] min-w-[12.5rem] overflow-hidden rounded-xl border border-white/10 bg-[#0A0008] py-1 shadow-xl shadow-black/50'
+      }
+    >
+      <div className={`flex items-center justify-between gap-2 border-b border-white/10 ${isSheet ? 'px-4 py-3' : 'px-3 py-2'}`}>
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Connected</p>
+          {explorerHref ? (
+            <a
+              href={explorerHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-0.5 block truncate font-mono text-xs text-cyan-400/90 hover:text-cyan-300 hover:underline"
+              title={play.address}
+              onClick={() => setMenuOpen(false)}
+            >
+              {shorten(play.address)} ↗
+            </a>
+          ) : (
+            <p className="mt-0.5 truncate font-mono text-xs text-white/55" title={play.address}>
+              {shorten(play.address)}
+            </p>
+          )}
+        </div>
+        <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 font-mono text-xs tabular-nums text-emerald-300">
+          {symbol} {balanceText}
+        </span>
+      </div>
+
+      {onManageBalance && (
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => {
+            setMenuOpen(false);
+            onManageBalance();
+          }}
+          className={
+            isSheet
+              ? 'flex w-full items-center justify-between gap-2 border-b border-white/10 px-4 py-3.5 text-left text-sm font-semibold text-white hover:bg-violet-500/10 transition-colors'
+              : 'flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-white/90 hover:bg-white/5 transition-colors'
+          }
+        >
+          <span>Manage balance</span>
+          <span className="text-white/35" aria-hidden>
+            →
+          </span>
+        </button>
+      )}
+
+      {play.isDemo && (
+        <button
+          type="button"
+          role="menuitem"
+          onClick={handleRefillDemo}
+          className={
+            isSheet
+              ? 'flex w-full items-center justify-between gap-2 border-b border-white/10 px-4 py-3.5 text-left text-sm font-semibold text-emerald-300 hover:bg-emerald-500/10 transition-colors'
+              : 'flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-emerald-300 hover:bg-emerald-500/10 transition-colors'
+          }
+        >
+          <span>Refill demo balance</span>
+          <span className="font-mono text-[11px] text-emerald-400/80">
+            {demoStartNativeAmount()} {symbol}
+          </span>
+        </button>
+      )}
+
+      <button
+        type="button"
+        role="menuitem"
+        onClick={handleDisconnect}
+        className={
+          isSheet
+            ? 'flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-rose-400 hover:bg-rose-500/10 transition-colors'
+            : 'flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors'
+        }
+      >
+        <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+          />
+        </svg>
+        Disconnect
+      </button>
+    </div>
+  );
+
+  return (
+    <>
+      <div className={isSheet ? 'w-full' : 'relative'} ref={menuRef}>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          className={triggerClass}
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          title={`${symbol} ${balanceText} · ${play.address}`}
+        >
+          <div className={`relative shrink-0 ${isSheet ? 'h-9 w-9' : 'h-5 w-5'}`}>
+            <Image src={ui.logo} alt="" fill className="object-contain" sizes={isSheet ? '36px' : '20px'} />
+          </div>
+          <div className="min-w-0 flex-1 leading-tight">
+            <span
+              className={`block truncate font-mono tabular-nums text-emerald-300/95 ${isSheet ? 'text-sm font-semibold' : 'text-[11px]'}`}
+            >
+              {symbol} {balanceText}
+            </span>
+            <span className={`block truncate font-mono text-white/55 ${isSheet ? 'text-xs' : 'text-[10px]'}`}>
+              {shorten(play.address)}
+            </span>
+          </div>
+          <svg
+            className={`shrink-0 text-white/40 transition-transform ${menuOpen ? 'rotate-180' : ''} ${isSheet ? 'h-5 w-5' : 'h-3.5 w-3.5'}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {menuOpen && menuPanel}
+      </div>
+      <ChainConnectModal open={modalOpen} onClose={() => setModalOpen(false)} />
+    </>
+  );
+}
