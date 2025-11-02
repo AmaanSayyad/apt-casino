@@ -1,0 +1,582 @@
+"use client";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePlayCurrency } from '@/hooks/usePlayCurrency';
+import Link from 'next/link';
+import { Box, Typography, Paper, Avatar, Chip, Tooltip, LinearProgress, IconButton, Collapse, Skeleton } from '@mui/material';
+import { FaTrophy, FaFire, FaMedal, FaCrown, FaChevronRight, FaChevronDown, FaChevronUp, FaGlobe, FaStar, FaCoins, FaSyncAlt } from 'react-icons/fa';
+
+// ---------- helpers --------------------------------------------------------------
+
+function shortenWallet(addr) {
+  if (!addr || typeof addr !== 'string') return '';
+  return addr.length <= 12 ? addr : `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+function compactApt(n) {
+  if (!Number.isFinite(n)) return '0';
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
+  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000) return `${(n / 1_000).toFixed(2)}K`;
+  if (abs >= 1) return n.toFixed(2);
+  if (abs >= 0.001) return n.toFixed(4);
+  return n.toFixed(6);
+}
+
+function timeAgo(ms) {
+  if (!ms || typeof ms !== 'number') return null;
+  const diff = Date.now() - ms;
+  if (diff < 0) return 'just now';
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 30) return `${day}d ago`;
+  const mo = Math.floor(day / 30);
+  if (mo < 12) return `${mo}mo ago`;
+  return `${Math.floor(mo / 12)}y ago`;
+}
+
+const BADGE_BY_RANK = ['diamond', 'platinum', 'gold', 'silver', 'bronze'];
+
+function BadgeIcon({ type }) {
+  switch (type) {
+    case 'diamond':
+      return <FaCrown style={{ color: '#00bcd4' }} />;
+    case 'platinum':
+      return <FaCrown style={{ color: '#e0e0e0' }} />;
+    case 'gold':
+      return <FaStar style={{ color: '#ffc107' }} />;
+    case 'silver':
+      return <FaMedal style={{ color: '#b0bec5' }} />;
+    case 'bronze':
+      return <FaMedal style={{ color: '#bf8970' }} />;
+    default:
+      return null;
+  }
+}
+
+// ---------- component ------------------------------------------------------------
+
+const RouletteLeaderboard = () => {
+  const { symbol } = usePlayCurrency();
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState({});
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const abortRef = useRef(null);
+
+  const load = useCallback(async () => {
+    try {
+      abortRef.current?.abort();
+      const ac = new AbortController();
+      abortRef.current = ac;
+      setLoading(true);
+      const res = await fetch('/api/leaderboard?game=roulette&metric=pnl&period=all&top=5', {
+        signal: ac.signal,
+        cache: 'no-store',
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setRows(Array.isArray(json?.leaderboard) ? json.leaderboard : []);
+      setLastUpdated(Date.now());
+      setError(null);
+    } catch (err) {
+      if (err?.name === 'AbortError') return;
+      setError(err?.message || 'Failed to load leaderboard');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+    const id = setInterval(load, 60_000);
+    return () => {
+      clearInterval(id);
+      abortRef.current?.abort();
+    };
+  }, [load]);
+
+  const handleExpandClick = (id) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // Re-render every 30s so the "X minutes ago" labels stay fresh between refreshes.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const updatedAgo = useMemo(() => timeAgo(lastUpdated), [lastUpdated]);
+
+  return (
+    <Paper
+      elevation={5}
+      sx={{
+        p: { xs: 2, md: 3 },
+        borderRadius: 3,
+        background: 'linear-gradient(135deg, rgba(9, 0, 5, 0.9) 0%, rgba(25, 5, 30, 0.85) 100%)',
+        backdropFilter: 'blur(15px)',
+        border: '1px solid rgba(104, 29, 219, 0.2)',
+        mb: 5,
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+        height: '100%',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '5px',
+          background: 'linear-gradient(90deg, #d82633, #681DDB)',
+        },
+      }}
+    >
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        gutterBottom
+        sx={{
+          borderBottom: '1px solid rgba(104, 29, 219, 0.3)',
+          pb: 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          color: 'white',
+          textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+        }}
+      >
+        <FaTrophy color="#d82633" size={22} />
+        <span style={{ background: 'linear-gradient(90deg, #FFFFFF, #FFA500)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          Roulette Leaderboard
+        </span>
+      </Typography>
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, mb: 3 }}>
+        <Typography variant="body2" color="rgba(255,255,255,0.7)">
+          Top players by net winnings
+        </Typography>
+
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Chip
+            icon={<FaGlobe size={12} />}
+            label="Global"
+            size="small"
+            sx={{ backgroundColor: 'rgba(104, 29, 219, 0.3)', color: 'white', fontWeight: 'medium' }}
+          />
+          <Tooltip title="Refresh">
+            <span style={{ display: 'inline-flex' }}>
+              <IconButton
+                size="small"
+                onClick={load}
+                disabled={loading}
+                sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: 'white', backgroundColor: 'rgba(104, 29, 219, 0.2)' } }}
+              >
+                <FaSyncAlt size={12} className={loading ? 'spin' : ''} />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      {/* Leaderboard Entries */}
+      <Box>
+        {loading && rows.length === 0 && (
+          [0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} variant="rounded" height={68} sx={{ mb: 2, bgcolor: 'rgba(255,255,255,0.06)' }} />
+          ))
+        )}
+
+        {!loading && !error && rows.length === 0 && (
+          <Box sx={{ textAlign: 'center', py: 4, color: 'rgba(255,255,255,0.6)' }}>
+            <Typography variant="body2">No roulette rounds played yet.</Typography>
+            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'rgba(255,255,255,0.4)' }}>
+              Be the first — your wallet appears here once you place a bet.
+            </Typography>
+          </Box>
+        )}
+
+        {error && (
+          <Box sx={{ textAlign: 'center', py: 4, color: '#ff8a80' }}>
+            <Typography variant="body2">Could not load leaderboard.</Typography>
+            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'rgba(255,255,255,0.4)' }}>
+              {error}
+            </Typography>
+          </Box>
+        )}
+
+        {rows.map((player, index) => {
+          const id = player.wallet || `r${index}`;
+          const handle =
+            typeof player.handle === 'string' && player.handle.trim() && !player.handle.includes('[object')
+              ? player.handle.trim()
+              : shortenWallet(player.wallet);
+          const winrateUnit = Math.max(0, Math.min(100, Math.round((player.winrate || 0) * 100)));
+          const badge = BADGE_BY_RANK[index] || null;
+          const lastSeen = timeAgo(player.lastWinMs || player.lastBetMs);
+          // Display-only "win streak" — number of wins among the latest aggregated bets.
+          // Not yet on the API; default to 0 (kept out of the UI when missing).
+          const winStreak = 0;
+
+          const pnl = Number(player.pnlApt ?? player.pnlNative ?? 0);
+          const pnlPositive = pnl >= 0;
+          const pnlColor = pnlPositive ? '#14D854' : '#ff8a80';
+
+          return (
+            <Box key={id} sx={{ mb: 2 }}>
+              <Box
+                sx={{
+                  p: 2,
+                  background:
+                    index === 0
+                      ? 'linear-gradient(90deg, rgba(255, 215, 0, 0.08), rgba(9, 0, 5, 0.3))'
+                      : index === 1
+                      ? 'linear-gradient(90deg, rgba(224, 224, 224, 0.05), rgba(9, 0, 5, 0.3))'
+                      : index === 2
+                      ? 'linear-gradient(90deg, rgba(191, 137, 112, 0.05), rgba(9, 0, 5, 0.3))'
+                      : 'rgba(0, 0, 0, 0.25)',
+                  borderRadius: 2,
+                  border:
+                    index === 0
+                      ? '1px solid rgba(255, 215, 0, 0.3)'
+                      : index === 1
+                      ? '1px solid rgba(224, 224, 224, 0.2)'
+                      : index === 2
+                      ? '1px solid rgba(191, 137, 112, 0.2)'
+                      : '1px solid rgba(104, 29, 219, 0.1)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    background:
+                      index === 0
+                        ? 'linear-gradient(90deg, rgba(255, 215, 0, 0.15), rgba(9, 0, 5, 0.4))'
+                        : index === 1
+                        ? 'linear-gradient(90deg, rgba(224, 224, 224, 0.1), rgba(9, 0, 5, 0.4))'
+                        : index === 2
+                        ? 'linear-gradient(90deg, rgba(191, 137, 112, 0.1), rgba(9, 0, 5, 0.4))'
+                        : 'rgba(25, 5, 30, 0.3)',
+                    boxShadow: '0 5px 15px rgba(0, 0, 0, 0.3)',
+                  },
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '3px',
+                    height: '100%',
+                    backgroundColor:
+                      index === 0 ? '#ffc107' : index === 1 ? '#e0e0e0' : index === 2 ? '#bf8970' : 'rgba(104, 29, 219, 0.3)',
+                    boxShadow:
+                      index < 3 ? `0 0 8px ${index === 0 ? '#ffc107' : index === 1 ? '#e0e0e0' : '#bf8970'}40` : 'none',
+                  },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                {/* Rank */}
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    backgroundColor:
+                      index === 0 ? '#ffc107' : index === 1 ? '#e0e0e0' : index === 2 ? '#bf8970' : 'rgba(104, 29, 219, 0.2)',
+                    color: index < 3 ? '#000' : '#fff',
+                    fontWeight: 'bold',
+                    mr: 2,
+                    boxShadow: index < 3 ? '0 2px 8px rgba(0, 0, 0, 0.3)' : 'none',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  {player.rank ?? index + 1}
+                </Box>
+
+                {/* Avatar and Username */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mr: 3, flexGrow: 1, minWidth: 0 }}>
+                  <Avatar
+                    src={player.avatarUrl || undefined}
+                    alt={handle}
+                    sx={{
+                      mr: 2,
+                      border: index < 3 ? '2px solid #ffc107' : '1px solid rgba(104, 29, 219, 0.2)',
+                      width: 40,
+                      height: 40,
+                      boxShadow: index < 3 ? '0 0 8px rgba(255, 193, 7, 0.5)' : 'none',
+                      bgcolor: 'rgba(104, 29, 219, 0.4)',
+                    }}
+                  >
+                    {(handle || '').charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                      <Tooltip title={player.wallet || ''}>
+                        <Typography
+                          fontWeight="bold"
+                          color="white"
+                          sx={{
+                            fontSize: index === 0 ? '1.05rem' : '1rem',
+                            textShadow: index < 3 ? '0 1px 3px rgba(0,0,0,0.4)' : 'none',
+                            maxWidth: expanded[id] ? '100%' : { xs: 110, sm: 180, md: 200 },
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {handle}
+                        </Typography>
+                      </Tooltip>
+                      <BadgeIcon type={badge} />
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5, flexWrap: 'wrap' }}>
+                      <Tooltip title="Win rate">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={winrateUnit}
+                            sx={{
+                              width: 50,
+                              height: 4,
+                              borderRadius: 2,
+                              backgroundColor: 'rgba(255,255,255,0.1)',
+                              '& .MuiLinearProgress-bar': {
+                                background: 'linear-gradient(90deg, #14D854, #00bcd4)',
+                                borderRadius: 2,
+                              },
+                            }}
+                          />
+                          <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                            {winrateUnit}%
+                          </Typography>
+                        </Box>
+                      </Tooltip>
+
+                      {winStreak > 0 && (
+                        <Tooltip title={`${winStreak} win streak`}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: 5,
+                              backgroundColor: 'rgba(216, 38, 51, 0.1)',
+                              border: '1px solid rgba(216, 38, 51, 0.1)',
+                            }}
+                          >
+                            <FaFire color="#d82633" size={12} />
+                            <Typography variant="caption" color="#ff8a80" fontWeight="bold">
+                              {winStreak}
+                            </Typography>
+                          </Box>
+                        </Tooltip>
+                      )}
+
+                      {lastSeen && (
+                        <Typography variant="caption" color="rgba(255,255,255,0.5)">
+                          {lastSeen}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Winnings */}
+                <Box sx={{ textAlign: 'right', mr: 0.5, minWidth: { xs: 72, sm: 88 }, flexShrink: 0 }}>
+                  <Typography variant="caption" color="rgba(255,255,255,0.55)" sx={{ display: 'block', lineHeight: 1.2 }}>
+                    Net P&amp;L
+                  </Typography>
+                  <Typography
+                    fontWeight="bold"
+                    sx={{
+                      color: pnlColor,
+                      fontSize: index === 0 ? '1.05rem' : '0.95rem',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {pnlPositive ? '+' : ''}{compactApt(pnl)} {symbol}
+                  </Typography>
+                </Box>
+
+                {/* Expand button */}
+                <IconButton
+                  size="small"
+                  onClick={() => handleExpandClick(id)}
+                  aria-expanded={!!expanded[id]}
+                  aria-label={expanded[id] ? 'Hide player stats' : 'Show player stats'}
+                  sx={{
+                    ml: 0.5,
+                    flexShrink: 0,
+                    color: expanded[id] ? 'white' : 'rgba(255,255,255,0.5)',
+                    backgroundColor: expanded[id] ? 'rgba(104, 29, 219, 0.35)' : 'transparent',
+                    '&:hover': { backgroundColor: 'rgba(104, 29, 219, 0.2)', color: 'white' },
+                  }}
+                >
+                  {expanded[id] ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                </IconButton>
+                </Box>
+
+                {/* Expanded stats — full width below the row */}
+                <Collapse in={!!expanded[id]} timeout="auto" unmountOnExit>
+                  <Box
+                    sx={{
+                      mt: 2,
+                      pt: 2,
+                      borderTop: '1px solid rgba(104, 29, 219, 0.25)',
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: 'block',
+                        mb: 1.5,
+                        color: 'rgba(255,255,255,0.45)',
+                        fontFamily: 'monospace',
+                        fontSize: '0.7rem',
+                        wordBreak: 'break-all',
+                      }}
+                    >
+                      {player.wallet}
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                        gap: 1.5,
+                      }}
+                    >
+                      <StatBlock label="Bets" value={(player.bets ?? 0).toLocaleString()} />
+                      <StatBlock label="Wins" value={(player.wins ?? 0).toLocaleString()} />
+                      <StatBlock
+                        label="Win rate"
+                        value={`${winrateUnit}%`}
+                        sub={`${player.wins ?? 0} / ${player.bets ?? 0}`}
+                      />
+                      <StatBlock
+                        label="Wagered"
+                        value={`${compactApt(player.wageredApt || 0)}`}
+                        sub={symbol}
+                      />
+                      <StatBlock
+                        label="Returned"
+                        value={`${compactApt(player.returnedApt || 0)}`}
+                        sub={symbol}
+                      />
+                      <StatBlock
+                        label="Biggest win"
+                        value={`${compactApt(player.biggestWinApt || 0)}`}
+                        sub={symbol}
+                        accent="#14D854"
+                      />
+                      <StatBlock
+                        label="Net P&L"
+                        value={`${pnlPositive ? '+' : ''}${compactApt(pnl)}`}
+                        sub={symbol}
+                        accent={pnlColor}
+                      />
+                      {lastSeen && (
+                        <StatBlock label="Last active" value={lastSeen} />
+                      )}
+                    </Box>
+                  </Box>
+                </Collapse>
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+
+      {/* Bottom info */}
+      <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(104, 29, 219, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+        <Typography variant="caption" color="rgba(255,255,255,0.5)">
+          <Box
+            component="span"
+            sx={{
+              display: 'inline-block',
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              backgroundColor: '#14D854',
+              mr: 1,
+              verticalAlign: 'middle',
+              boxShadow: '0 0 6px rgba(20,216,84,0.6)',
+            }}
+          />
+          {updatedAgo ? `Updated ${updatedAgo} · refreshes every minute` : 'Loading on-chain data…'}
+        </Typography>
+
+        <Box
+          component={Link}
+          href="/leaderboard?game=roulette&metric=pnl&period=all"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            color: 'rgba(255,255,255,0.5)',
+            cursor: 'pointer',
+            textDecoration: 'none',
+            '&:hover': { color: 'white', '& .arrow-icon': { transform: 'translateX(3px)' } },
+          }}
+        >
+          <Typography variant="caption">All-time leaderboard</Typography>
+          <FaChevronRight size={10} className="arrow-icon" style={{ transition: 'transform 0.2s ease' }} />
+        </Box>
+      </Box>
+
+      <style jsx global>{`
+        .spin { animation: rl-spin 1s linear infinite; }
+        @keyframes rl-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </Paper>
+  );
+};
+
+function StatBlock({ label, value, sub, accent }) {
+  return (
+    <Box
+      sx={{
+        p: 1.5,
+        borderRadius: 1.5,
+        background: 'rgba(0, 0, 0, 0.35)',
+        border: '1px solid rgba(104, 29, 219, 0.15)',
+        minHeight: 72,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+      }}
+    >
+      <Typography
+        variant="caption"
+        color="rgba(255,255,255,0.5)"
+        sx={{ textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: '0.65rem', mb: 0.5 }}
+      >
+        {label}
+      </Typography>
+      <Typography variant="body2" color={accent || 'white'} fontWeight={700} sx={{ lineHeight: 1.2 }}>
+        {value}
+        {sub ? (
+          <Typography component="span" variant="caption" color="rgba(255,255,255,0.55)" sx={{ ml: 0.5 }}>
+            {sub}
+          </Typography>
+        ) : null}
+      </Typography>
+    </Box>
+  );
+}
+
+export default RouletteLeaderboard;
