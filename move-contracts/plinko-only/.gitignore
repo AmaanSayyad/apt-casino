@@ -1,0 +1,7 @@
+# Aptos Move (plinko-only) local artifacts
+build/
+.aptos/
+.move/
+.package-cache/
+
+
