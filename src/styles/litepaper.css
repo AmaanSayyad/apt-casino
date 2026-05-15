@@ -1,0 +1,145 @@
+.litepaper-root {
+  --lp-bg: #070005;
+  --lp-surface: rgba(255, 255, 255, 0.03);
+  --lp-border: rgba(255, 255, 255, 0.08);
+  background: var(--lp-bg);
+  color: #e5e7eb;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.litepaper-root::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(192, 38, 211, 0.18), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(6, 182, 212, 0.12), transparent 50%),
+    radial-gradient(ellipse 50% 30% at 50% 100%, rgba(244, 63, 94, 0.08), transparent 45%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.litepaper-root > * {
+  position: relative;
+  z-index: 1;
+}
+
+.lp-glass {
+  background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
+  backdrop-filter: blur(12px);
+}
+
+.lp-gradient-border {
+  position: relative;
+  border-radius: 1rem;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.45), rgba(6, 182, 212, 0.35));
+}
+
+.lp-gradient-border > .lp-gradient-inner {
+  border-radius: calc(1rem - 1px);
+  background: rgba(7, 0, 5, 0.92);
+}
+
+.lp-hero-shell {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 24px 80px -20px rgba(192, 38, 211, 0.35),
+    0 24px 80px -20px rgba(6, 182, 212, 0.15);
+}
+
+.lp-hero-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 80% at 0% 50%, rgba(192, 38, 211, 0.12), transparent 55%),
+    radial-gradient(ellipse 55% 70% at 100% 40%, rgba(6, 182, 212, 0.1), transparent 50%);
+  pointer-events: none;
+}
+
+.lp-hero-inner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, black 30%, transparent 100%);
+}
+
+.lp-chip {
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.lp-toc-link {
+  display: block;
+  padding: 0.4rem 0.75rem;
+  border-left: 2px solid transparent;
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.55);
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.lp-toc-link:hover {
+  color: #fff;
+  border-left-color: rgba(244, 63, 94, 0.6);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.lp-section-card {
+  scroll-margin-top: 8.5rem;
+  transition: border-color 0.2s ease;
+}
+
+.lp-section-card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.lp-num {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.lp-advisor-blur {
+  filter: blur(8px);
+  transform: scale(1.05);
+}
+
+.lp-marquee-track {
+  animation: lp-scroll 32s linear infinite;
+}
+
+.lp-marquee-wrap:hover .lp-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes lp-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes lp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lp-animate-in {
+  animation: lp-fade-up 0.5s ease-out both;
+}

@@ -1,0 +1,521 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "./colors.css";
+@import "./fonts.css";
+@import "./shadows.css";
+@import "./components.css";
+@import "./navbar-fix.css";
+
+
+/* Base styles to prevent horizontal overflow */
+html,
+body {
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding-left: 0;
+  padding-right: 0;
+  background-color: #070005;
+  padding-bottom: 0;
+  box-sizing: border-box;
+}
+
+body {
+  padding-top: var(--site-header-offset);
+  color: #fff;
+}
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+
+  /* Fixed Navbar + announcement marquee (see Navbar.js) */
+  --site-navbar-toolbar: 6.25rem;
+  --site-alert-marquee: 2.875rem;
+  --site-header-accent: 2px;
+  --site-header-offset: calc(
+    var(--site-navbar-toolbar) + var(--site-alert-marquee) + var(--site-header-accent)
+  );
+  --site-page-top-gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --site-navbar-toolbar: 6.75rem;
+    --site-header-offset: calc(
+      var(--site-navbar-toolbar) + var(--site-alert-marquee) + var(--site-header-accent)
+    );
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+.format-scroll::-webkit-scrollbar {
+  width: 1px;
+}
+
+/* Animation keyframes for navbar effects */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out forwards;
+  overflow: hidden;
+}
+
+/* New animations for HowItWorksSection */
+@keyframes float {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+}
+
+@keyframes float-delay {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-15px) translateX(-8px);
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+}
+
+@keyframes float-slow {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  100% {
+    transform: translateY(0) translateX(0);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes reverse-spin-slow {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes gradient-background {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delay {
+  animation: float-delay 8s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 10s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 15s linear infinite;
+}
+
+.animate-reverse-spin-slow {
+  animation: reverse-spin-slow 20s linear infinite;
+}
+
+.animate-gradient-background {
+  background-size: 200% 200%;
+  animation: gradient-background 3s ease infinite;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ecosystem logos marquee (landing) */
+.ecosystem-logos-section {
+  background: linear-gradient(180deg, #070005 0%, #0c000a 50%, #070005 100%);
+}
+
+.ecosystem-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(236, 72, 153, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 18%,
+    black 82%,
+    transparent 100%
+  );
+  transform: perspective(420px) rotateX(58deg) scale(1.4);
+  transform-origin: center 35%;
+  opacity: 0.55;
+}
+
+.ecosystem-glow {
+  position: absolute;
+  width: min(520px, 55vw);
+  height: 280px;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.35;
+}
+.ecosystem-glow--left {
+  top: 20%;
+  left: -8%;
+  background: rgba(236, 72, 153, 0.25);
+}
+.ecosystem-glow--right {
+  bottom: 10%;
+  right: -8%;
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.ecosystem-marquee-row {
+  width: 100%;
+  overflow: hidden;
+}
+
+.ecosystem-marquee-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  z-index: 2;
+  pointer-events: none;
+}
+.ecosystem-marquee-fade--left {
+  left: 0;
+  background: linear-gradient(90deg, #070005 0%, transparent 100%);
+}
+.ecosystem-marquee-fade--right {
+  right: 0;
+  background: linear-gradient(270deg, #070005 0%, transparent 100%);
+}
+
+.ecosystem-marquee-track {
+  display: flex;
+  gap: 22px;
+  width: max-content;
+  padding: 8px 16px;
+  animation: ecosystem-marquee-left var(--ecosystem-marquee-duration, 28s) linear infinite;
+  will-change: transform;
+}
+.ecosystem-marquee-track--reverse {
+  animation-name: ecosystem-marquee-right;
+}
+
+@keyframes ecosystem-marquee-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes ecosystem-marquee-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.ecosystem-marquee-tile {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.ecosystem-marquee-tile:hover {
+  transform: translateY(-2px) scale(1.03);
+  border-color: rgba(236, 72, 153, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+}
+.ecosystem-marquee-tile--soon {
+  opacity: 0.72;
+}
+.ecosystem-marquee-img {
+  width: 64px !important;
+  height: 64px !important;
+}
+.ecosystem-marquee-soon {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 768px) {
+  .ecosystem-marquee-tile {
+    width: 88px;
+    height: 88px;
+  }
+  .ecosystem-marquee-img {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  .ecosystem-grid-bg {
+    background-size: 36px 36px;
+  }
+}
+
+/* Hero announcements marquee (landing top bar) */
+.hero-alert-marquee-inner {
+  position: relative;
+  overflow: hidden;
+}
+.hero-alert-marquee-fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  z-index: 2;
+  pointer-events: none;
+}
+.hero-alert-marquee-fade--left {
+  left: 0;
+  background: linear-gradient(90deg, #070005 0%, transparent 100%);
+}
+.hero-alert-marquee-fade--right {
+  right: 0;
+  background: linear-gradient(270deg, #070005 0%, transparent 100%);
+}
+.hero-alert-marquee-track {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 3rem;
+  width: max-content;
+  padding: 13px 0;
+  animation: ecosystem-marquee-left var(--hero-alert-marquee-duration, 52s) linear infinite;
+  will-change: transform;
+}
+@media (max-width: 767px) {
+  .hero-alert-marquee-fade {
+    width: 28px;
+  }
+  .hero-alert-marquee-track {
+    gap: 2rem;
+    padding: 10px 8px;
+  }
+  .hero-alert-marquee-item {
+    font-size: 0.8125rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-alert-marquee-track {
+    animation-duration: 180s;
+  }
+}
+
+/* Homepage roadmap (What's coming) */
+.roadmap-section {
+  position: relative;
+}
+.roadmap-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 40% at 50% 0%, rgba(192, 38, 211, 0.1), transparent 60%);
+  pointer-events: none;
+}
+.roadmap-section > * {
+  position: relative;
+  z-index: 1;
+}
+.roadmap-glass {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+/* Dexscreener embed (landing) */
+.apt-dex-section {
+  position: relative;
+}
+
+.apt-dex-embed-slot {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: #0a0008;
+}
+
+.apt-dex-embed-frame {
+  position: relative;
+  width: 100%;
+  padding-bottom: 125%;
+}
+
+@media (min-width: 1400px) {
+  .apt-dex-embed-frame {
+    padding-bottom: 65%;
+  }
+}
+
+.apt-dex-embed-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.apt-dex-embed-placeholder {
+  min-height: 320px;
+  background: linear-gradient(180deg, #0a0008 0%, #120010 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 768px) {
+  .apt-dex-embed-placeholder {
+    min-height: 240px;
+  }
+}
+
+/* Advisory / partnerships carousel */
+.apt-social-card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: inherit;
+  border: 1px solid rgba(236, 72, 153, 0.22);
+  background: rgba(236, 72, 153, 0.04);
+  box-shadow: 0 0 60px -16px rgba(168, 85, 247, 0.35);
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.apt-social-card:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 0 80px -12px rgba(236, 72, 153, 0.4);
+}
+
+.apt-advisor-photo {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform-origin: center center;
+}
+
+.apt-social-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 9999px;
+  border: 1px solid rgba(236, 72, 153, 0.35);
+  background: rgba(18, 0, 16, 0.82);
+  backdrop-filter: blur(8px);
+  padding: 5px 10px 5px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(244, 114, 182, 0.95);
+  z-index: 2;
+}
+
+.apt-social-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  box-shadow: 0 0 8px rgba(236, 72, 153, 0.75);
+  animation: apt-social-dot-pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes apt-social-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}

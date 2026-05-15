@@ -1,0 +1,21 @@
+/* Small gap below the fixed header — use instead of large pt-28 on pages */
+.site-page-top {
+  padding-top: var(--site-page-top-gap);
+}
+
+@media (min-width: 768px) {
+  .site-page-top {
+    padding-top: 2rem;
+  }
+}
+
+/* Opaque fixed header — no backdrop blur (prevents hero bleed-through) */
+.site-header,
+nav.site-header {
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: #070005;
+  isolation: isolate;
+}
