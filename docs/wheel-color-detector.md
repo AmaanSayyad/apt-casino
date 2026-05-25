@@ -8,7 +8,7 @@ Component used by the Spin Wheel game to show which segment sits under the point
 flowchart LR
     GW[GameWheel.jsx] -->|wheelPosition segments| CD[ColorDetector.jsx]
     CD -->|compute index| SEG[Active segment]
-    SEG --> UI[Color + multiplier display]
+    SEG --> UI["Color and multiplier display"]
     SEG -->|onSegmentChange callback| GW
     GW -->|spin end| PAY[Payout + house edge]
 ```

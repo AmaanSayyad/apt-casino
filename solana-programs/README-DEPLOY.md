@@ -20,7 +20,7 @@ flowchart TB
 ```mermaid
 sequenceDiagram
     participant P as Player
-    participant A as Admin / API
+    participant A as Admin API
     participant V as Vault PDA
     participant L as PlayerLedger PDA
 
@@ -95,27 +95,29 @@ npm run bootstrap:solana
 
 ```mermaid
 flowchart LR
+    API["Solana chain API"]
+
     subgraph Today["Production today"]
         SB[(Supabase ledger)]
         HW[Hot wallet treasury]
-        API[/api/chains/solana/*]
-        API --> SB
-        API --> HW
     end
 
     subgraph Future["On-chain settle"]
         PROG[Anchor program]
         PROG --> VLT[Vault PDA]
         PROG --> LED[PlayerLedger]
-        API -.->|wire when ready| PROG
     end
+
+    API --> SB
+    API --> HW
+    API -.->|wire when ready| PROG
 ```
 
 | Layer | Status |
 |-------|--------|
 | Program in repo | Deployable |
 | Live app play | Supabase house ledger + treasury hot wallet |
-| Full on-chain settle | Wire `/api/chains/solana/*` and `/api/log-game` to program instructions when ready |
+| Full on-chain settle | Wire Solana chain API and log-game routes to program instructions when ready |
 
 ## Reference
 

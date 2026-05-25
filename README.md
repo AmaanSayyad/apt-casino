@@ -82,14 +82,14 @@ APT-Casino addresses these problems by offering:
 flowchart TB
     subgraph Client["Browser / Mobile"]
         UI[Next.js App Router]
-        Games[Roulette · Mines · Plinko · Wheel]
-        Wallet[Wallet Adapter<br/>Solana / Aptos]
-        Demo[Demo Mode<br/>Redux + localStorage]
+        Games[Roulette, Mines, Plinko, Wheel]
+        Wallet["Wallet Adapter<br/>Solana and Aptos"]
+        Demo["Demo Mode<br/>Redux and localStorage"]
     end
 
     subgraph Vercel["Next.js on Vercel"]
-        API["/api/chains/[chain]/*"]
-        Admin[Admin / Stream APIs]
+        API["Chain REST API routes"]
+        Admin["Admin and Stream APIs"]
         Fair[Provably Fair Engine]
     end
 
@@ -122,20 +122,20 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    subgraph Live["Live play (Solana)"]
+    subgraph Live["Live play Solana"]
         W1[Wallet] -->|on-chain deposit| T1[Treasury]
-        T1 -->|verify tx| API1[/api/chains/solana/deposit]
+        T1 -->|verify tx| API1["Deposit API"]
         API1 --> DB1[(user_house_balances)]
-        DB1 -->|bet / win| API2[/api/chains/solana/bet]
+        DB1 -->|bet or win| API2["Bet API"]
         API2 --> DB1
-        DB1 -->|withdraw| API3[/api/chains/solana/withdraw]
+        DB1 -->|withdraw| API3["Withdraw API"]
         API3 --> T1
     end
 
     subgraph DemoPath["Demo mode"]
         D1[Toggle demo] --> R1[Redux balanceSlice]
         R1 --> LS[(localStorage)]
-        R1 --> G1[Game UI — no wallet]
+        R1 --> G1["Game UI no wallet"]
     end
 ```
 
@@ -145,8 +145,8 @@ flowchart LR
 sequenceDiagram
     actor Player
     participant Game as Game Page
-    participant API as /api/chains/solana/bet
-    participant Fair as Fairness + House Edge
+    participant API as Bet API
+    participant Fair as Fairness and House Edge
     participant DB as Supabase
     participant Log as game_play_events
 
@@ -226,25 +226,29 @@ House edge overrides (basis points) are configurable per game via `NEXT_PUBLIC_H
 ### Game catalog
 
 ```mermaid
-mindmap
-  root((APT Casino Games))
-    Roulette
-      Inside bets
-      Outside bets
-      European 0
-      Mobile horizontal scroll
-    Mines
-      5x5 grid
-      Cashout anytime
-      Mine count 1-24
-    Plinko
-      Rows 8-16
-      Risk Low Med High
-      Multiplier bins
-    Spin Wheel
-      Risk tiers
-      Color segments
-      Instant settle
+flowchart TB
+    ROOT["APT Casino Games"]
+
+    ROOT --> R["Roulette"]
+    ROOT --> M["Mines"]
+    ROOT --> P["Plinko"]
+    ROOT --> W["Spin Wheel"]
+
+    R --> R1["Inside and outside bets"]
+    R --> R2["European single zero"]
+    R --> R3["Mobile horizontal scroll"]
+
+    M --> M1["5x5 grid"]
+    M --> M2["Cashout anytime"]
+    M --> M3["1 to 24 mines"]
+
+    P --> P1["8 to 16 rows"]
+    P --> P2["Low, Medium, High risk"]
+    P --> P3["Multiplier bins"]
+
+    W --> W1["Risk tiers"]
+    W --> W2["Color segments"]
+    W --> W3["Instant settle"]
 ```
 
 ## 🎯 Game Mechanics
@@ -349,31 +353,6 @@ NEXT_PUBLIC_LIVEPEER_API_KEY=
 
 ## 🚀 Deployment
 
-### Deploy flow
-
-```mermaid
-flowchart LR
-    subgraph Local
-        ENV[.env from .env.example]
-        BUILD[npm run build]
-    end
-    subgraph Contracts
-        SOL[d deploy:solana]
-        APT[d deploy:aptos]
-        BOOT[bootstrap scripts]
-    end
-    subgraph Cloud
-        VER[Vercel prod]
-        SB[(Supabase)]
-    end
-    ENV --> BUILD
-    SOL --> BOOT
-    APT --> BOOT
-    BOOT --> VER
-    SB --> VER
-    BUILD --> VER
-```
-
 ### Vercel Deployment
 
 1. **Connect to Vercel**
@@ -427,8 +406,8 @@ stateDiagram-v2
     Playing --> Playing: Place bets locally
     Playing --> Refilled: Refill demo balance
     Refilled --> Playing: Reset to 100 units
-    DemoOn --> DemoOff: Disable demo / connect wallet
-    Connected --> PlayingLive: Deposit + play on-chain ledger
+    DemoOn --> DemoOff: Disable demo or connect wallet
+    Connected --> PlayingLive: Deposit and on-chain ledger
 ```
 
 ## 🔐 Security

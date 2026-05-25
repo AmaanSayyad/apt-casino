@@ -13,11 +13,11 @@ flowchart TD
     D -->|No| F[Frontend build]
     E --> F
     F --> G[Vercel prod + env vars]
-    G --> H[Fund treasury SOL / APT]
+    G --> H["Fund treasury SOL and APT"]
     H --> I[Smoke tests]
     I --> J{Pass?}
     J -->|Yes| K[Go live]
-    J -->|No| L[Fix on preview → redeploy]
+    J -->|No| L[Fix on preview then redeploy]
     L --> I
 ```
 
@@ -150,11 +150,11 @@ Or use `./deploy.sh -n mainnet` for combined contract + Vercel flow.
 flowchart TD
     INC[Incident detected] --> PAUSE[Pause Solana program<br/>set_paused]
     PAUSE --> STOP[Stop manual withdraw approvals]
-    STOP --> MAINT[Enable maintenance / banner]
+    STOP --> MAINT[Enable maintenance banner]
     MAINT --> FIX[Patch on preview deployment]
     FIX --> TEST[Re-run smoke tests]
     TEST --> RESUME[Gradual traffic restore]
-    RESUME --> COMMS[Notify community Discord / X]
+    RESUME --> COMMS[Notify community Discord and X]
 ```
 
 1. Enable maintenance banner or pause Solana program (`set_paused`)

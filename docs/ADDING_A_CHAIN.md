@@ -12,7 +12,7 @@ flowchart TB
     REG --> DEP[usePlayDeposit]
     REG --> HND[handlers/yourchain.ts]
     HND --> IDX[handlers/index.ts switches]
-    IDX --> RT["/api/chains/[id]/*"]
+    IDX --> RT["Chain REST API"]
     RT --> SB[(Supabase)]
     DEP --> RT
     CLI[clientApi.js] --> RT
@@ -29,7 +29,7 @@ sequenceDiagram
     participant U as User
 
     Dev->>Reg: Add PlayChainConfig status live
-    Dev->>H: balance / bet / deposit / withdraw
+    Dev->>H: balance bet deposit withdraw
     U->>U: Connect wallet
     U->>H: deposit tx verified
     H->>H: Credit user_house_balances

@@ -6,14 +6,14 @@ How player funds, house edge, and payouts flow in the current APT Casino stack.
 
 ```mermaid
 flowchart TB
-    PW[Player Wallet] -->|SOL / APT deposit tx| TR[Treasury / Vault]
-    TR -->|RPC verify| DEP[/api/chains/.../deposit]
+    PW[Player Wallet] -->|SOL or APT deposit| TR["Treasury or Vault"]
+    TR -->|RPC verify| DEP["Deposit API"]
     DEP -->|credit minus platform fee| DB[(user_house_balances)]
-    DB --> BET[/api/chains/.../bet]
-    BET --> GM[Game logic + house edge BPS]
+    DB --> BET["Bet API"]
+    BET --> GM["Game logic and house edge"]
     GM --> DB
-    DB --> WDR[/api/chains/.../withdraw]
-    WDR -->|debit + fee| TR
+    DB --> WDR["Withdraw API"]
+    WDR -->|debit and fee| TR
     TR -->|on-chain payout| PW
 
     style DB fill:#1a1a2e,stroke:#681DDB,color:#fff
@@ -60,10 +60,9 @@ House edge is applied in app logic via `applyHouseEdgeToMultiplier()` (`src/lib/
 ### Fee & revenue split
 
 ```mermaid
-pie showData
-    title Default platform fee on deposit (1000 bps = 10%)
-    "House / platform treasury" : 80
-    "Referrer share (up to cap)" : 20
+pie title Default platform fee on deposit (1000 bps = 10%)
+    "House and platform treasury" : 80
+    "Referrer share up to cap" : 20
 ```
 
 ```mermaid
@@ -73,7 +72,7 @@ flowchart LR
     FEE -->|100 bps| REF[Referrer reward pool]
     BET[Bet settled] --> EDGE[House edge BPS per game]
     EDGE --> GGR[GGR metrics]
-    GGR --> BB[GGR buyback → APTC burn / stakers / treasury]
+    GGR --> BB["GGR buyback APTC burn stakers treasury"]
 ```
 
 ### Deposit sequence
@@ -100,7 +99,7 @@ sequenceDiagram
     participant U as User
     participant A as Withdraw API
     participant S as Supabase
-    participant O as Ops / Admin
+    participant O as Ops Admin
     participant T as Treasury key
 
     U->>A: Request withdraw
