@@ -74,7 +74,8 @@ APT-Casino addresses these problems by offering:
 
 ## Technical Architecture
 
-<img width="1657" height="731" alt="Screenshot 2025-09-25 at 1 51 21 AM" src="https://github.com/user-attachments/assets/5380ce03-c176-42c4-9698-ef08d2eca5a4" />
+<img width="1515" height="725" alt="Screenshot 2026-05-26 at 3 16 55 AM" src="https://github.com/user-attachments/assets/01759d2f-9ca1-4bc8-bec4-6ce8348596eb" />
+
 
 ### System overview
 
