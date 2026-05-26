@@ -32,7 +32,16 @@ import {
 
 const TOKEN_LS = 'apt_casino_admin_token';
 
-const TABLE_TABS = new Set(['users', 'player_pnl', 'gameplay', 'financial', 'staking', 'referrals', 'newsletter']);
+const TABLE_TABS = new Set([
+  'users',
+  'player_pnl',
+  'gameplay',
+  'financial',
+  'staking',
+  'referrals',
+  'daily_streak',
+  'newsletter',
+]);
 
 function buildTabGroups(pendingCount, dangerCount) {
   return [
@@ -56,6 +65,7 @@ function buildTabGroups(pendingCount, dangerCount) {
       tabs: [
         { id: 'financial', label: 'Financials', badge: pendingCount },
         { id: 'staking', label: 'Staking' },
+        { id: 'daily_streak', label: 'Daily streaks' },
         { id: 'referrals', label: 'Referrals' },
         { id: 'tournaments', label: 'Contests' },
       ],
@@ -105,6 +115,8 @@ export default function AdminDashboard() {
   const [referrals, setReferrals] = useState([]);
   const [subs, setSubs] = useState(null);
   const [subsError, setSubsError] = useState('');
+  const [dailyStreakLeaders, setDailyStreakLeaders] = useState([]);
+  const [dailyStreakRecent, setDailyStreakRecent] = useState([]);
 
   const [walletQuery, setWalletQuery] = useState('');
   const [walletIntel, setWalletIntel] = useState(null);
@@ -150,6 +162,7 @@ export default function AdminDashboard() {
           dangerRes,
           bannedRes,
           modeRes,
+          dailyStreakRes,
         ] = await Promise.all([
           adminFetch('/api/admin/stats', t).then((r) => r.json()),
           adminFetch('/api/admin/users', t),
@@ -163,6 +176,7 @@ export default function AdminDashboard() {
           adminFetch('/api/admin/danger-zone', t),
           adminFetch('/api/admin/banned-wallets', t),
           adminFetch('/api/admin/mode-analytics', t),
+          adminFetch('/api/admin/daily-streak', t),
         ]);
 
         setStats(statsJson);
@@ -188,6 +202,11 @@ export default function AdminDashboard() {
         if (dangerRes.ok) setDanger(await dangerRes.json());
         if (bannedRes.ok) setBannedWallets((await bannedRes.json()).bans ?? []);
         if (modeRes.ok) setModeAnalytics(await modeRes.json());
+        if (dailyStreakRes.ok) {
+          const j = await dailyStreakRes.json();
+          setDailyStreakLeaders(j.leaders ?? []);
+          setDailyStreakRecent(j.recent ?? []);
+        }
       } catch (e) {
         setSessionError(e.message || 'Sync failed');
         if (String(e.message).includes('401')) {
@@ -636,6 +655,7 @@ export default function AdminDashboard() {
                     {activeTab === 'danger' && 'Bans, freezes, frequency review, win streaks'}
                     {activeTab === 'financial' && 'Manual withdrawals and cash flow'}
                     {activeTab === 'gameplay' && 'Recent bets from game_play_events'}
+                    {activeTab === 'daily_streak' && 'Wallets who claimed daily streak APTC'}
                     {TABLE_TABS.has(activeTab) && activeTab !== 'financial' && activeTab !== 'gameplay' && 'Filterable ledger data'}
                   </p>
                 </div>
@@ -995,6 +1015,78 @@ export default function AdminDashboard() {
                 </tbody>
               </AdminTable>
             )
+          )}
+
+          {activeTab === 'daily_streak' && (
+            <div className="space-y-8">
+              {dailyStreakLeaders.filter((r) => filterRow(r.wallet)).length === 0 ? (
+                <EmptyState
+                  title="No daily streak claims yet"
+                  description="Daily streak claims appear here once wallets start checking in daily (UTC)."
+                />
+              ) : (
+                <div>
+                  <SectionHeading title="Daily streak leaders" description="Total APTC claimed via daily sign-in streaks." />
+                  <AdminTable stickyHeader>
+                    <THead cols={['Wallet', 'Chain', 'Current', 'Best', 'Total claimed (APTC)']} />
+                    <tbody>
+                      {dailyStreakLeaders
+                        .filter((r) => filterRow(r.wallet))
+                        .map((r) => (
+                          <TableRow key={`${r.wallet}-${r.chain}`}>
+                            <td className="px-4 py-3 font-mono text-xs">
+                              <WalletExplorerLink wallet={r.wallet} chain={r.chain} />
+                            </td>
+                            <td className="px-4 py-3 capitalize">{r.chain}</td>
+                            <td className="px-4 py-3 font-mono text-sm">{r.currentStreak}</td>
+                            <td className="px-4 py-3 font-mono text-sm text-amber-200">{r.longestStreak}</td>
+                            <td className="px-4 py-3 font-mono text-sm">{fmtNum(r.totalAptcClaimed, 4)}</td>
+                          </TableRow>
+                        ))}
+                    </tbody>
+                  </AdminTable>
+                </div>
+              )}
+
+              <div>
+                <SectionHeading title="Recent daily streak claims" description="Latest daily check-ins (UTC)." />
+                <AdminTable stickyHeader>
+                  <THead cols={['Time', 'Wallet', 'Chain', 'Day', 'Reward (APTC)', 'Tx']} />
+                  <tbody>
+                    {dailyStreakRecent
+                      .filter((r) => filterRow(r.wallet))
+                      .slice(0, 200)
+                      .map((r) => (
+                        <TableRow key={r.id ?? `${r.wallet}-${r.createdAt}-${r.streakDay}`}>
+                          <td className="px-4 py-2.5 whitespace-nowrap text-xs text-white/60">
+                            {r.createdAt ? new Date(r.createdAt).toLocaleString() : '—'}
+                          </td>
+                          <td className="px-4 py-2.5 font-mono text-xs">
+                            <WalletExplorerLink wallet={r.wallet} chain={r.chain} />
+                          </td>
+                          <td className="px-4 py-2.5 capitalize text-xs">{r.chain}</td>
+                          <td className="px-4 py-2.5 font-mono text-xs">{r.streakDay}</td>
+                          <td className="px-4 py-2.5 font-mono text-xs text-emerald-300">{fmtNum(r.rewardAptc, 4)}</td>
+                          <td className="px-4 py-2.5 font-mono text-xs text-white/50">
+                            {r.claimTxHash ? (
+                              <a
+                                href={r.claimTxHash}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-cyan-400/90 hover:text-cyan-300 uppercase tracking-wider"
+                              >
+                                Tx
+                              </a>
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                        </TableRow>
+                      ))}
+                  </tbody>
+                </AdminTable>
+              </div>
+            </div>
           )}
 
           {activeTab === 'tournaments' && <TournamentsAdminPanel adminToken={adminToken} />}
