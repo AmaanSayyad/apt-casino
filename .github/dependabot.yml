@@ -32,3 +32,5 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major"]
+      # Mitigated via patches/bigint-buffer+1.1.5.patch (see docs/SECURITY.md) — no upstream fix.
+      - dependency-name: "bigint-buffer"

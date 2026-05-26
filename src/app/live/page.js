@@ -173,7 +173,6 @@ export default function LivePage() {
       }
       setNewPlaybackId("");
       setThumbnailFile(null);
-      setThumbnailPreview("");
       setXHandle("");
       setTelegramUsername("");
       setSolanaPayoutWallet("");
