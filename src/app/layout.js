@@ -7,6 +7,7 @@ import MainnetWarning from "@/components/MainnetWarning";
 const inter = Inter({ subsets: ["latin"] });
 
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { rootMetadata } from "@/lib/siteMetadata";
 
 export const metadata = rootMetadata;
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
           <Footer />
         </Providers>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
