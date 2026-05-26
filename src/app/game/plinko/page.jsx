@@ -295,22 +295,6 @@ export default function Plinko() {
 
       {/* Game Description with Video */}
       <div className="px-4 md:px-8 lg:px-20 pb-12">
-        <Typography
-          variant="h4"
-          color="white"
-          sx={{
-            mb: 6,
-            textAlign: 'center',
-            background: 'linear-gradient(45deg, #ec4899, #681DDB)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontWeight: 'bold',
-            letterSpacing: '0.5px',
-          }}
-        >
-          Master {gameData.title}
-        </Typography>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Video on left */}
           <div>

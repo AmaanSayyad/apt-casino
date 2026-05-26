@@ -2995,23 +2995,6 @@ export default function GameRoulette() {
           mx: 'auto',
           maxWidth: '1600px',
         }}>
-          {/* Section Header */}
-          <Typography
-            variant="h4"
-            sx={{
-              mb: 5,
-              textAlign: 'center',
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #d82633, #681DDB)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              letterSpacing: '1px',
-              textShadow: '0 4px 8px rgba(0,0,0,0.5)'
-            }}
-          >
-            Master European Roulette
-          </Typography>
-
           {/* Video and Description Section */}
           <Grid container spacing={4} sx={{ mb: 7 }}>
             {/* Video on left */}

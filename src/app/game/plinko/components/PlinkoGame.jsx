@@ -25,6 +25,12 @@ import {
   resolvePlinkoBoard,
 } from '@/lib/plinko/plinkoConfig';
 
+/** Last peg row Y in canvas coords (bins sit just below). */
+function plinkoLastPinRowY(rows) {
+  if (rows <= 1) return PLINKO_PADDING_TOP;
+  return PLINKO_CANVAS_HEIGHT - PLINKO_PADDING_BOTTOM;
+}
+
 import { DEFAULT_PLAY_CHAIN, formatNativeAmount } from '@/lib/chains/registry';
 import {
   loadPlinkoSessionStats,
@@ -104,8 +110,25 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
     () => resolvePlinkoBoard(currentRows, currentRiskLevel),
     [currentRows, currentRiskLevel],
   );
-  const { multipliers, pins, binCount } = board;
+  const { multipliers, pins, binCount, pinsLastRowXCoords } = board;
   multipliersRef.current = board.multipliers;
+
+  const pinDistanceX = useMemo(
+    () => getPinDistanceX(currentRows, binCount),
+    [currentRows, binCount],
+  );
+
+  const multiplierSlotLayout = useMemo(() => {
+    const lastPinY = plinkoLastPinRowY(currentRows);
+    const pinR = getPinRadius(currentRows);
+    const slotTopPct = ((lastPinY + pinR * 2 + 6) / PLINKO_CANVAS_HEIGHT) * 100;
+    const slotWidthPct = (pinDistanceX / PLINKO_CANVAS_WIDTH) * 100 * 0.92;
+    return multipliers.map((_, index) => ({
+      leftPct: (binCenterX(index, pinsLastRowXCoords) / PLINKO_CANVAS_WIDTH) * 100,
+      widthPct: slotWidthPct,
+      topPct: slotTopPct,
+    }));
+  }, [multipliers, pinsLastRowXCoords, pinDistanceX, currentRows]);
 
   const PIN_CATEGORY = 0x0001;
   const BALL_CATEGORY = 0x0002;
@@ -629,32 +652,76 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
         <audio ref={ballDropAudioRef} src="/sounds/chip-put.mp3" preload="auto" />
         <audio ref={binLandAudioRef} src="/sounds/win-chips.mp3" preload="auto" />
         <div className="relative w-full max-w-[800px] min-w-0">
-          <svg
-            className="w-full h-[min(52vw,420px)] sm:h-[520px] md:h-[600px] relative z-10"
-            viewBox="0 0 800 600"
-            preserveAspectRatio="xMidYMid meet"
-          >
-            {/* Draw pegs */}
-            {pins.map((pin) => (
-              <circle
-                key={pin.id}
-                cx={pin.x}
-                cy={pin.y}
-                r="6"
-                fill={hitPegs.has(pin.id) ? "#ffd700" : "white"}
-                className="drop-shadow-sm"
-                style={{
-                  filter: hitPegs.has(pin.id)
-                    ? "drop-shadow(0 0 15px #ffd700) brightness(1.5)"
-                    : "drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
-                }}
-              />
-            ))}
-            <g ref={ballsLayerRef} />
-          </svg>
+          {/* Shared 4:3 frame so pegs and multiplier slots use the same coordinate scale */}
+          <div className="relative w-full aspect-[4/3]">
+            <svg
+              className="absolute inset-0 h-full w-full z-10"
+              viewBox={`0 0 ${PLINKO_CANVAS_WIDTH} ${PLINKO_CANVAS_HEIGHT}`}
+              preserveAspectRatio="xMidYMid meet"
+            >
+              {pins.map((pin) => (
+                <circle
+                  key={pin.id}
+                  cx={pin.x}
+                  cy={pin.y}
+                  r="6"
+                  fill={hitPegs.has(pin.id) ? "#ffd700" : "white"}
+                  className="drop-shadow-sm"
+                  style={{
+                    filter: hitPegs.has(pin.id)
+                      ? "drop-shadow(0 0 15px #ffd700) brightness(1.5)"
+                      : "drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
+                  }}
+                />
+              ))}
+              <g ref={ballsLayerRef} />
+            </svg>
+
+            <div className="pointer-events-none absolute inset-0 z-20">
+              {multipliers.map((multiplier, index) => {
+                const layout = multiplierSlotLayout[index];
+                const isDisplayOnly =
+                  parsePlinkoMultiplierLabel(multiplier) > PLINKO_MAX_LANDING_MULTIPLIER;
+                return (
+                  <div
+                    key={index}
+                    className={`absolute flex flex-col items-center text-center transition-all duration-300 ${
+                      isDisplayOnly ? 'opacity-45' : ''
+                    } ${ballPosition === index ? 'font-bold text-yellow-400' : 'text-white'}`}
+                    style={{
+                      left: `${layout.leftPct}%`,
+                      top: `${layout.topPct}%`,
+                      width: `${layout.widthPct}%`,
+                      transform:
+                        ballPosition === index
+                          ? 'translateX(-50%) scale(1.1)'
+                          : 'translateX(-50%)',
+                    }}
+                  >
+                    <div
+                      className={`flex w-full aspect-[10/7] max-h-8 items-center justify-center rounded bg-gradient-to-r ${getSlotColor(index)} shadow-lg sm:max-h-9 ${
+                        ballPosition === index ? 'ring-2 ring-yellow-400' : ''
+                      }`}
+                    >
+                      <span className="max-w-full truncate px-0.5 text-[7px] font-bold leading-none text-white sm:text-[9px] md:text-[10px]">
+                        {multiplier}
+                      </span>
+                    </div>
+                    <div
+                      className={`mt-0.5 h-0.5 w-full rounded-full sm:mt-1 sm:h-1 ${
+                        ballPosition === index
+                          ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                          : 'bg-[#333947]'
+                      }`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Bet History - desktop sidebar */}
-          <div className="hidden md:block absolute right-2 lg:right-4 top-4 z-10">
+          <div className="hidden md:block absolute right-2 lg:right-4 top-4 z-30">
             <div className="space-y-2">
               {recentBetSlots.filled.map((bet, index) => (
                 <div key={index} className="w-16 h-16 bg-[#2A0025] border border-[#333947] rounded-lg flex flex-col items-center justify-center p-1">
@@ -677,68 +744,32 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
             </div>
           </div>
 
-          {/* Multiplier Slots */}
-          <div className="w-full mt-2 sm:mt-4 max-w-[800px] mx-auto min-w-0">
-            {/* Mobile recent drops */}
-            <div className="flex md:hidden gap-1.5 w-full overflow-x-auto pb-2 mb-2 scrollbar-thin">
-              {recentBetSlots.filled.map((bet, index) => (
-                <div
-                  key={`m-${index}`}
-                  className="shrink-0 w-14 h-14 bg-[#2A0025] border border-[#333947] rounded-lg flex flex-col items-center justify-center p-1"
+          {/* Mobile recent drops */}
+          <div className="mt-2 flex w-full gap-1.5 overflow-x-auto pb-2 scrollbar-thin md:hidden">
+            {recentBetSlots.filled.map((bet, index) => (
+              <div
+                key={`m-${index}`}
+                className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-lg border border-[#333947] bg-[#2A0025] p-1"
+              >
+                <span className="text-[10px] font-bold text-white">{bet.multiplier}</span>
+                <span
+                  className={`text-[9px] ${
+                    (bet.netPnl ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                  }`}
                 >
-                  <span className="text-[10px] font-bold text-white">{bet.multiplier}</span>
-                  <span
-                    className={`text-[9px] ${
-                      (bet.netPnl ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'
-                    }`}
-                  >
-                    {(bet.netPnl ?? 0) >= 0 ? '+' : ''}
-                    {formatNativeAmount(bet.netPnl ?? 0, activeChain)}
-                  </span>
-                </div>
-              ))}
-              {Array.from({ length: recentBetSlots.emptyCount }).map((_, index) => (
-                <div
-                  key={`m-empty-${index}`}
-                  className="shrink-0 w-14 h-14 bg-[#2A0025] border border-[#333947] rounded-lg flex items-center justify-center opacity-30"
-                >
-                  <span className="text-xs text-gray-500">-</span>
-                </div>
-              ))}
-            </div>
-
-            <div
-              className={`flex w-full min-w-0 gap-px sm:gap-1 md:gap-2 ${
-                currentRows === 16 ? 'px-0' : 'px-1 sm:px-4'
-              }`}
-            >
-              {multipliers.map((multiplier, index) => {
-                const isDisplayOnly =
-                  parsePlinkoMultiplierLabel(multiplier) > PLINKO_MAX_LANDING_MULTIPLIER;
-                return (
-                <div
-                  key={index}
-                  className={`flex-1 min-w-0 max-w-[44px] flex flex-col items-center text-center transition-all duration-300 ${
-                    isDisplayOnly ? 'opacity-45' : ''
-                  } ${ballPosition === index
-                    ? "text-yellow-400 font-bold scale-110"
-                    : "text-white"
-                    }`}
-                >
-                  <div className={`w-full aspect-[10/7] max-h-7 sm:max-h-8 rounded bg-gradient-to-r ${getSlotColor(index)} flex items-center justify-center mb-1 sm:mb-2 shadow-lg ${ballPosition === index ? 'ring-2 ring-yellow-400' : ''
-                    }`}>
-                    <span className="text-[7px] sm:text-[9px] md:text-[10px] font-bold text-white leading-none px-0.5 truncate max-w-full">
-                      {multiplier}
-                    </span>
-                  </div>
-                  <div className={`w-full h-0.5 sm:h-1 rounded-full ${ballPosition === index
-                    ? "bg-gradient-to-r from-yellow-400 to-orange-500"
-                    : "bg-[#333947]"
-                    }`}></div>
-                </div>
-              );
-              })}
-            </div>
+                  {(bet.netPnl ?? 0) >= 0 ? '+' : ''}
+                  {formatNativeAmount(bet.netPnl ?? 0, activeChain)}
+                </span>
+              </div>
+            ))}
+            {Array.from({ length: recentBetSlots.emptyCount }).map((_, index) => (
+              <div
+                key={`m-empty-${index}`}
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#333947] bg-[#2A0025] opacity-30"
+              >
+                <span className="text-xs text-gray-500">-</span>
+              </div>
+            ))}
           </div>
         </div>
 
