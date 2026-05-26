@@ -35,7 +35,7 @@
     "@emotion/styled": "^11.14.1",
     "@livepeer/react": "^4.3.6",
     "@mui/icons-material": "^5.15.18",
-    "@mui/lab": "^5.0.0-alpha.170",
+    "@mui/lab": "^6.0.0-dev.20240529-082515-213b5e33ab",
     "@mui/material": "^5.15.18",
     "@react-three/drei": "^9.88.0",
     "@react-three/fiber": "^8.14.5",
