@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PlayChainIcon from '@/components/play/PlayChainIcon';
 import { usePlayCurrency } from '@/hooks/usePlayCurrency';
 import { formatNativeAmount } from '@/lib/chains/registry';
@@ -23,6 +23,7 @@ export default function MinesBetAmountField({
   const { symbol, chain, balanceNative } = usePlayCurrency();
   const [mounted, setMounted] = useState(false);
   const [display, setDisplay] = useState(String(DEFAULT_GAME_BET));
+  const restoredRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -31,14 +32,18 @@ export default function MinesBetAmountField({
   useEffect(() => {
     if (!mounted) return;
     const saved = getGameBetPreferenceString(GAME, chain);
+    restoredRef.current = true;
     setDisplay(saved);
     onChange({ target: { name: 'betAmount', value: saved } });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- restore once per chain
   }, [mounted, chain]);
 
   useEffect(() => {
-    if (value !== undefined && value !== null && String(value) !== display) {
-      setDisplay(String(value));
+    if (!restoredRef.current) return;
+    if (value === undefined || value === null) return;
+    const next = String(value);
+    if (next !== display) {
+      setDisplay(next);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);

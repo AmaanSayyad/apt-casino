@@ -301,25 +301,28 @@ export default function Mines() {
     }
   };
 
+  const manualFormConfig = useMemo(() => getManualFormConfig(symbol), [symbol]);
+  const autoFormConfig = useMemo(() => getAutoFormConfig(symbol), [symbol]);
+
   // Tab configuration - memoized to prevent unnecessary re-renders
   const tabs = useMemo(() => [
     {
       label: "Manual",
       content: (
-        <DynamicForm config={getManualFormConfig(symbol)} onSubmit={handleFormSubmit} gameStatus={gameStatus} />
+        <DynamicForm config={manualFormConfig} onSubmit={handleFormSubmit} gameStatus={gameStatus} />
       ),
     },
     {
       label: "Auto",
       content: (
         <DynamicForm
-          config={getAutoFormConfig(symbol)}
+          config={autoFormConfig}
           onSubmit={handleFormSubmit}
           gameStatus={gameStatus}
         />
       ),
     },
-  ], [gameStatus, symbol]);
+  ], [gameStatus, manualFormConfig, autoFormConfig]);
 
   // Handle game completion (only when game ends - cashout or mine hit)
   const handleGameComplete = async (result) => {

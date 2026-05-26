@@ -15,7 +15,10 @@ import CustomInput from '@/components/CustomInput';
 import MinesBetAmountField from './components/MinesBetAmountField';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { setGameBetPreference } from '@/lib/client/gameBetPreference';
+import {
+  getGameBetPreferenceString,
+  setGameBetPreference,
+} from '@/lib/client/gameBetPreference';
 import { usePlayCurrency } from '@/hooks/usePlayCurrency';
 
 export const MinesAutoSessionContext = createContext(null);
@@ -152,15 +155,18 @@ const DynamicForm = ({
   useEffect(() => {
     const initialData = {};
     config.fields.forEach((field) => {
-      initialData[field.id] =
-        field.defaultValue !== undefined
-          ? field.defaultValue
-          : field.type === 'multiSelect'
-            ? []
-            : '';
+      if (field.type === 'betAmount') {
+        initialData[field.id] = getGameBetPreferenceString('mines', chain);
+      } else if (field.defaultValue !== undefined) {
+        initialData[field.id] = field.defaultValue;
+      } else if (field.type === 'multiSelect') {
+        initialData[field.id] = [];
+      } else {
+        initialData[field.id] = '';
+      }
     });
     setFormData(initialData);
-  }, [config]);
+  }, [config, chain]);
 
   const fieldsBySection = useMemo(() => {
     const groups = { game: [], strategy: [], strategyLimits: [], ai: [] };
