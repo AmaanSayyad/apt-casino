@@ -23,7 +23,6 @@ import {
   Panel,
   SearchInput,
   SectionHeading,
-  shortWallet,
   WalletExplorerLink,
   StatBox,
   TabNav,
@@ -565,7 +564,9 @@ export default function AdminDashboard() {
                         <TableRow key={`${row.chain}-${row.label}`}>
                           <td className="px-4 py-3 capitalize text-white/85">{row.chain}</td>
                           <td className="px-4 py-3 text-white/70">{row.label}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-white/50">{shortWallet(row.address)}</td>
+                          <td className="px-4 py-3 font-mono text-xs">
+                            <WalletExplorerLink wallet={row.address} chain={row.chain} />
+                          </td>
                           <td className="px-4 py-3 text-white/60 text-xs font-bold">{row.asset}</td>
                           <td className="px-4 py-3 font-mono text-sm">
                             {row.error ? (
@@ -688,7 +689,9 @@ export default function AdminDashboard() {
                 <tbody>
                   {users.filter((u) => filterRow(u.userAddress)).map((u) => (
                     <TableRow key={`${u.userAddress}-${u.chain}`}>
-                      <td className="px-4 py-3 font-mono text-xs">{shortWallet(u.userAddress)}</td>
+                      <td className="px-4 py-3 font-mono text-xs">
+                        <WalletExplorerLink wallet={u.userAddress} chain={u.chain} />
+                      </td>
                       <td className="px-4 py-3 capitalize">{u.chain}</td>
                       <td className="px-4 py-3 font-mono text-sm">
                         {fmtNum(u.balance)} <span className="text-white/40">{u.currency}</span>
@@ -730,7 +733,9 @@ export default function AdminDashboard() {
                   <tbody>
                     {playerPnl.filter((r) => filterRow(r.wallet)).map((r) => (
                       <TableRow key={`${r.wallet}-${r.chain}`}>
-                        <td className="px-4 py-3 font-mono text-xs">{shortWallet(r.wallet)}</td>
+                        <td className="px-4 py-3 font-mono text-xs">
+                          <WalletExplorerLink wallet={r.wallet} chain={r.chain} />
+                        </td>
                         <td className="px-4 py-3">
                           <Badge tone="neutral">{r.currency}</Badge>
                         </td>
@@ -787,7 +792,9 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-4 py-2.5 capitalize text-xs">{b.chain}</td>
                         <td className="px-4 py-2.5 text-xs">{b.game}</td>
-                        <td className="px-4 py-2.5 font-mono text-xs">{shortWallet(b.wallet)}</td>
+                        <td className="px-4 py-2.5 font-mono text-xs">
+                          <WalletExplorerLink wallet={b.wallet} chain={b.chain} />
+                        </td>
                         <td className="px-4 py-2.5 font-mono text-xs">{fmtNum(b.bet)}</td>
                         <td className="px-4 py-2.5 font-mono text-xs">{fmtNum(b.payout)}</td>
                         <td className="px-4 py-2.5 font-mono text-xs">
@@ -818,7 +825,9 @@ export default function AdminDashboard() {
                     <tbody>
                       {pendingWd.filter((w) => filterRow(w.wallet)).map((w) => (
                         <TableRow key={w.id}>
-                          <td className="px-4 py-3 font-mono text-xs">{shortWallet(w.wallet)}</td>
+                          <td className="px-4 py-3 font-mono text-xs">
+                            <WalletExplorerLink wallet={w.wallet} chain={w.chain} />
+                          </td>
                           <td className="px-4 py-3 capitalize">{w.chain}</td>
                           <td className="px-4 py-3 font-mono">{fmtNum(w.gross_apt)}</td>
                           <td className="px-4 py-3 font-mono text-amber-200">${fmtNum(w.usd_estimate, 2)}</td>
@@ -944,7 +953,9 @@ export default function AdminDashboard() {
                             <td className="px-4 py-2 text-xs text-white/50">
                               {new Date(p.created_at).toLocaleString()}
                             </td>
-                            <td className="px-4 py-2 font-mono text-xs text-cyan-400/90">{shortWallet(p.user_address)}</td>
+                            <td className="px-4 py-2 font-mono text-xs">
+                              <WalletExplorerLink wallet={p.user_address} chain="solana" />
+                            </td>
                             <td className="px-4 py-2 text-xs">{p.pool_key}</td>
                             <td className="px-4 py-2 font-mono text-xs">{fmtNum(p.amount, 0)}</td>
                             <td className="px-4 py-2">
@@ -973,7 +984,9 @@ export default function AdminDashboard() {
                   {referrals.filter((r) => filterRow(r.wallet)).map((r) => (
                     <TableRow key={r.wallet}>
                       <td className="px-4 py-3 text-violet-300 font-bold">#{r.rank}</td>
-                      <td className="px-4 py-3 font-mono text-xs">{shortWallet(r.wallet)}</td>
+                      <td className="px-4 py-3 font-mono text-xs">
+                        <WalletExplorerLink wallet={r.wallet} chain={r.chain} />
+                      </td>
                       <td className="px-4 py-3 font-mono text-sm">{r.code ?? '—'}</td>
                       <td className="px-4 py-3">{r.referrals}</td>
                       <td className="px-4 py-3 font-mono">{fmtNum(r.earnedOctas, 0)}</td>

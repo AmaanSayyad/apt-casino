@@ -24,10 +24,17 @@ export function shortWallet(w) {
   return s.length > 14 ? `${s.slice(0, 8)}…${s.slice(-4)}` : s;
 }
 
+/** Guess chain from address shape when API omits chain (Aptos = 0x…, else Solana base58). */
+export function inferChainFromAddress(wallet) {
+  const w = String(wallet || '').trim();
+  if (w.startsWith('0x')) return 'aptos';
+  return 'solana';
+}
+
 /** Truncated wallet label linking to chain explorer (Solana → explorer.solana.com). */
-export function WalletExplorerLink({ wallet, chain = 'solana', className = '' }) {
+export function WalletExplorerLink({ wallet, chain, className = '' }) {
   if (!wallet) return <span className={className}>—</span>;
-  const chainId = String(chain || 'solana').toLowerCase();
+  const chainId = String(chain || inferChainFromAddress(wallet)).toLowerCase();
   const href =
     chainId === 'solana'
       ? solanaExplorerAddressUrl(wallet)
