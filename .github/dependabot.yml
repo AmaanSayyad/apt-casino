@@ -12,3 +12,23 @@ updates:
         update-types:
           - minor
           - patch
+    # Major bumps that need coordinated migrations (not blind Dependabot merges).
+    ignore:
+      - dependency-name: "@mui/material"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@mui/lab"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@mui/icons-material"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@aptos-labs/ts-sdk"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@aptos-labs/wallet-adapter-core"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@aptos-labs/wallet-adapter-react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@aptos-labs/wallet-adapter-ant-design"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@telegram-apps/bridge"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
