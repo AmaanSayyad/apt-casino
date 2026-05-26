@@ -39,7 +39,7 @@
     "@mui/material": "^5.15.18",
     "@react-three/drei": "^9.88.0",
     "@react-three/fiber": "^8.14.5",
-    "@reduxjs/toolkit": "^1.9.7",
+    "@reduxjs/toolkit": "^2.12.0",
     "@solana/spl-token": "^0.4.14",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-phantom": "^0.9.28",
