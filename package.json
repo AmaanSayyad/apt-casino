@@ -86,7 +86,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
-    "@types/node": "22.15.15",
+    "@types/node": "25.9.1",
     "patch-package": "^8.0.1",
     "tailwind-scrollbar": "^3.0.4",
     "typescript": "5.8.3"
