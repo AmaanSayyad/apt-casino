@@ -645,8 +645,6 @@ function GridOutsideBet({ rightCard = false, active = false, ...props }) {
         backgroundColor: (theme) => theme.palette.dark.button,
         borderBottom: (theme) => "10px solid " + theme.palette.dark.card,
         borderLeft: (theme) => "10px solid " + theme.palette.dark.card,
-        borderRight: (theme) =>
-          rightCard ? `10px solid ${theme.palette.dark.card}` : undefined,
         transition: "all 0.3s ease",
         "&:hover": {
           transform: "translateY(-2px)",
@@ -1063,7 +1061,6 @@ export default function GameRoulette() {
   const [recentResults, setRecentResults] = useState([]);
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const tableScrollRef = useRef(null);
   const [isMuted, setIsMuted] = useState(false);
   const [bettingHistory, setBettingHistory] = useState([]);
   const [error, setError] = useState(null);
@@ -2451,8 +2448,9 @@ export default function GameRoulette() {
             position: "relative",
             zIndex: 1,
             width: "100%",
-            maxWidth: "100%",
-            px: 0,
+            maxWidth: { md: 1680, lg: 1800 },
+            mx: { md: "auto" },
+            px: { xs: 0, md: 2, lg: 3 },
           }}
         >
 
@@ -2471,8 +2469,8 @@ export default function GameRoulette() {
               border: '1px solid rgba(255,255,255,0.05)',
               borderRadius: '8px',
               gap: 1,
-              maxWidth: '98%', // Increased from 90% to 98%
-              mx: 'auto'
+              width: '100%',
+              mx: 'auto',
             }}
           >
             <Typography
@@ -2527,44 +2525,57 @@ export default function GameRoulette() {
             )}
           </Box>
 
-          {/* Roulette table — fixed layout width; scroll container when viewport is narrower */}
+          {/* Roulette table — mobile: horizontal scroll; desktop: full width */}
           <Box
-            ref={tableScrollRef}
             sx={{
               width: '100%',
-              maxWidth: '100%',
-              overflowX: 'auto',
-              overflowY: 'visible',
-              pb: 1,
-              display: 'flex',
-              justifyContent: 'center',
-              WebkitOverflowScrolling: 'touch',
-              ...(isSmallScreen && { touchAction: 'pan-x' }),
-              '&::-webkit-scrollbar': { height: '6px' },
-              '&::-webkit-scrollbar-track': {
-                background: 'rgba(255,255,255,0.08)',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: 'rgba(255,255,255,0.25)',
-                borderRadius: '4px',
-              },
+              ...(isSmallScreen
+                ? {
+                    overflowX: 'auto',
+                    overflowY: 'visible',
+                    pb: 1,
+                    WebkitOverflowScrolling: 'touch',
+                    touchAction: 'pan-x',
+                    '&::-webkit-scrollbar': { height: '6px' },
+                    '&::-webkit-scrollbar-track': {
+                      background: 'rgba(255,255,255,0.08)',
+                      borderRadius: '4px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: 'rgba(255,255,255,0.25)',
+                      borderRadius: '4px',
+                    },
+                  }
+                : {
+                    overflowX: 'auto',
+                    overflowY: 'visible',
+                    display: 'flex',
+                    justifyContent: 'center',
+                  }),
             }}
           >
             <Box
               sx={{
-                width: isSmallScreen ? 920 : 1140,
-                minWidth: isSmallScreen ? 920 : 1140,
-                flexShrink: 0,
+                width: '100%',
+                ...(isSmallScreen
+                  ? { minWidth: 920, width: 920, flexShrink: 0 }
+                  : {
+                      minWidth: { md: 1100, lg: 1280 },
+                      maxWidth: '100%',
+                    }),
               }}
             >
             <Grid
               container
               columns={14}
               sx={{
-                mt: { xs: 1.5, md: 4 },
+                mt: { xs: 1.5, md: 3 },
                 mx: 'auto',
+                px: { xs: 0.5, sm: 1 },
                 width: '100%',
+                '& .MuiTypography-h5': {
+                  fontSize: { xs: '1.1rem', md: '1.35rem', lg: '1.5rem' },
+                },
               }}
             >
               <Grid xs={1} md={1}>
