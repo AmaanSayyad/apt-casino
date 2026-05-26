@@ -645,6 +645,8 @@ function GridOutsideBet({ rightCard = false, active = false, ...props }) {
         backgroundColor: (theme) => theme.palette.dark.button,
         borderBottom: (theme) => "10px solid " + theme.palette.dark.card,
         borderLeft: (theme) => "10px solid " + theme.palette.dark.card,
+        borderRight: (theme) =>
+          rightCard ? `10px solid ${theme.palette.dark.card}` : undefined,
         transition: "all 0.3s ease",
         "&:hover": {
           transform: "translateY(-2px)",
@@ -1061,9 +1063,7 @@ export default function GameRoulette() {
   const [recentResults, setRecentResults] = useState([]);
 
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const tableOuterRef = useRef(null);
-  const tableInnerRef = useRef(null);
-  const [tableScale, setTableScale] = useState(1);
+  const tableScrollRef = useRef(null);
   const [isMuted, setIsMuted] = useState(false);
   const [bettingHistory, setBettingHistory] = useState([]);
   const [error, setError] = useState(null);
@@ -1241,32 +1241,6 @@ export default function GameRoulette() {
       window.removeEventListener('orientationchange', checkScreenSize);
     };
   }, []);
-
-  // Desktop: scale table to fit viewport (avoids clipping under body overflow-x: hidden)
-  useEffect(() => {
-    if (isSmallScreen) {
-      setTableScale(1);
-      return undefined;
-    }
-    const measure = () => {
-      const outer = tableOuterRef.current;
-      const inner = tableInnerRef.current;
-      if (!outer || !inner) return;
-      const available = outer.clientWidth;
-      const natural = inner.scrollWidth;
-      if (available > 0 && natural > 0) {
-        setTableScale(Math.min(1, available / natural));
-      }
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (tableOuterRef.current) ro.observe(tableOuterRef.current);
-    window.addEventListener('resize', measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, [isSmallScreen]);
 
   // Track recent results
   useEffect(() => {
@@ -2553,48 +2527,35 @@ export default function GameRoulette() {
             )}
           </Box>
 
-          {/* Roulette table — mobile: horizontal scroll; desktop: scale-to-fit */}
+          {/* Roulette table — fixed layout width; scroll container when viewport is narrower */}
           <Box
-            ref={tableOuterRef}
+            ref={tableScrollRef}
             sx={{
               width: '100%',
               maxWidth: '100%',
-              px: { xs: 0, sm: 1, md: 2 },
-              ...(isSmallScreen
-                ? {
-                    overflowX: 'auto',
-                    overflowY: 'visible',
-                    pb: 1,
-                    WebkitOverflowScrolling: 'touch',
-                    touchAction: 'pan-x',
-                    '&::-webkit-scrollbar': { height: '6px' },
-                    '&::-webkit-scrollbar-track': {
-                      background: 'rgba(255,255,255,0.08)',
-                      borderRadius: '4px',
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                      background: 'rgba(255,255,255,0.25)',
-                      borderRadius: '4px',
-                    },
-                  }
-                : {
-                    overflow: 'hidden',
-                    display: 'flex',
-                    justifyContent: 'center',
-                  }),
+              overflowX: 'auto',
+              overflowY: 'visible',
+              pb: 1,
+              display: 'flex',
+              justifyContent: 'center',
+              WebkitOverflowScrolling: 'touch',
+              ...(isSmallScreen && { touchAction: 'pan-x' }),
+              '&::-webkit-scrollbar': { height: '6px' },
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(255,255,255,0.08)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(255,255,255,0.25)',
+                borderRadius: '4px',
+              },
             }}
           >
             <Box
-              ref={tableInnerRef}
               sx={{
-                ...(isSmallScreen
-                  ? { minWidth: 920, width: 920 }
-                  : {
-                      width: '100%',
-                      maxWidth: 1140,
-                      transform: `scale(${tableScale})`,
-                      transformOrigin: 'top center',
-                    }),
+                width: isSmallScreen ? 920 : 1140,
+                minWidth: isSmallScreen ? 920 : 1140,
+                flexShrink: 0,
               }}
             >
             <Grid
@@ -2603,7 +2564,6 @@ export default function GameRoulette() {
               sx={{
                 mt: { xs: 1.5, md: 4 },
                 mx: 'auto',
-                px: { xs: 0.5, sm: 1 },
                 width: '100%',
               }}
             >
