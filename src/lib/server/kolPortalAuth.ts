@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import { createHmac, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
 
 export const KOL_SESSION_COOKIE = 'kol_portal_session';
@@ -32,10 +32,9 @@ export function verifyPortalPassword(password: string, stored: string): boolean 
 
 export function generatePortalPassword(length = 12): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-  const bytes = randomBytes(length);
   let out = '';
   for (let i = 0; i < length; i += 1) {
-    out += chars[bytes[i] % chars.length];
+    out += chars[randomInt(chars.length)];
   }
   return out;
 }

@@ -21,7 +21,8 @@
     "deploy:game-logger": "node scripts/deploy-game-logger.js",
     "compile:solana": "cd solana-programs && anchor build",
     "deploy:solana": "node solana-programs/scripts/deploy-solana.mjs",
-    "bootstrap:solana": "node solana-programs/scripts/bootstrap-solana.mjs"
+    "bootstrap:solana": "node solana-programs/scripts/bootstrap-solana.mjs",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^3.1.3",
@@ -41,9 +42,10 @@
     "@reduxjs/toolkit": "^1.9.7",
     "@solana/spl-token": "^0.4.14",
     "@solana/wallet-adapter-base": "^0.9.27",
+    "@solana/wallet-adapter-phantom": "^0.9.28",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",
-    "@solana/wallet-adapter-wallets": "^0.19.38",
+    "@solana/wallet-adapter-solflare": "^0.6.32",
     "@solana/web3.js": "^1.95.8",
     "@supabase/supabase-js": "^2.57.4",
     "@tanstack/react-query": "^5.75.5",
@@ -85,12 +87,18 @@
   },
   "devDependencies": {
     "@types/node": "22.15.15",
+    "patch-package": "^8.0.1",
     "tailwind-scrollbar": "^3.0.4",
     "typescript": "5.8.3"
   },
   "overrides": {
     "form-data": "^4.0.4",
     "handlebars": "^4.7.9",
-    "protobufjs": "^7.5.5"
+    "protobufjs": "^7.5.9",
+    "lodash": "^4.17.23",
+    "js-cookie": "^3.0.7",
+    "postcss": "^8.5.15",
+    "ws": "^8.21.0",
+    "uuid": "^11.1.0"
   }
 }

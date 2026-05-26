@@ -2,21 +2,83 @@
  * Validates that a Livepeer playback ID or HLS URL is reachable (HEAD on manifest).
  * YouTube URLs are validated separately (client-side embed + oEmbed); do not call this for YouTube.
  */
-export async function validateLivepeerOrHls(playbackId: string): Promise<{ ok: boolean; url: string; status: number }> {
+
+const ALLOWED_HLS_HOSTS = new Set([
+  'livepeercdn.com',
+  'cdn.livepeer.com',
+  'livepeercdn.studio',
+]);
+
+/** Block private/link-local hosts and non-HTTPS fetches (SSRF mitigation). */
+function assertSafeHlsUrl(url: URL): void {
+  if (url.protocol !== 'https:') {
+    throw new Error('Only HTTPS stream URLs are allowed');
+  }
+  const host = url.hostname.toLowerCase();
+  if (
+    host === 'localhost' ||
+    host.endsWith('.local') ||
+    host === '127.0.0.1' ||
+    host.startsWith('127.') ||
+    host === '0.0.0.0' ||
+    host === '::1' ||
+    host.endsWith('.internal')
+  ) {
+    throw new Error('Invalid stream host');
+  }
+  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
+  if (ipv4) {
+    const [, a, b] = ipv4.map(Number);
+    if (a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || a === 169) {
+      throw new Error('Invalid stream host');
+    }
+  }
+  if (!ALLOWED_HLS_HOSTS.has(host)) {
+    throw new Error('Stream host is not on the allowlist');
+  }
+}
+
+function buildHlsUrl(playbackId: string): string {
   const trimmed = playbackId.trim();
-  const isUrl = /^https?:\/\//i.test(trimmed);
-  const hls = isUrl ? trimmed : `https://livepeercdn.com/hls/${trimmed}/index.m3u8`;
+  if (/^https?:\/\//i.test(trimmed)) {
+    const url = new URL(trimmed);
+    assertSafeHlsUrl(url);
+    return url.toString();
+  }
+  const id = trimmed.replace(/[^a-zA-Z0-9_-]/g, '');
+  if (!id) throw new Error('Invalid playback id');
+  const url = new URL(`https://livepeercdn.com/hls/${encodeURIComponent(id)}/index.m3u8`);
+  assertSafeHlsUrl(url);
+  return url.toString();
+}
+
+export async function validateLivepeerOrHls(
+  playbackId: string,
+): Promise<{ ok: boolean; url: string; status: number }> {
+  let hls: string;
   try {
-    const res = await fetch(hls, { method: 'HEAD', cache: 'no-store' });
-    const ok = res.ok;
-    return { ok, url: hls, status: res.status };
+    hls = buildHlsUrl(playbackId);
+  } catch {
+    return { ok: false, url: '', status: 0 };
+  }
+  try {
+    const res = await fetch(hls, { method: 'HEAD', cache: 'no-store', redirect: 'error' });
+    return { ok: res.ok, url: hls, status: res.status };
   } catch {
     return { ok: false, url: hls, status: 0 };
   }
 }
 
+const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be']);
+
 export function isYouTubeStreamUrl(input: string): boolean {
-  return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i.test(input.trim());
+  try {
+    const raw = input.trim();
+    const url = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
+    return YOUTUBE_HOSTS.has(url.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
 }
 
 export function streamSourceType(playbackId: string): 'youtube' | 'hls' | 'livepeer' {

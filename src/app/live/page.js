@@ -82,11 +82,24 @@ export default function LivePage() {
     return () => clearInterval(timer);
   }, [myLiveSession?.id, wallet, loadStreams]);
 
+  useEffect(() => {
+    return () => {
+      if (thumbnailPreview && thumbnailPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(thumbnailPreview);
+      }
+    };
+  }, [thumbnailPreview]);
+
   function onThumbnailPick(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) return;
     setThumbnailFile(file);
-    setThumbnailPreview(URL.createObjectURL(file));
+    setThumbnailPreview((prev) => {
+      if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
   }
 
   async function addStream() {
@@ -366,8 +379,12 @@ export default function LivePage() {
                     disabled={!connected || adding}
                     className="w-full text-xs text-white/70 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-purple-500/30 file:text-white"
                   />
-                  {thumbnailPreview && (
-                    <img src={thumbnailPreview} alt="" className="mt-2 h-20 rounded-lg object-cover border border-white/10" />
+                  {thumbnailPreview && thumbnailPreview.startsWith("blob:") && (
+                    <img
+                      src={thumbnailPreview}
+                      alt="Thumbnail preview"
+                      className="mt-2 h-20 rounded-lg object-cover border border-white/10"
+                    />
                   )}
                 </div>
                 <div className="space-y-2">

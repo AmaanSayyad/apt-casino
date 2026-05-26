@@ -49,12 +49,25 @@ export type KolAllocationPublic = {
 };
 
 export function normalizeKolSlug(raw: string): string {
-  return String(raw || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48);
+  const input = String(raw || '').trim().toLowerCase().slice(0, 64);
+  const chars: string[] = [];
+  let prevHyphen = false;
+  for (const ch of input) {
+    const code = ch.charCodeAt(0);
+    const isLower = code >= 97 && code <= 122;
+    const isDigit = code >= 48 && code <= 57;
+    if (isLower || isDigit) {
+      chars.push(ch);
+      prevHyphen = false;
+      continue;
+    }
+    if (ch === '-' && !prevHyphen && chars.length > 0) {
+      chars.push('-');
+      prevHyphen = true;
+    }
+  }
+  while (chars.length > 0 && chars[chars.length - 1] === '-') chars.pop();
+  return chars.join('').slice(0, 48);
 }
 
 export function isValidKolSlug(slug: string): boolean {

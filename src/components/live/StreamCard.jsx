@@ -12,15 +12,24 @@ import {
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
+const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be']);
+
 export function getYouTubeVideoId(url) {
   try {
     const u = new URL(url.startsWith('http') ? url : `https://${url}`);
-    if (u.hostname.includes('youtu.be')) return u.pathname.replace('/', '').split('/')[0] || null;
-    if (u.hostname.includes('youtube.com')) {
-      if (u.pathname.startsWith('/watch') || u.pathname.startsWith('/live')) {
-        return u.searchParams.get('v') || null;
-      }
-      if (u.pathname.startsWith('/embed/')) return u.pathname.split('/embed/')[1]?.split('/')[0] || null;
+    const host = u.hostname.toLowerCase();
+    if (!YOUTUBE_HOSTS.has(host)) return null;
+    if (host === 'youtu.be') {
+      const id = u.pathname.replace(/^\//, '').split('/')[0] || '';
+      return /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null;
+    }
+    if (u.pathname.startsWith('/watch') || u.pathname.startsWith('/live')) {
+      const v = u.searchParams.get('v') || '';
+      return /^[a-zA-Z0-9_-]{11}$/.test(v) ? v : null;
+    }
+    if (u.pathname.startsWith('/embed/')) {
+      const id = u.pathname.split('/embed/')[1]?.split('/')[0] || '';
+      return /^[a-zA-Z0-9_-]{11}$/.test(id) ? id : null;
     }
   } catch {
     /* ignore */

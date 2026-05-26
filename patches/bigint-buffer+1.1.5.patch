@@ -1,0 +1,61 @@
+diff --git a/node_modules/bigint-buffer/build/Makefile b/node_modules/bigint-buffer/build/Makefile
+index da8c330..212c32b 100644
+--- a/node_modules/bigint-buffer/build/Makefile
++++ b/node_modules/bigint-buffer/build/Makefile
+@@ -331,8 +331,8 @@ ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
+ endif
+ 
+ quiet_cmd_regen_makefile = ACTION Regenerating $@
+-cmd_regen_makefile = cd $(srcdir); /Users/amaan/.nvm/versions/node/v22.15.0/lib/node_modules/npm/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/Users/amaan/Library/Caches/node-gyp/22.15.0" "-Dnode_gyp_dir=/Users/amaan/.nvm/versions/node/v22.15.0/lib/node_modules/npm/node_modules/node-gyp" "-Dnode_lib_file=/Users/amaan/Library/Caches/node-gyp/22.15.0/<(target_arch)/node.lib" "-Dmodule_root_dir=/private/var/folders/l6/_b4rdx4x3_15qrh6r56hy29h0000gn/T/tmp-64466-fKCNmxlTktJJ/node_modules/bigint-buffer" "-Dnode_engine=v8" "--depth=." "-Goutput_dir=." "--generator-output=build" -I/private/var/folders/l6/_b4rdx4x3_15qrh6r56hy29h0000gn/T/tmp-64466-fKCNmxlTktJJ/node_modules/bigint-buffer/build/config.gypi -I/Users/amaan/.nvm/versions/node/v22.15.0/lib/node_modules/npm/node_modules/node-gyp/addon.gypi -I/Users/amaan/Library/Caches/node-gyp/22.15.0/include/node/common.gypi "--toplevel-dir=." binding.gyp
+-Makefile: $(srcdir)/../../../../../../../../../Users/amaan/Library/Caches/node-gyp/22.15.0/include/node/common.gypi $(srcdir)/../../../../../../../../../Users/amaan/.nvm/versions/node/v22.15.0/lib/node_modules/npm/node_modules/node-gyp/addon.gypi $(srcdir)/build/config.gypi $(srcdir)/binding.gyp
++cmd_regen_makefile = cd $(srcdir); /Users/amaan/.nvm/versions/node/v22.15.0/lib/node_modules/npm/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/Users/amaan/Library/Caches/node-gyp/22.15.0" "-Dnode_gyp_dir=/Users/amaan/.nvm/versions/node/v22.15.0/lib/node_modules/npm/node_modules/node-gyp" "-Dnode_lib_file=/Users/amaan/Library/Caches/node-gyp/22.15.0/<(target_arch)/node.lib" "-Dmodule_root_dir=/Users/amaan/Downloads/Github2/apt-casino-final/node_modules/bigint-buffer" "-Dnode_engine=v8" "--depth=." "-Goutput_dir=." "--generator-output=build" -I/Users/amaan/Downloads/Github2/apt-casino-final/node_modules/bigint-buffer/build/config.gypi -I/Users/amaan/.nvm/versions/node/v22.15.0/lib/node_modules/npm/node_modules/node-gyp/addon.gypi -I/Users/amaan/Library/Caches/node-gyp/22.15.0/include/node/common.gypi "--toplevel-dir=." binding.gyp
++Makefile: $(srcdir)/../../../../../.nvm/versions/node/v22.15.0/lib/node_modules/npm/node_modules/node-gyp/addon.gypi $(srcdir)/binding.gyp $(srcdir)/build/config.gypi $(srcdir)/../../../../../Library/Caches/node-gyp/22.15.0/include/node/common.gypi
+ 	$(call do_cmd,regen_makefile)
+ 
+ # "all" is a concatenation of the "all" targets from all the included
+diff --git a/node_modules/bigint-buffer/build/Release/bigint_buffer.node b/node_modules/bigint-buffer/build/Release/bigint_buffer.node
+index 03294af..eed6d5d 100755
+Binary files a/node_modules/bigint-buffer/build/Release/bigint_buffer.node and b/node_modules/bigint-buffer/build/Release/bigint_buffer.node differ
+diff --git a/node_modules/bigint-buffer/build/Release/obj.target/bigint_buffer/src/bigint-buffer.o b/node_modules/bigint-buffer/build/Release/obj.target/bigint_buffer/src/bigint-buffer.o
+index feccfee..7c16eea 100644
+Binary files a/node_modules/bigint-buffer/build/Release/obj.target/bigint_buffer/src/bigint-buffer.o and b/node_modules/bigint-buffer/build/Release/obj.target/bigint_buffer/src/bigint-buffer.o differ
+diff --git a/node_modules/bigint-buffer/build/config.gypi b/node_modules/bigint-buffer/build/config.gypi
+index bebb824..0cdaa24 100644
+--- a/node_modules/bigint-buffer/build/config.gypi
++++ b/node_modules/bigint-buffer/build/config.gypi
+@@ -491,12 +491,11 @@
+     "python": "/opt/homebrew/opt/python@3.13/bin/python3.13",
+     "standalone_static_library": 1,
+     "global_prefix": "/Users/amaan/.nvm/versions/node/v22.15.0",
+-    "local_prefix": "/private/var/folders/l6/_b4rdx4x3_15qrh6r56hy29h0000gn/T/tmp-64466-fKCNmxlTktJJ/node_modules/bigint-buffer",
++    "local_prefix": "/Users/amaan/Downloads/Github2/apt-casino-final/node_modules/bigint-buffer",
+     "globalconfig": "/Users/amaan/.nvm/versions/node/v22.15.0/etc/npmrc",
+-    "init_module": "/Users/amaan/.npm-init.js",
+     "userconfig": "/Users/amaan/.npmrc",
++    "init_module": "/Users/amaan/.npm-init.js",
+     "npm_version": "10.9.2",
+-    "force": "true",
+     "node_gyp": "/Users/amaan/.nvm/versions/node/v22.15.0/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js",
+     "cache": "/Users/amaan/.npm",
+     "user_agent": "npm/10.9.2 node/v22.15.0 darwin arm64 workspaces/false",
+diff --git a/node_modules/bigint-buffer/dist/node.js b/node_modules/bigint-buffer/dist/node.js
+index 513168c..b076e51 100644
+--- a/node_modules/bigint-buffer/dist/node.js
++++ b/node_modules/bigint-buffer/dist/node.js
+@@ -1,15 +1,8 @@
+ 'use strict';
+ 
+ Object.defineProperty(exports, "__esModule", { value: true });
++// Native bindings disabled: GHSA-3gc7-fjrx-p6mg (buffer overflow in toBigIntLE). Pure JS only.
+ let converter;
+-{
+-    try {
+-        converter = require('bindings')('bigint_buffer');
+-    }
+-    catch (e) {
+-        console.warn('bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)');
+-    }
+-}
+ /**
+  * Convert a little-endian buffer into a BigInt.
+  * @param buf The little-endian buffer to convert
