@@ -7,17 +7,17 @@ const DEFAULT_SITE_URL = 'https://aptcasino.com';
 
 export const SITE_NAME = 'APT Casino';
 
-/** Public path — same asset as `public/APT-Casino-Logo.png` and `src/app/icon.png`. */
+/** White spade on purple gradient — `public/` + `src/app/icon.png` + `src/app/apple-icon.png`. */
 export const SITE_ICON_PATH = '/APT-Casino-Logo.png';
 
 export const siteIcons = {
   icon: [
-    { url: SITE_ICON_PATH, type: 'image/png' },
-    { url: SITE_ICON_PATH, sizes: '32x32', type: 'image/png' },
-    { url: SITE_ICON_PATH, sizes: '16x16', type: 'image/png' },
+    { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    { url: SITE_ICON_PATH, sizes: '512x512', type: 'image/png' },
   ],
-  shortcut: [{ url: SITE_ICON_PATH, type: 'image/png' }],
-  apple: [{ url: SITE_ICON_PATH, type: 'image/png' }],
+  shortcut: [{ url: '/favicon-32x32.png', type: 'image/png' }],
+  apple: [{ url: SITE_ICON_PATH, sizes: '180x180', type: 'image/png' }],
 };
 
 export const DEFAULT_TITLE = 'APT Casino';
