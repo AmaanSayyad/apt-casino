@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import MainnetWarning from "@/components/MainnetWarning";
 const inter = Inter({ subsets: ["latin"] });
 
+import { Analytics } from "@vercel/analytics/next";
 import { rootMetadata } from "@/lib/siteMetadata";
 
 export const metadata = rootMetadata;
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
           </main>
           <Footer />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
