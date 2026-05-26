@@ -11,6 +11,7 @@ import {
 } from '@/lib/server/profileLedger';
 import { getCashbackStatus } from '@/lib/server/cashback';
 import { getDepositAptcBonusStatus } from '@/lib/server/depositAptcBonus';
+import { getDailyStreakStatus } from '@/lib/server/dailyStreak';
 import { getFeeTiersPublicPayload } from '@/lib/server/feeTiers';
 import { resolveReferralChain } from '@/lib/server/referrals';
 
@@ -51,6 +52,7 @@ export async function GET(req: NextRequest) {
     onChainBalanceNative,
     cashbackStatus,
     depositAptcBonus,
+    dailyStreakStatus,
   ] = await Promise.all([
     supabase
       .from('user_profiles')
@@ -80,6 +82,7 @@ export async function GET(req: NextRequest) {
     fetchOnChainNativeBalance(chainId, wallet),
     chainId === 'solana' ? getCashbackStatus(wallet, chainId) : Promise.resolve(null),
     getDepositAptcBonusStatus(wallet, chainId),
+    getDailyStreakStatus(wallet, chainId),
   ]);
 
   if (depositsFetch.error) {
@@ -198,6 +201,7 @@ export async function GET(req: NextRequest) {
           recent: depositAptcBonus.recent,
         }
       : null,
+    dailyStreak: dailyStreakStatus,
     feeTiers: getFeeTiersPublicPayload(),
   });
 }

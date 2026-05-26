@@ -3,6 +3,9 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Telegram/WhatsApp/etc. need OG tags in <head>, not streamed into <body>
+  htmlLimitedBots:
+    /TelegramBot|Twitterbot|facebookexternalhit|LinkedInBot|Slackbot|Discordbot|WhatsApp|bingbot|Googlebot|Applebot|Pinterest|Embedly|preview/i,
   experimental: {
     optimizePackageImports: ['react-icons', 'lucide-react'],
   },

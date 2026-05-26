@@ -16,6 +16,9 @@ export const SITE_NAME = 'APT Casino';
 /** White spade on purple gradient — `public/` + `src/app/icon.png` + `src/app/apple-icon.png`. */
 export const SITE_ICON_PATH = '/APT-Casino-Logo.png';
 
+/** Static 1200×630 PNG for Telegram / WhatsApp / Discord (must not be JS-generated). */
+export const DEFAULT_OG_IMAGE_PATH = '/og/social-share.png';
+
 export const siteIcons = {
   icon: [
     { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -75,7 +78,7 @@ export function buildPageMetadata(opts = {}) {
   const path = opts.path ?? '/';
   const canonical = new URL(path.startsWith('/') ? path : `/${path}`, siteUrl).toString();
 
-  const ogImagePath = opts.ogImagePath ?? '/opengraph-image';
+  const ogImagePath = opts.ogImagePath ?? DEFAULT_OG_IMAGE_PATH;
   const ogImage = new URL(ogImagePath.startsWith('/') ? ogImagePath : `/${ogImagePath}`, siteUrl).toString();
 
   return {
@@ -94,9 +97,11 @@ export function buildPageMetadata(opts = {}) {
       images: [
         {
           url: ogImage,
+          secureUrl: ogImage,
           width: 1200,
           height: 630,
           alt: SITE_NAME,
+          type: 'image/png',
         },
       ],
     },
@@ -104,7 +109,7 @@ export function buildPageMetadata(opts = {}) {
       card: 'summary_large_image',
       title,
       description,
-      images: [ogImage],
+      images: [{ url: ogImage, alt: SITE_NAME }],
     },
   };
 }

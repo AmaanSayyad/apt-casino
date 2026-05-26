@@ -32,6 +32,7 @@ import {
 import ProfileEditModal from './ProfileEditModal';
 import CashbackPanel from './CashbackPanel';
 import DepositAptcBonusPanel from './DepositAptcBonusPanel';
+import DailyStreakPanel from './DailyStreakPanel';
 const TABS = [
   { id: 'overview', label: 'Overview', icon: FaChartLine },
   { id: 'games', label: 'Games', icon: FaDice },
@@ -681,6 +682,13 @@ function EarnTab({ profile, referralStats, loading, chain, wallet, demoMode, onR
 
   return (
     <div className="space-y-6">
+      <DailyStreakPanel
+        dailyStreak={profile?.dailyStreak}
+        chain={chain}
+        wallet={wallet}
+        demoMode={demoMode}
+        onClaimed={onRefresh}
+      />
       <DepositAptcBonusPanel
         depositAptcBonus={profile?.depositAptcBonus}
         chain={chain}
