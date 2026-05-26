@@ -1,6 +1,6 @@
 # APT-Casino -  Real-Time GambleFi as a Decentralized Probabilistic Compute Layer on Solana and Aptos
 
-**Live:** [https://aptcasino.fun](https://aptcasino.fun)
+**Live:** [https://aptcasino.fun](https://aptcasino.fun) · **Litepaper:** [https://aptcasino.fun/litepaper](https://aptcasino.fun/litepaper)
 
 A couple of days back, I was was on etherscan exploring some transactions and saw an advertisement of [https://stake.com/](url) which was giving 200% bonus on first deposit, I deposited 120 USDT into stake.com they gave 360 USDT as total balance in their controlled custodial wallet and when I started playing casino games I was shocked to see that I was only able to play with $1 per game and was unable to increase the betting amount beyond $1 coz and when I tried to explore and play other games on the platform the issue was persisting, I reached the customer support and got to know that this platform has cheated him under the name of wager limits as I was using the bonus scheme of 200%.
 
@@ -332,7 +332,7 @@ node scripts/deploy.js mainnet
 Copy `.env.example` to `.env`. Never commit `.env` (see root `.gitignore`).
 
 Key groups:
-- **Site** — `NEXT_PUBLIC_SITE_URL`, pitch deck / social URLs
+- **Site** — `NEXT_PUBLIC_SITE_URL` (canonical origin, e.g. `https://aptcasino.fun`; litepaper at `/litepaper`), pitch deck / social URLs
 - **Solana** — `NEXT_PUBLIC_SOLANA_NETWORK`, RPC, `NEXT_PUBLIC_SOL_TREASURY_ADDRESS`, `SOL_TREASURY_SECRET_KEY`, `NEXT_PUBLIC_APT_CASINO_PROGRAM_ID`
 - **Aptos** — `NEXT_PUBLIC_APTOS_NETWORK`, `NEXT_PUBLIC_CASINO_MODULE_ADDRESS`, `TREASURY_PRIVATE_KEY`
 - **Supabase** — `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`

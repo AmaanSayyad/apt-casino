@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { litepaperPath } from '@/lib/siteMetadata';
 import dynamic from 'next/dynamic';
 import { ROADMAP_DIAGRAM_CARDS } from '@/lib/config/roadmapDiagrams';
 
@@ -120,7 +121,7 @@ export default function NewsUpdates() {
             <h2 className="text-2xl md:text-3xl font-display font-bold text-white">What&apos;s coming</h2>
           </div>
           <Link
-            href="/litepaper#roadmap"
+            href={litepaperPath('roadmap')}
             className="text-xs uppercase tracking-[0.2em] text-white/40 hover:text-white/70 transition-colors"
           >
             Full litepaper →

@@ -4,6 +4,8 @@
  * API falls back to this list when the table is empty.
  */
 
+import { getLitepaperUrl } from '@/lib/siteMetadata';
+
 /** @typedef {'Platform'|'Governance'|'Partnership'|'Security'|'Community'|'Tournaments'} RoadmapCategory */
 /** @typedef {'planned'|'in_progress'} RoadmapStatus */
 
@@ -26,7 +28,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Fair SPL launch on Bags with transparent liquidity — initial 2% protocol buy (~20M APTC) at TGE, no VC unlock overhang.',
     category: 'Platform',
     status: 'in_progress',
-    link: '/litepaper#aptc-token',
+    link: getLitepaperUrl('aptc-token'),
     sortOrder: 10,
   },
   {
@@ -76,7 +78,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Post-TGE market purchases on Bags, Meteora, and open DEX until treasury holds 10% of max supply — funds community, LP, staking, and ops buckets.',
     category: 'Governance',
     status: 'in_progress',
-    link: '/litepaper#aptc-allocation',
+    link: getLitepaperUrl('aptc-allocation'),
     sortOrder: 25,
   },
   {
@@ -106,7 +108,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Scheduled open-market buys from gross gaming revenue with configurable burn, staker, treasury, and market splits.',
     category: 'Platform',
     status: 'planned',
-    link: '/litepaper#ggr-flywheel',
+    link: getLitepaperUrl('ggr-flywheel'),
     sortOrder: 40,
   },
   {
@@ -156,7 +158,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Independent security review of Aptos game modules and treasury paths before scaling TVL and external integrations.',
     category: 'Security',
     status: 'planned',
-    link: '/litepaper#security',
+    link: getLitepaperUrl('security'),
     sortOrder: 65,
   },
   {
@@ -186,7 +188,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Published breakdown of GGR, buybacks, burns, staking emissions, and partnership grants — aligned with the 100M APTC allocation chart.',
     category: 'Governance',
     status: 'planned',
-    link: '/litepaper#aptc-allocation',
+    link: getLitepaperUrl('aptc-allocation'),
     sortOrder: 85,
   },
   {
@@ -216,7 +218,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Third live play chain in the registry — Sui house balance mode, treasury env, and provably fair game API routes.',
     category: 'Platform',
     status: 'planned',
-    link: '/litepaper#multichain-topology',
+    link: getLitepaperUrl('multichain-topology'),
     sortOrder: 100,
   },
   {
@@ -226,7 +228,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Community votes on buyback %, burn ratio, referral cliff, and staking emission — starting with off-chain signaling, moving on-chain.',
     category: 'Governance',
     status: 'planned',
-    link: '/litepaper#roadmap',
+    link: getLitepaperUrl('roadmap'),
     sortOrder: 105,
   },
   {
@@ -236,7 +238,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Server house balance on Base with the same chain registry pattern — unified profile and leaderboard across Solana, Aptos, and EVM.',
     category: 'Platform',
     status: 'planned',
-    link: '/litepaper#multichain-topology',
+    link: getLitepaperUrl('multichain-topology'),
     sortOrder: 110,
   },
   {
@@ -256,7 +258,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Open hub API for third-party builders to publish games with revenue share, shared RNG proofs, and APTC fee routing.',
     category: 'Platform',
     status: 'planned',
-    link: '/litepaper#scope',
+    link: getLitepaperUrl('scope'),
     sortOrder: 120,
   },
   {
@@ -296,7 +298,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
       'Largest transparent GambleFi hub — listed third-party games, creator revenue share, and unified APTC economics across chains.',
     category: 'Platform',
     status: 'planned',
-    link: '/litepaper#roadmap',
+    link: getLitepaperUrl('roadmap'),
     sortOrder: 140,
   },
   {

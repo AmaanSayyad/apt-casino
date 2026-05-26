@@ -36,7 +36,7 @@ flowchart TD
 
 - [ ] Supabase migrations applied (`supabase/README.md`)
 - [ ] `.env.example` copied to Vercel with all required keys
-- [ ] `NEXT_PUBLIC_SITE_URL` set to `https://aptcasino.fun`
+- [ ] `NEXT_PUBLIC_SITE_URL` set to `https://aptcasino.fun` (litepaper: `https://aptcasino.fun/litepaper`)
 - [ ] Solana RPC URL (paid provider recommended for mainnet)
 - [ ] Livepeer API key for `/live` streams
 

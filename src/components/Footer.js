@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import GradientBorderButton from "./GradientBorderButton";
 import { PITCH_DECK_URL } from "@/lib/pitchDeck";
+import { LITEPAPER_PATH } from "@/lib/siteMetadata";
 import { FaGlobe, FaChevronDown, FaChevronUp, FaMobileAlt, FaLock, FaShieldAlt, FaCoins } from "react-icons/fa";
 
 export default function Footer() {
@@ -149,7 +150,7 @@ export default function Footer() {
           <ul className="space-y-3 mt-4">
             {[
               { name: "Home", path: "/" },
-              { name: "Litepaper", path: "/litepaper" },
+              { name: "Litepaper", path: LITEPAPER_PATH },
               { name: "Pitch deck", path: PITCH_DECK_URL, external: true },
               { name: "Games", path: "/game" },
               { name: "Live", path: "/live" },

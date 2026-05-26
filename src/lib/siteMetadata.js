@@ -5,6 +5,12 @@
 
 export const DEFAULT_SITE_URL = 'https://aptcasino.fun';
 
+/** In-app route for the litepaper page. */
+export const LITEPAPER_PATH = '/litepaper';
+
+/** Canonical litepaper URL on the production domain. */
+export const DEFAULT_LITEPAPER_URL = `${DEFAULT_SITE_URL}${LITEPAPER_PATH}`;
+
 export const SITE_NAME = 'APT Casino';
 
 /** White spade on purple gradient — `public/` + `src/app/icon.png` + `src/app/apple-icon.png`. */
@@ -47,6 +53,18 @@ export function buildReferralShortLink(code) {
   const c = String(code || '').trim().toUpperCase();
   if (!c) return '';
   return `${getPublicShareOrigin()}/r/${c}`;
+}
+
+/** Canonical litepaper URL (honours NEXT_PUBLIC_SITE_URL). @param {string} [fragment] Section id, with or without `#`. */
+export function getLitepaperUrl(fragment = '') {
+  const hash = fragment ? (fragment.startsWith('#') ? fragment : `#${fragment}`) : '';
+  return `${getSiteUrl()}${LITEPAPER_PATH}${hash}`;
+}
+
+/** Next.js Link href — path + optional section hash. */
+export function litepaperPath(fragment = '') {
+  const hash = fragment ? (fragment.startsWith('#') ? fragment : `#${fragment}`) : '';
+  return `${LITEPAPER_PATH}${hash}`;
 }
 
 /** @param {{ title?: string; description?: string; path?: string }} opts */

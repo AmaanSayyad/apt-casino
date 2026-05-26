@@ -8,6 +8,12 @@ import {
 } from '@/lib/config/tokenomics';
 
 export { PITCH_DECK_EMBED, PITCH_DECK_URL } from '@/lib/pitchDeck';
+export {
+  DEFAULT_LITEPAPER_URL,
+  getLitepaperUrl,
+  litepaperPath,
+  LITEPAPER_PATH,
+} from '@/lib/siteMetadata';
 
 export const LITEPAPER_VERSION = 'v1.0.0';
 export const LITEPAPER_UPDATED = '2026-05-19';

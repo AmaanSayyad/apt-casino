@@ -23,6 +23,7 @@ import { usePlayWallet } from '@/hooks/usePlayWallet';
 import { DEFAULT_PLAY_CHAIN, getPlayChainConfig, rawToDisplay, displayToRaw } from '@/lib/chains/registry';
 import { fetchPlayBalance, postPlayWithdraw } from '@/lib/play/clientApi';
 import { OPEN_BALANCE_MODAL_EVENT } from '@/hooks/useWalletStatus';
+import { LITEPAPER_PATH } from '@/lib/siteMetadata';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -366,7 +367,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", path: "/" },
-    { name: "Litepaper", path: "/litepaper" },
+    { name: "Litepaper", path: LITEPAPER_PATH },
     { name: "Games", path: "/game" },
     { name: "Live", path: "/live" },
     { name: "Leaderboard", path: "/leaderboard" },
