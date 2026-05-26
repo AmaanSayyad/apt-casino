@@ -1,3 +1,4 @@
+import { getSiteUrl } from '@/lib/siteMetadata';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { hashPortalPassword, verifyPortalPassword } from '@/lib/server/kolPortalAuth';
 
@@ -100,7 +101,7 @@ export function formatKolAllocationPublic(
   const unlockMs = new Date(String(row.unlock_at)).getTime();
   const now = Date.now();
   const effective = effectiveStatus(row);
-  const origin = siteOrigin || process.env.NEXT_PUBLIC_SITE_URL || 'https://aptcasino.com';
+  const origin = siteOrigin || getSiteUrl();
 
   return {
     id: row.id,

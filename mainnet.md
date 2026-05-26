@@ -36,7 +36,7 @@ flowchart TD
 
 - [ ] Supabase migrations applied (`supabase/README.md`)
 - [ ] `.env.example` copied to Vercel with all required keys
-- [ ] `NEXT_PUBLIC_SITE_URL` set to production domain
+- [ ] `NEXT_PUBLIC_SITE_URL` set to `https://aptcasino.fun`
 - [ ] Solana RPC URL (paid provider recommended for mainnet)
 - [ ] Livepeer API key for `/live` streams
 
@@ -51,7 +51,7 @@ flowchart TD
 Minimal set — see `.env.example` for the full list:
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://aptcasino.com
+NEXT_PUBLIC_SITE_URL=https://aptcasino.fun
 NEXT_PUBLIC_DEFAULT_PLAY_CHAIN=solana
 
 # Solana

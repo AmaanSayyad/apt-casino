@@ -1,9 +1,9 @@
 /**
  * Shared Open Graph / Twitter Card metadata for link previews (X, Discord, Telegram).
- * Set NEXT_PUBLIC_SITE_URL in production (e.g. https://aptcasino.com).
+ * Set NEXT_PUBLIC_SITE_URL in production (e.g. https://aptcasino.fun).
  */
 
-const DEFAULT_SITE_URL = 'https://aptcasino.com';
+export const DEFAULT_SITE_URL = 'https://aptcasino.fun';
 
 export const SITE_NAME = 'APT Casino';
 

@@ -6,6 +6,7 @@ import {
 } from '@/lib/solana/backend-client';
 import { getSolanaTreasuryAddress } from '@/lib/solana/config';
 import { getResolvedFeeWalletAddress } from '@/lib/chains/registry';
+import { getSiteUrl } from '@/lib/siteMetadata';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import {
   creditHouseBalance,
@@ -243,7 +244,7 @@ export async function solanaDepositPOST(request: Request) {
       }
     }
 
-    await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || ''}/api/players/track`, {
+    await fetch(`${getSiteUrl()}/api/players/track`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet, chain: CHAIN }),
