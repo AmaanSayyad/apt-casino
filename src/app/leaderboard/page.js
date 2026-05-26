@@ -120,7 +120,7 @@ export default function LeaderboardPage() {
   );
 
   return (
-    <div className="site-page-top min-h-screen bg-gradient-to-b from-sharp-black to-[#150012] text-white pb-16 px-4 md:px-12">
+    <div className="site-page-top site-page-pad-x min-h-[100dvh] bg-gradient-to-b from-sharp-black to-[#150012] pb-[max(4rem,env(safe-area-inset-bottom))] text-white md:min-h-screen md:pb-16">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <header className="text-center">

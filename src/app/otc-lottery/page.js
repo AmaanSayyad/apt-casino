@@ -303,7 +303,7 @@ export default function OtcLotteryPage() {
   const step = registeredEntry ? 4 : solAddress ? (parseFloat(solAmount) > 0 ? 3 : 2) : 1;
 
   return (
-    <div className="min-h-screen bg-[#070005] text-white overflow-x-hidden">
+    <div className="site-game-page min-h-[100dvh] bg-[#070005] text-white md:min-h-screen">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-red-magic/10 blur-[120px]" />
@@ -311,7 +311,7 @@ export default function OtcLotteryPage() {
         <div className="absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-purple-600/8 blur-[90px]" />
       </div>
 
-      <div className="site-page-top relative pb-20 px-4 md:px-8 lg:px-12 xl:px-16 max-w-[1600px] mx-auto">
+      <div className="site-page-top site-page-pad-x relative mx-auto max-w-[1600px] pb-20">
         {/* Hero */}
         <header className="relative mb-12 md:mb-16">
           <div className="p-[1px] rounded-2xl bg-gradient-to-r from-red-magic via-purple-500/80 to-blue-magic">

@@ -110,7 +110,7 @@ function FairnessVerifyContent() {
       : null;
 
   return (
-    <div className="site-page-top min-h-screen bg-[#070005] text-white px-4 py-10">
+    <div className="site-page-top site-page-pad-x min-h-[100dvh] bg-[#070005] py-8 text-white md:min-h-screen md:py-10">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-start gap-4 mb-8">
           <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25">
@@ -311,7 +311,7 @@ export default function FairnessVerifyPage() {
   return (
     <Suspense
       fallback={
-        <div className="site-page-top min-h-screen bg-[#070005] text-white px-4 py-10">
+        <div className="site-page-top site-page-pad-x min-h-[100dvh] bg-[#070005] py-8 text-white md:min-h-screen md:py-10">
           <div className="max-w-2xl mx-auto animate-pulse space-y-3">
             <div className="h-10 w-64 bg-white/10 rounded" />
             <div className="h-24 bg-white/5 rounded-xl" />

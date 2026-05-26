@@ -432,7 +432,7 @@ export default function Mines() {
 
   // Header Section
   const renderHeader = () => (
-    <div className="relative text-white px-4 md:px-8 lg:px-20 mb-8">
+    <div className="relative text-white site-page-pad-x mb-8">
       {/* Background Elements */}
       <div className="absolute top-5 -right-32 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
       <div className="absolute top-28 left-1/3 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
@@ -573,7 +573,7 @@ export default function Mines() {
 
   // Main Content Section
   const renderMainContent = () => (
-    <div className="flex flex-col lg:flex-row gap-4 px-4 md:px-8 lg:px-20">
+    <div className="flex flex-col lg:flex-row gap-4 site-page-pad-x">
       {/* Sidebar/Tabs */}
       <div className="w-full lg:w-1/3 xl:w-1/4">
         <motion.div
@@ -620,7 +620,7 @@ export default function Mines() {
 
   // Game Info Section
   const renderGameInfo = () => (
-    <div className="mt-10 px-4 md:px-8 lg:px-20">
+    <div className="mt-10 site-page-pad-x">
       {/* Enhanced Game Detail */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -1061,7 +1061,7 @@ export default function Mines() {
   // We don't need this function anymore as we've added IDs directly to the components
 
   return (
-    <motion.div className="min-h-screen bg-[#070005] bg-gradient-to-b from-[#070005] to-[#0e0512] pb-28 md:pb-20 text-white mines-bg custom-scrollbar">
+    <motion.div className="site-game-page bg-[#070005] bg-gradient-to-b from-[#070005] to-[#0e0512] text-white mines-bg custom-scrollbar">
       <div className="site-page-top">
         {renderHeader()}
         {renderMainContent()}

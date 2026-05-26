@@ -308,7 +308,7 @@ export default function LivePage() {
 
   return (
     <>
-      <div className="site-page-top min-h-screen pb-16 px-4 md:px-10 lg:px-24 xl:px-36 bg-[#070005]">
+      <div className="site-page-top site-page-pad-x min-h-[100dvh] bg-[#070005] pb-[max(4rem,env(safe-area-inset-bottom))] md:min-h-screen md:pb-16">
         <div className="bg-[#070005]/90 border border-purple-500/20 rounded-2xl p-4 md:p-6 shadow-xl backdrop-blur mb-6">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h1 className="text-2xl md:text-3xl font-display font-semibold text-white">Live</h1>

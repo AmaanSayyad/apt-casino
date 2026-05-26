@@ -10,9 +10,10 @@ export async function generateMetadata({ params }) {
   }
 
   return buildPageMetadata({
-    title: `Join ${SITE_NAME} — referral ${code}`,
-    description: `You were invited to ${SITE_NAME}. ${DEFAULT_DESCRIPTION}`,
+    title: `Join ${SITE_NAME} — invited by ${code}`,
+    description: `You're invited to ${SITE_NAME}. Use code ${code} — provably fair games on Solana & Aptos. Deposit, play, and earn APTC via referrals.`,
     path: `/r/${code}`,
+    ogImagePath: `/r/${code}/opengraph-image`,
   });
 }
 

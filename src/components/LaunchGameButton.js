@@ -13,7 +13,7 @@ export default function LaunchGameButton() {
   
   return (
     <a
-      className="text-white font-display cursor-pointer rounded-xl py-3 px-6 smooth-gradient"
+      className="inline-flex items-center justify-center rounded-xl px-6 py-3 font-display text-white smooth-gradient"
       type="button" 
       href="/game"
     >

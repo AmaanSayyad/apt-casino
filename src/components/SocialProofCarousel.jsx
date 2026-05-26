@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 
 /** Single advisor reveal — blurred teaser (matches Bynomo landing pattern). */
-const ADVISOR_IMAGE = '/Lucas Advisor.JPG';
+const ADVISOR_IMAGE = '/lucas-advisor.jpg';
 const ADVISOR_ALT = 'Confirmed advisor — BNB Chain ecosystem';
 
 export default function SocialProofCarousel() {

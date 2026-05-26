@@ -22,10 +22,12 @@ export default function PageShell({
   }[maxWidth] || 'max-w-6xl';
 
   return (
-    <div className={`site-page-top min-h-screen bg-gradient-to-b from-sharp-black via-[#0a0008] to-[#150012] text-white pb-16 px-4 md:px-8 lg:px-12 ${className}`}>
+    <div
+      className={`site-page-top site-page-pad-x min-h-[100dvh] bg-gradient-to-b from-sharp-black via-[#0a0008] to-[#150012] pb-[max(4rem,env(safe-area-inset-bottom))] text-white md:min-h-screen md:pb-16 ${className}`}
+    >
       <div className={`${maxW} mx-auto`}>
         {breadcrumbs.length > 0 && (
-          <nav className="flex items-center gap-2 text-sm text-white/45 mb-6" aria-label="Breadcrumb">
+          <nav className="site-breadcrumb mb-5 flex items-center gap-2 text-sm text-white/45 md:mb-6" aria-label="Breadcrumb">
             {breadcrumbs.map((crumb, i) => (
               <span key={crumb.label} className="flex items-center gap-2">
                 {i > 0 && <span className="text-white/25">/</span>}
@@ -41,11 +43,11 @@ export default function PageShell({
           </nav>
         )}
 
-        <header className="mb-10 md:mb-12">
+        <header className="mb-8 md:mb-12">
           {badge && (
-            <p className="text-[10px] uppercase tracking-[0.35em] text-purple-300/80 mb-3">{badge}</p>
+            <p className="mb-2 text-[10px] uppercase tracking-[0.35em] text-purple-300/80 md:mb-3">{badge}</p>
           )}
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display text-white leading-tight">
+          <h1 className="font-display text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
             {typeof title === 'string' ? (
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic via-fuchsia-400 to-blue-magic">
                 {title}

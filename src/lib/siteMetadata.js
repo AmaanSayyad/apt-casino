@@ -67,7 +67,7 @@ export function litepaperPath(fragment = '') {
   return `${LITEPAPER_PATH}${hash}`;
 }
 
-/** @param {{ title?: string; description?: string; path?: string }} opts */
+/** @param {{ title?: string; description?: string; path?: string; ogImagePath?: string }} opts */
 export function buildPageMetadata(opts = {}) {
   const siteUrl = getSiteUrl();
   const title = opts.title ?? DEFAULT_TITLE;
@@ -75,7 +75,8 @@ export function buildPageMetadata(opts = {}) {
   const path = opts.path ?? '/';
   const canonical = new URL(path.startsWith('/') ? path : `/${path}`, siteUrl).toString();
 
-  const ogImage = new URL('/opengraph-image', siteUrl).toString();
+  const ogImagePath = opts.ogImagePath ?? '/opengraph-image';
+  const ogImage = new URL(ogImagePath.startsWith('/') ? ogImagePath : `/${ogImagePath}`, siteUrl).toString();
 
   return {
     title,

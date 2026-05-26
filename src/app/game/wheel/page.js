@@ -487,7 +487,7 @@ export default function Home() {
     };
 
     return (
-      <div className="site-page-top relative text-white px-4 md:px-8 lg:px-20 mb-8">
+      <div className="site-page-top relative text-white site-page-pad-x mb-8">
         {/* Background Elements */}
         <div className="absolute top-5 -right-32 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
         <div className="absolute top-28 left-1/3 w-32 h-32 bg-green-500/10 rounded-full blur-2xl"></div>
@@ -629,12 +629,12 @@ export default function Home() {
 
 
   return (
-    <div className="min-h-screen bg-[#070005] text-white pb-20">
+    <div className="site-game-page bg-[#070005] text-white">
       {/* Header */}
       {renderHeader()}
 
       {/* Main Game Section */}
-      <div className="relative z-10 px-4 md:px-8 lg:px-20 pb-10">
+      <div className="site-page-pad-x relative z-10 pb-10">
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="w-full lg:w-2/3">
             <GameWheel
@@ -676,7 +676,7 @@ export default function Home() {
       </div>
 
       {/* Video and Description Section */}
-      <div className="relative z-0 px-4 md:px-8 lg:px-20 mt-4 mb-12">
+      <div className="relative z-0 site-page-pad-x mt-4 mb-12">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="w-full lg:w-1/2">
             <WheelVideo />
@@ -688,7 +688,7 @@ export default function Home() {
       </div>
 
       {/* Strategy Guide and Probabilities Section */}
-      <div id="strategy-guide" className="px-4 md:px-8 lg:px-20 my-12 scroll-mt-24">
+      <div id="strategy-guide" className="site-page-pad-x my-12 scroll-mt-24">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="w-full lg:w-1/2">
             <WheelStrategyGuide />
@@ -700,7 +700,7 @@ export default function Home() {
       </div>
 
       {/* Leaderboard + History */}
-      <div className="px-4 md:px-8 lg:px-20 my-12">
+      <div className="site-page-pad-x my-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <WheelLeaderboard />
           <div id="history" className="scroll-mt-24">

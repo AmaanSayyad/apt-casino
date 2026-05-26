@@ -1,9 +1,9 @@
 /**
- * Advisory board — single blurred advisor image (public/Lucas Advisor.JPG).
+ * Advisory board — single blurred advisor image (public/lucas-advisor.jpg).
  */
 
 export const ADVISOR_REVEAL = {
-  src: '/Lucas Advisor.JPG',
+  src: '/lucas-advisor.jpg',
   alt: 'Confirmed advisor — BNB Chain ecosystem',
   badge: 'Confirmed',
 };

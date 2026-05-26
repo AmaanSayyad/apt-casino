@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
         <Providers>
           <Navbar />
           <MainnetWarning />
-          <main id="site-main" className="site-main">
+          <main id="site-main" className="site-main min-w-0 w-full">
             {children}
           </main>
           <Footer />

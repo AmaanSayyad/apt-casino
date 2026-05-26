@@ -17,6 +17,20 @@ const nextConfig = {
   },
   poweredByHeader: false,
   reactStrictMode: false,
+  async redirects() {
+    return [
+      {
+        source: '/Lucas Advisor.JPG',
+        destination: '/lucas-advisor.jpg',
+        permanent: true,
+      },
+      {
+        source: '/Lucas%20Advisor.JPG',
+        destination: '/lucas-advisor.jpg',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

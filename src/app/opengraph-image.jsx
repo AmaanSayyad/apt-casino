@@ -27,59 +27,65 @@ export default async function Image() {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: 'linear-gradient(145deg, #070005 0%, #1a0510 45%, #3d0a1f 100%)',
-          padding: 56,
+          background: 'linear-gradient(135deg, #070005 0%, #1a0510 40%, #3d0a28 100%)',
+          padding: 48,
           fontFamily: 'system-ui, sans-serif',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 700,
-              letterSpacing: 2,
-              color: '#f5c6d8',
-              textTransform: 'uppercase',
-            }}
-          >
-            {SITE_NAME}
-          </div>
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 6,
+            background: 'linear-gradient(90deg, #ec4899, #8b5cf6, #3b82f6)',
+          }}
+        />
+
+        <div
+          style={{
+            fontSize: 24,
+            fontWeight: 700,
+            letterSpacing: 3,
+            color: '#f5c6d8',
+            textTransform: 'uppercase',
+          }}
+        >
+          {SITE_NAME}
         </div>
 
-        <div style={{ display: 'flex', flex: 1, alignItems: 'center', gap: 40 }}>
+        <div style={{ display: 'flex', flex: 1, alignItems: 'center', gap: 32, marginTop: 20 }}>
           {heroSrc ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={heroSrc}
               alt=""
-              width={420}
-              height={236}
+              width={360}
+              height={202}
               style={{
-                borderRadius: 16,
+                borderRadius: 18,
                 objectFit: 'cover',
-                border: '2px solid rgba(255,255,255,0.12)',
+                border: '2px solid rgba(236,72,153,0.35)',
               }}
             />
           ) : null}
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 16 }}>
             <div
               style={{
-                fontSize: 52,
+                fontSize: 48,
                 fontWeight: 800,
                 color: '#ffffff',
-                lineHeight: 1.1,
-                maxWidth: 640,
+                lineHeight: 1.08,
               }}
             >
-              Multichain GambleFi
+              100% on-chain randomness
             </div>
             <div
               style={{
-                fontSize: 26,
-                color: 'rgba(255,255,255,0.82)',
-                lineHeight: 1.35,
-                maxWidth: 620,
+                fontSize: 22,
+                color: 'rgba(255,255,255,0.8)',
+                lineHeight: 1.4,
               }}
             >
               {DEFAULT_DESCRIPTION}
@@ -91,7 +97,7 @@ export default async function Image() {
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            fontSize: 22,
+            fontSize: 20,
             color: 'rgba(245,198,216,0.9)',
           }}
         >

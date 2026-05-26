@@ -90,7 +90,7 @@ export default function Plinko() {
       maxWin: loading ? '…' : display.maxWin,
     };
     return (
-      <div className="site-page-top relative text-white px-4 md:px-8 lg:px-20 mb-8">
+      <div className="site-page-top site-page-pad-x relative mb-6 text-white md:mb-8">
         <div className="relative">
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
             {/* Left Column - Game Info */}
@@ -260,12 +260,12 @@ export default function Plinko() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070005] text-white pb-24 md:pb-12">
+    <div className="site-game-page bg-[#070005] text-white">
       {/* Header */}
       <PlinkoHeader />
 
       {/* Main Game Area */}
-      <div className="px-3 sm:px-4 md:px-8 lg:px-20 pb-8 sm:pb-12">
+      <div className="site-page-pad-x pb-8 sm:pb-12">
         <div className="flex flex-col xl:flex-row gap-4 sm:gap-8">
           {/* Left Panel - Game Controls */}
           <div className="w-full xl:w-1/4">
@@ -294,7 +294,7 @@ export default function Plinko() {
       </div>
 
       {/* Game Description with Video */}
-      <div className="px-4 md:px-8 lg:px-20 pb-12">
+      <div className="site-page-pad-x pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Video on left */}
           <div>
@@ -361,7 +361,7 @@ export default function Plinko() {
       </div>
 
       {/* Game History Section */}
-      <div className="px-4 md:px-8 lg:px-20 pb-12 scroll-mt-20" id="history">
+      <div className="site-page-pad-x pb-12 scroll-mt-20" id="history">
         <div className="relative bg-gradient-to-br from-[#1A0015]/95 to-[#0d0008]/90 rounded-xl border border-purple-700/30 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
           <div className="absolute top-0 left-0 right-0 h-[5px] bg-gradient-to-r from-pink-500 via-fuchsia-500 to-blue-500 z-10" />
           <div className="p-6 pt-7">
@@ -371,7 +371,7 @@ export default function Plinko() {
       </div>
 
       {/* Strategy + Probabilities + (side-by-side) Payouts & Leaderboard */}
-      <div className="px-4 md:px-8 lg:px-20 pb-20">
+      <div className="site-page-pad-x pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2 scroll-mt-20" id="strategy">
             <PlinkoStrategyGuide />

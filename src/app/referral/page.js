@@ -24,6 +24,7 @@ import {
   FaUserPlus,
 } from 'react-icons/fa';
 import PageShell, { PageCard, SectionHeading } from '@/components/layout/PageShell';
+import ReferralLinkCard from '@/components/referral/ReferralLinkCard';
 import { buildReferralShortLink, getPublicShareOrigin } from '@/lib/siteMetadata';
 import { getReferralBroadcastMessage } from '@/lib/referral/shareMessage';
 import {
@@ -383,48 +384,13 @@ export default function ReferralsPage() {
           </div>
         ) : (
           <>
-            <label className="block">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
-                Short link
-              </span>
-              <div className="mt-2 flex flex-col lg:flex-row gap-3">
-                <div className="flex-1 min-w-0 rounded-xl border border-white/10 bg-black/50 px-4 py-3.5 font-mono text-sm text-white/90 break-all leading-relaxed">
-                  {referralLinkShort}
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleCopy('short')}
-                    className="flex-1 lg:flex-none rounded-xl bg-gradient-to-r from-red-magic to-blue-magic hover:opacity-90 transition-opacity px-5 py-3 text-sm font-bold text-white inline-flex items-center justify-center gap-2"
-                  >
-                    {copied === 'short' ? (
-                      <>
-                        <FaCheck /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <FaCopy /> Copy link
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy('message')}
-                    className="flex-1 lg:flex-none rounded-xl border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] px-5 py-3 text-sm font-semibold text-white/90 inline-flex items-center justify-center gap-2"
-                  >
-                    {copied === 'message' ? (
-                      <>
-                        <FaCheck /> Copied
-                      </>
-                    ) : (
-                      <>
-                        <FaCopy /> Copy hype
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </label>
+            <ReferralLinkCard
+              link={referralLinkShort}
+              code={code}
+              copied={copied}
+              onCopyLink={() => handleCopy('short')}
+              onCopyMessage={() => handleCopy('message')}
+            />
 
             {shareChannels.length > 0 && (
               <div className="mt-6 pt-6 border-t border-white/10 space-y-5">
@@ -488,20 +454,30 @@ export default function ReferralsPage() {
               </div>
             )}
 
-            {referralLinkQuery && (
-              <p className="mt-5 pt-4 border-t border-white/5 text-xs text-white/45 leading-relaxed">
-                <span className="text-white/35 uppercase tracking-wider text-[10px] font-bold block mb-1">
+            {referralLinkQuery && referralLinkQuery !== referralLinkShort && (
+              <div className="mt-4 rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">
                   Alternate URL (same tracking)
-                </span>
-                <code className="text-white/65 break-all">{referralLinkQuery}</code>
+                </p>
+                <p className="mt-2 break-all font-mono text-xs leading-relaxed text-white/70 sm:text-sm">
+                  {referralLinkQuery}
+                </p>
                 <button
                   type="button"
                   onClick={() => handleCopy('query')}
-                  className="ml-2 inline-flex align-middle rounded-md border border-white/15 px-2 py-0.5 text-[10px] font-semibold text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/80 transition-colors hover:bg-white/10"
                 >
-                  {copied === 'query' ? 'Copied' : 'Copy'}
+                  {copied === 'query' ? (
+                    <>
+                      <FaCheck /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <FaCopy /> Copy alternate
+                    </>
+                  )}
                 </button>
-              </p>
+              </div>
             )}
           </>
         )}

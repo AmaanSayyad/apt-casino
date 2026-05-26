@@ -41,7 +41,7 @@ export default function LitepaperMedia() {
           </div>
           <div className="relative flex-1 min-h-[200px] overflow-hidden">
             <Image
-              src="/Lucas Advisor.JPG"
+              src="/lucas-advisor.jpg"
               alt="Advisory board"
               fill
               className="lp-advisor-blur object-cover"

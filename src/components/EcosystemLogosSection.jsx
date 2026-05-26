@@ -13,14 +13,43 @@ function shuffle(arr) {
   return copy;
 }
 
+/** One logo per partner — indexed once for SEO, screen readers, and reduced-motion users. */
+function PartnerLogoGrid({ items, listLabel }) {
+  return (
+    <ul
+      className="flex flex-wrap items-center justify-center gap-3 sm:gap-4"
+      aria-label={listLabel}
+    >
+      {items.map((logo) => (
+        <li key={logo.key}>
+          <div
+            className={`ecosystem-marquee-tile ${logo.comingSoon ? 'ecosystem-marquee-tile--soon' : ''}`}
+            title={logo.comingSoon ? `${logo.alt} — coming soon` : logo.alt}
+          >
+            <Image
+              src={logo.src}
+              alt={logo.alt}
+              width={72}
+              height={72}
+              className="ecosystem-marquee-img object-contain"
+            />
+            {logo.comingSoon && <span className="ecosystem-marquee-soon">Soon</span>}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Seamless infinite scroll — duplicates tiles only in this decorative layer (aria-hidden, empty alts).
+ * Canonical partner names live in PartnerLogoGrid (sr-only + reduced-motion fallback).
+ */
 function MarqueeRow({ items, durationSeconds, reverse = false }) {
   const trackItems = useMemo(() => [...items, ...items], [items]);
 
   return (
-    <div
-      className="ecosystem-marquee-row relative"
-      aria-hidden="true"
-    >
+    <div className="ecosystem-marquee-row relative" aria-hidden="true">
       <div
         className={`ecosystem-marquee-fade ecosystem-marquee-fade--left ${reverse ? 'ecosystem-marquee-fade--reverse' : ''}`}
       />
@@ -33,19 +62,21 @@ function MarqueeRow({ items, durationSeconds, reverse = false }) {
       >
         {trackItems.map((logo, idx) => (
           <div
-            key={`${logo.key}-${idx}`}
+            key={`${logo.key}-motion-${idx}`}
             className={`ecosystem-marquee-tile ${logo.comingSoon ? 'ecosystem-marquee-tile--soon' : ''}`}
-            title={logo.comingSoon ? `${logo.alt} — coming soon` : logo.alt}
           >
             <Image
               src={logo.src}
-              alt={logo.alt}
+              alt=""
               width={72}
               height={72}
               className="ecosystem-marquee-img object-contain"
+              aria-hidden
             />
             {logo.comingSoon && (
-              <span className="ecosystem-marquee-soon">Soon</span>
+              <span className="ecosystem-marquee-soon" aria-hidden>
+                Soon
+              </span>
             )}
           </div>
         ))}
@@ -54,16 +85,50 @@ function MarqueeRow({ items, durationSeconds, reverse = false }) {
   );
 }
 
+function LogoSection({
+  label,
+  listLabel,
+  items,
+  durationSeconds,
+  reverse = false,
+  motionEnabled,
+}) {
+  return (
+    <div>
+      <p className="text-center text-[10px] uppercase tracking-[0.2em] text-white/30 mb-3">{label}</p>
+
+      {/* One indexed list in HTML; visible until marquee mounts, then sr-only for a11y/SEO. */}
+      <div className={motionEnabled ? 'sr-only' : 'px-4 motion-reduce:px-4'}>
+        <PartnerLogoGrid items={items} listLabel={listLabel} />
+      </div>
+
+      {motionEnabled ? (
+        <div className="motion-reduce:hidden">
+          <MarqueeRow items={items} durationSeconds={durationSeconds} reverse={reverse} />
+        </div>
+      ) : null}
+
+      <div className="hidden motion-reduce:block px-4">
+        <PartnerLogoGrid items={items} listLabel={listLabel} />
+      </div>
+    </div>
+  );
+}
+
 export default function EcosystemLogosSection() {
   const [chainLogos, setChainLogos] = useState(ECOSYSTEM_CHAIN_LOGOS);
+  const [motionEnabled, setMotionEnabled] = useState(false);
 
   useEffect(() => {
     setChainLogos(shuffle(ECOSYSTEM_CHAIN_LOGOS));
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReduced) setMotionEnabled(true);
   }, []);
 
   return (
     <section className="ecosystem-logos-section relative overflow-hidden border-y border-white/[0.06]">
-      {/* Perspective grid — APT-Casino pink / purple */}
       <div className="ecosystem-grid-bg pointer-events-none" aria-hidden />
 
       <div className="ecosystem-glow ecosystem-glow--left pointer-events-none" aria-hidden />
@@ -90,18 +155,21 @@ export default function EcosystemLogosSection() {
         </div>
 
         <div className="space-y-5">
-          <div>
-            <p className="text-center text-[10px] uppercase tracking-[0.2em] text-white/30 mb-3">
-              Blockchains
-            </p>
-            <MarqueeRow items={chainLogos} durationSeconds={32} />
-          </div>
-          <div>
-            <p className="text-center text-[10px] uppercase tracking-[0.2em] text-white/30 mb-3">
-              DEX & tooling
-            </p>
-            <MarqueeRow items={ECOSYSTEM_DEX_LOGOS} durationSeconds={22} reverse />
-          </div>
+          <LogoSection
+            label="Blockchains"
+            listLabel="Supported blockchains"
+            items={chainLogos}
+            durationSeconds={32}
+            motionEnabled={motionEnabled}
+          />
+          <LogoSection
+            label="DEX & tooling"
+            listLabel="DEX and analytics partners"
+            items={ECOSYSTEM_DEX_LOGOS}
+            durationSeconds={22}
+            reverse
+            motionEnabled={motionEnabled}
+          />
         </div>
 
         <p className="text-center text-[11px] text-white/30 mt-10 px-4 max-w-xl mx-auto">

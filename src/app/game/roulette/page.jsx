@@ -883,7 +883,7 @@ export default function GameRoulette() {
     const rouletteEdgePct = (2.7 + houseEdgePercent('roulette')).toFixed(2);
 
     return (
-      <div className="site-page-top relative text-white px-4 md:px-8 lg:px-20 mb-8">
+      <div className="site-page-top site-page-pad-x relative mb-6 text-white md:mb-8">
         {/* Background Elements */}
         <div className="absolute top-5 -right-32 w-64 h-64 bg-red-500/10 rounded-full blur-3xl"></div>
         <div className="absolute top-28 left-1/3 w-32 h-32 bg-green-500/10 rounded-full blur-2xl"></div>
@@ -2426,7 +2426,11 @@ export default function GameRoulette() {
 
   return (
     <ThemeProvider theme={theme}>
-      <div ref={contentRef} className="font-sans min-h-screen pb-28 md:pb-12 pt-4 md:pt-8" style={{ backgroundColor: "#080005" }}>
+      <div
+        ref={contentRef}
+        className="site-game-page site-page-top font-sans md:pt-4"
+        style={{ backgroundColor: "#080005" }}
+      >
         {/* Audio elements */}
         <audio ref={spinSoundRef} src="/sounds/ball-spin.mp3" preload="auto" />
         <audio ref={winSoundRef} src="/sounds/win-chips.mp3" preload="auto" />
