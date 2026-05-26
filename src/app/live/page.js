@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePlayWallet } from "@/hooks/usePlayWallet";
 import { normalizeWalletForChain, walletsMatch } from "@/lib/server/referrals";
 import StreamCard from "@/components/live/StreamCard";
@@ -17,6 +17,28 @@ function streamWatchUrl(playbackId) {
   return `https://livepeercdn.com/hls/${trimmed}/index.m3u8`;
 }
 
+/** Preview thumbnail from a local File only (src set via ref, not user-controlled strings). */
+function ThumbnailPreview({ file }) {
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!file || !img) return undefined;
+    const objectUrl = URL.createObjectURL(file);
+    img.src = objectUrl;
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  if (!file) return null;
+  return (
+    <img
+      ref={imgRef}
+      alt="Thumbnail preview"
+      className="mt-2 h-20 rounded-lg object-cover border border-white/10"
+    />
+  );
+}
+
 export default function LivePage() {
   const play = usePlayWallet();
   const connected = play.connected;
@@ -27,7 +49,6 @@ export default function LivePage() {
   const [listSource, setListSource] = useState("loading");
   const [newPlaybackId, setNewPlaybackId] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [xHandle, setXHandle] = useState("");
   const [telegramUsername, setTelegramUsername] = useState("");
   const [solanaPayoutWallet, setSolanaPayoutWallet] = useState("");
@@ -82,24 +103,12 @@ export default function LivePage() {
     return () => clearInterval(timer);
   }, [myLiveSession?.id, wallet, loadStreams]);
 
-  useEffect(() => {
-    return () => {
-      if (thumbnailPreview && thumbnailPreview.startsWith("blob:")) {
-        URL.revokeObjectURL(thumbnailPreview);
-      }
-    };
-  }, [thumbnailPreview]);
-
   function onThumbnailPick(e) {
     const file = e.target.files?.[0];
     if (!file) return;
     const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!allowed.includes(file.type)) return;
     setThumbnailFile(file);
-    setThumbnailPreview((prev) => {
-      if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(file);
-    });
   }
 
   async function addStream() {
@@ -379,13 +388,7 @@ export default function LivePage() {
                     disabled={!connected || adding}
                     className="w-full text-xs text-white/70 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-purple-500/30 file:text-white"
                   />
-                  {thumbnailPreview && thumbnailPreview.startsWith("blob:") && (
-                    <img
-                      src={thumbnailPreview}
-                      alt="Thumbnail preview"
-                      className="mt-2 h-20 rounded-lg object-cover border border-white/10"
-                    />
-                  )}
+                  <ThumbnailPreview file={thumbnailFile} />
                 </div>
                 <div className="space-y-2">
                   <input
