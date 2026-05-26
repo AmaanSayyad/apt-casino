@@ -46,7 +46,10 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
   const fairness = useProvableFairness('plinko', playAddress);
 
   const [ballPosition, setBallPosition] = useState(null);
-  const [hitPegs, setHitPegs] = useState(new Set());
+  // Peg hit "flash" is purely visual; keep it out of React state to avoid rerendering many SVG circles.
+  const hitPegsRef = useRef(new Set());
+  const pegElByIdRef = useRef(new Map());
+  const ballHighlightTimeoutRef = useRef(null);
   const [currentRows, setCurrentRows] = useState(rowCount);
   const [currentRiskLevel, setCurrentRiskLevel] = useState(riskLevel);
   const [betHistory, setBetHistory] = useState([]);
@@ -97,7 +100,12 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
     setCurrentRows(rowCount);
     setCurrentRiskLevel(riskLevel);
     setBallPosition(null);
-    setHitPegs(new Set());
+    hitPegsRef.current.clear();
+    // Reset peg visuals for the newly selected board.
+    for (const el of pegElByIdRef.current.values()) {
+      el.setAttribute('fill', 'white');
+      el.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
+    }
   }, [rowCount, riskLevel]);
 
   // Keep the latest bet amount in a ref for use in async handlers
@@ -312,11 +320,15 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
           if (now - lastPegFlash > 120) {
             lastPegFlash = now;
             const pegBody = bodyA.pegId !== undefined ? bodyA : bodyB;
-            setHitPegs((prev) => {
-              const next = new Set(prev);
-              next.add(pegBody.pegId);
-              return next;
-            });
+            const pegId = pegBody.pegId;
+            if (!hitPegsRef.current.has(pegId)) {
+              hitPegsRef.current.add(pegId);
+              const el = pegElByIdRef.current.get(pegId);
+              if (el) {
+                el.setAttribute('fill', '#ffd700');
+                el.style.filter = 'drop-shadow(0 0 15px #ffd700) brightness(1.5)';
+              }
+            }
           }
         }
 
@@ -354,7 +366,11 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
       const netPnl = reward - betForRound;
 
       setBallPosition(binIndex);
-      setTimeout(() => setBallPosition(null), 400);
+      if (ballHighlightTimeoutRef.current) clearTimeout(ballHighlightTimeoutRef.current);
+      ballHighlightTimeoutRef.current = setTimeout(() => {
+        setBallPosition(null);
+        ballHighlightTimeoutRef.current = null;
+      }, 400);
 
       if (betForRound > 0) {
         void creditNativeRef.current(reward, playAddressRef.current);
@@ -459,6 +475,10 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
 
     return () => {
       stopPhysicsLoop();
+      if (ballHighlightTimeoutRef.current) {
+        clearTimeout(ballHighlightTimeoutRef.current);
+        ballHighlightTimeoutRef.current = null;
+      }
       for (const ball of activeBallsRef.current) {
         if (ball.plinkoDot?.parentNode) {
           ball.plinkoDot.parentNode.removeChild(ball.plinkoDot);
@@ -662,16 +682,16 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
               {pins.map((pin) => (
                 <circle
                   key={pin.id}
+                  ref={(el) => {
+                    if (!el) return;
+                    pegElByIdRef.current.set(pin.id, el);
+                  }}
                   cx={pin.x}
                   cy={pin.y}
                   r="6"
-                  fill={hitPegs.has(pin.id) ? "#ffd700" : "white"}
+                  fill="white"
                   className="drop-shadow-sm"
-                  style={{
-                    filter: hitPegs.has(pin.id)
-                      ? "drop-shadow(0 0 15px #ffd700) brightness(1.5)"
-                      : "drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
-                  }}
+                  style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
                 />
               ))}
               <g ref={ballsLayerRef} />
