@@ -122,7 +122,6 @@ export default async function Image({ params }) {
                   {code}
                 </div>
               </div>
-            </div>
             ) : null}
           </div>
         </div>
