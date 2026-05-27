@@ -4,6 +4,8 @@ import {
   aggregateGameActivityFromPlayEvents,
   aggregatePlayEventsSince,
   loadRecentBigWinners,
+  pickUniqueTopBigWinners,
+  type RecentBigWinner,
 } from '@/lib/server/gamePlayEvents';
 import { formatCombinedNative } from '@/lib/formatVolume';
 
@@ -130,14 +132,7 @@ export async function GET() {
   const gameTotals = new Map<string, number>();
   const gameOnlinePlayers = new Map<string, Set<string>>();
 
-  const winners: {
-    wallet: string;
-    walletShort: string;
-    payoutApt: number;
-    game: string;
-    timeAgo: string;
-    timestampSec: string;
-  }[] = [];
+  const winners: RecentBigWinner[] = [];
 
   for (const g of games) {
     const bet = u64(g, 'bet_amount');
@@ -167,31 +162,23 @@ export async function GET() {
       if (payout > bet) dailyWinners += 1;
     }
 
-    if (payout > bet) {
+    if (payout > bet && player) {
+      const payoutApt = Number(payout) / Number(OCTAS);
       winners.push({
         wallet: player,
         walletShort: shorten(player),
-        payoutApt: Number(payout) / Number(OCTAS),
+        payoutApt,
+        payoutDisplay: `${payoutApt.toLocaleString('en-US', { maximumFractionDigits: 4 })} APT`,
         game: GAME_NAME[u8(g, 'game_type')] || 'Casino',
         timeAgo: timeAgo(nowSeconds - ts),
         timestampSec: ts.toString(),
+        chain: 'aptos',
       });
     }
   }
 
-  winners.sort((a, b) => {
-    if (a.timestampSec === b.timestampSec) return 0;
-    return BigInt(b.timestampSec) > BigInt(a.timestampSec) ? 1 : -1;
-  });
-
-  const sbRecentWinners = await loadRecentBigWinners(4);
-  const mergedWinners = [...sbRecentWinners, ...winners.slice(0, 4)]
-    .sort((a, b) => {
-      const ta = BigInt(a.timestampSec || '0');
-      const tb = BigInt(b.timestampSec || '0');
-      return tb > ta ? 1 : tb < ta ? -1 : 0;
-    })
-    .slice(0, 4);
+  const sbRecentWinners = await loadRecentBigWinners(12);
+  const mergedWinners = pickUniqueTopBigWinners([...sbRecentWinners, ...winners], 4);
   const recentWinners = mergedWinners.map((w) =>
     'payoutDisplay' in w && w.payoutDisplay
       ? w

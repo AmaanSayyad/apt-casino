@@ -1,15 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
-
-function normalizeWallet(input: unknown): string | null {
-  if (typeof input !== 'string') return null;
-  let hex = input.trim().toLowerCase();
-  if (!hex) return null;
-  hex = hex.replace(/^0x/, '');
-  if (!/^[0-9a-f]+$/.test(hex)) return null;
-  hex = hex.padStart(64, '0');
-  return `0x${hex}`;
-}
 
 export async function POST(request: NextRequest) {
   const supabase = getSupabaseAdmin();
@@ -24,12 +15,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const wallet = normalizeWallet(body.wallet);
+  const chain = (body.chain && typeof body.chain === 'string' ? body.chain : 'aptos').toLowerCase();
+  const wallet = normalizeWalletForChain(body.wallet, chain);
   if (!wallet) {
     return NextResponse.json({ error: 'Invalid wallet' }, { status: 400 });
   }
 
-  const chain = (body.chain && typeof body.chain === 'string' ? body.chain : 'aptos').toLowerCase();
   const now = new Date().toISOString();
 
   const { error } = await supabase

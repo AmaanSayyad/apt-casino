@@ -1,7 +1,11 @@
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { ChainId, getPlayChainConfig } from '@/lib/chains/registry';
 import { nativeToRaw } from '@/lib/server/play/amounts';
-import { normalizeWalletForChain } from '@/lib/server/referrals';
+import {
+  inferChainFromWallet,
+  normalizeWallet,
+  normalizeWalletForChain,
+} from '@/lib/server/referrals';
 import { accrueCashbackOnBet } from '@/lib/server/cashback';
 import { isDemoPlayWallet } from '@/lib/play/demoPlay';
 
@@ -204,7 +208,37 @@ export type RecentBigWinner = {
   game: string;
   timeAgo: string;
   timestampSec: string;
+  /** Used internally for cross-chain dedupe; not sent to clients. */
+  chain?: string;
 };
+
+function walletDedupeKey(wallet: string, chain?: string): string {
+  const c = (chain || inferChainFromWallet(wallet)).toLowerCase();
+  const normalized = normalizeWalletForChain(wallet, c) ?? wallet.trim();
+  if (c === 'solana') return `solana:${normalized}`;
+  return `aptos:${(normalizeWallet(wallet) ?? wallet).toLowerCase()}`;
+}
+
+/** One entry per wallet — keeps the highest payout, sorted biggest win first. */
+export function pickUniqueTopBigWinners(entries: RecentBigWinner[], limit: number): RecentBigWinner[] {
+  const best = new Map<string, RecentBigWinner>();
+
+  for (const entry of entries) {
+    if (!entry.wallet?.trim()) continue;
+    const key = walletDedupeKey(entry.wallet, entry.chain);
+    const cur = best.get(key);
+    const payout = Number(entry.payoutApt) || 0;
+    const curPayout = Number(cur?.payoutApt) || 0;
+    if (!cur || payout > curPayout) {
+      best.set(key, entry);
+    }
+  }
+
+  return [...best.values()]
+    .sort((a, b) => (Number(b.payoutApt) || 0) - (Number(a.payoutApt) || 0))
+    .slice(0, limit)
+    .map(({ chain: _chain, ...rest }) => rest);
+}
 
 /** Recent winning rounds from Supabase (all play chains). */
 export async function loadRecentBigWinners(limit: number): Promise<RecentBigWinner[]> {
@@ -243,11 +277,11 @@ export async function loadRecentBigWinners(limit: number): Promise<RecentBigWinn
       game: GAME_DISPLAY[gameSlug] || gameSlug || 'Casino',
       timeAgo: timeAgoFromMs(now - createdAtMs),
       timestampSec: String(Math.floor(createdAtMs / 1000)),
+      chain,
     });
-    if (winners.length >= limit) break;
   }
 
-  return winners;
+  return pickUniqueTopBigWinners(winners, limit);
 }
 
 export type LeaderboardPlayEvent = {
