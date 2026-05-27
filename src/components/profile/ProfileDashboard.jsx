@@ -28,6 +28,10 @@ import {
   FaGift,
   FaChartLine,
   FaHistory,
+  FaBullhorn,
+  FaVideo,
+  FaTicketAlt,
+  FaCoins,
 } from 'react-icons/fa';
 import ProfileEditModal from './ProfileEditModal';
 import CashbackPanel from './CashbackPanel';
@@ -764,7 +768,92 @@ function EarnTab({ profile, referralStats, loading, chain, wallet, demoMode, onR
         )}
       </Panel>
     </div>
+    <EarnMoreWaysPanel />
     </div>
+  );
+}
+
+function EarnMoreWaysPanel() {
+  const opportunities = [
+    {
+      title: 'Go live and earn creator rewards',
+      desc: 'Stream your gameplay and earn 0.1% / 0.2% / 0.3% of platform revenue at 5 / 15 / 30+ minutes.',
+      href: '/live',
+      cta: 'Start streaming',
+      icon: <FaVideo className="text-cyan-300" />,
+    },
+    {
+      title: 'Grow referrals',
+      desc: 'Share your code and earn up to 2% of each qualified deposit as APTC referral rewards.',
+      href: '/referral',
+      cta: 'Open referrals',
+      icon: <FaBullhorn className="text-blue-300" />,
+    },
+    {
+      title: 'Claim daily streak rewards',
+      desc: 'Check in daily and climb streak tiers (up to ~30 APTC on top day) to compound rewards.',
+      href: '/profile',
+      cta: 'Claim streak',
+      icon: <FaGift className="text-amber-300" />,
+    },
+    {
+      title: 'Deposit cashback',
+      desc: 'Deposit on Solana and reclaim up to 1% of net deposits through the cashback panel.',
+      href: '/profile',
+      cta: 'View cashback',
+      icon: <FaCoins className="text-emerald-300" />,
+    },
+    {
+      title: 'Stake APTC',
+      desc: 'Lock APTC in fixed pools with APY tiers currently ranging from 30% up to 360%.',
+      href: '/stake',
+      cta: 'Stake now',
+      icon: <FaLock className="text-fuchsia-300" />,
+    },
+    {
+      title: 'OTC lottery access',
+      desc: 'Join OTC lottery rounds and often avoid DEX-style swap/LP/slippage fees (effective savings vary).',
+      href: '/otc-lottery',
+      cta: 'Open OTC lottery',
+      icon: <FaTicketAlt className="text-rose-300" />,
+    },
+  ];
+
+  return (
+    <section className="rounded-2xl border border-white/10 bg-[#1A0015]/70 p-6">
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5">
+            <FaChartLine className="text-purple-300" />
+          </div>
+          <h3 className="font-display text-lg font-medium">More ways to earn</h3>
+        </div>
+      </div>
+      <p className="mb-5 text-sm text-white/55">
+        Stack multiple income paths on APT-Casino. Mix creator rewards, referrals, streaks, cashback, staking,
+        and OTC campaigns to maximize your total earnings.
+      </p>
+      <div className="grid gap-3 md:grid-cols-2">
+        {opportunities.map((item) => (
+          <Link
+            key={item.title}
+            href={item.href}
+            className="rounded-xl border border-white/10 bg-black/25 p-4 hover:border-white/20 hover:bg-black/35 transition"
+          >
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5">{item.icon}</div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">{item.title}</p>
+                <p className="mt-1 text-xs text-white/50 leading-relaxed">{item.desc}</p>
+                <p className="mt-2 text-[11px] uppercase tracking-wider font-semibold text-blue-magic">
+                  {item.cta} →
+                </p>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }
 

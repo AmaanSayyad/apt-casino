@@ -319,7 +319,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
           const now = performance.now();
           if (now - lastPegFlash > 120) {
             lastPegFlash = now;
-            const pegBody = bodyA.pegId !== undefined ? bodyA : bodyB;
+          const pegBody = bodyA.pegId !== undefined ? bodyA : bodyB;
             const pegId = pegBody.pegId;
             if (!hitPegsRef.current.has(pegId)) {
               hitPegsRef.current.add(pegId);
@@ -365,7 +365,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
       const reward = betForRound * multiplierValue;
       const netPnl = reward - betForRound;
 
-      setBallPosition(binIndex);
+        setBallPosition(binIndex);
       if (ballHighlightTimeoutRef.current) clearTimeout(ballHighlightTimeoutRef.current);
       ballHighlightTimeoutRef.current = setTimeout(() => {
         setBallPosition(null);
@@ -376,7 +376,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
         void creditNativeRef.current(reward, playAddressRef.current);
       }
 
-      playAudio(binLandAudioRef);
+        playAudio(binLandAudioRef);
 
       const chain = activeChainRef.current;
       const stats = recordPlinkoSessionRound(chain, {
@@ -388,16 +388,16 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
       setBestMultiplier(stats.bestMultiplier);
       setTotalWon(stats.totalNetPnl);
 
-      const newBetResult = {
+        const newBetResult = {
         id: meta.id,
         game: 'Plinko',
-        title: new Date().toLocaleTimeString(),
+          title: new Date().toLocaleTimeString(),
         betAmount: formatNativeAmount(betForRound, chain),
         multiplier: mults[binIndex],
         payout: formatNativeAmount(reward, chain),
         netPnl,
-        timestamp: Date.now(),
-        txHash: null,
+          timestamp: Date.now(),
+          txHash: null,
         explorerUrl: null,
       };
       setBetHistory((prev) => [newBetResult, ...prev.slice(0, 99)]);
@@ -417,20 +417,20 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
         fair.reset();
       }
 
-      logGame({
-        gameType: 'plinko',
+          logGame({
+            gameType: 'plinko',
         playerAddress: addr,
         betAmount: betForRound,
-        result: gameResult,
-        payout: reward,
+            result: gameResult,
+            payout: reward,
         fairnessProof: fairnessProof || undefined,
       })
         .then((res) => {
           if (!res?.success) return;
           setBetHistory((prev) =>
             prev.map((item) =>
-              item.id === newBetResult.id
-                ? { ...item, txHash: res.transactionHash || null, explorerUrl: res.explorerUrl || null }
+                item.id === newBetResult.id
+                  ? { ...item, txHash: res.transactionHash || null, explorerUrl: res.explorerUrl || null }
                 : item,
             ),
           );
@@ -679,23 +679,23 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
               viewBox={`0 0 ${PLINKO_CANVAS_WIDTH} ${PLINKO_CANVAS_HEIGHT}`}
               preserveAspectRatio="xMidYMid meet"
             >
-              {pins.map((pin) => (
-                <circle
-                  key={pin.id}
+            {pins.map((pin) => (
+              <circle
+                key={pin.id}
                   ref={(el) => {
                     if (!el) return;
                     pegElByIdRef.current.set(pin.id, el);
                   }}
-                  cx={pin.x}
-                  cy={pin.y}
-                  r="6"
+                cx={pin.x}
+                cy={pin.y}
+                r="6"
                   fill="white"
-                  className="drop-shadow-sm"
+                className="drop-shadow-sm"
                   style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}
-                />
-              ))}
+              />
+            ))}
               <g ref={ballsLayerRef} />
-            </svg>
+          </svg>
 
             <div className="pointer-events-none absolute inset-0 z-20">
               {multipliers.map((multiplier, index) => {
@@ -780,7 +780,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
                   {(bet.netPnl ?? 0) >= 0 ? '+' : ''}
                   {formatNativeAmount(bet.netPnl ?? 0, activeChain)}
                 </span>
-              </div>
+                  </div>
             ))}
             {Array.from({ length: recentBetSlots.emptyCount }).map((_, index) => (
               <div
@@ -788,8 +788,8 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
                 className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#333947] bg-[#2A0025] opacity-30"
               >
                 <span className="text-xs text-gray-500">-</span>
-              </div>
-            ))}
+                </div>
+              ))}
           </div>
         </div>
 

@@ -247,7 +247,7 @@ const PlinkoLeaderboard = () => {
         </Box>
       </Box>
 
-      <Box>
+              <Box>
         {loading &&
           rows.length === 0 &&
           [0, 1, 2, 3, 4].map((i) => (
@@ -560,7 +560,7 @@ const PlinkoLeaderboard = () => {
             </Box>
           );
         })}
-      </Box>
+            </Box>
 
       <Box
         sx={{
@@ -606,7 +606,7 @@ const PlinkoLeaderboard = () => {
         >
           <Typography variant="caption">All-time leaderboard</Typography>
           <FaChevronRight size={10} className="arrow-icon" style={{ transition: 'transform 0.2s ease' }} />
-        </Box>
+          </Box>
       </Box>
 
       <style jsx global>{`

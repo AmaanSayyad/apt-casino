@@ -5,11 +5,16 @@ import {
   FaClock,
   FaCoins,
   FaExternalLinkAlt,
+  FaBullhorn,
+  FaChartLine,
+  FaGift,
   FaLock,
   FaKey,
   FaSignOutAlt,
+  FaTicketAlt,
   FaUnlock,
   FaUserFriends,
+  FaVideo,
 } from 'react-icons/fa';
 
 function fmtNum(n) {
@@ -370,6 +375,80 @@ export default function KolPortalClient({ slug }) {
           </button>
         </form>
       </div>
+
+      <section className="rounded-xl border border-white/10 bg-black/20 p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <FaChartLine className="text-fuchsia-300 text-sm" />
+          <h3 className="text-sm font-semibold text-white">Partner earnings hub</h3>
+        </div>
+        <p className="text-xs text-white/50 mb-4 leading-relaxed">
+          Increase your total partner income by combining multiple tracks. You can promote these flows to different
+          audience types — traders, stream viewers, long-term holders, and community members.
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          {[
+            {
+              title: 'Live streaming rewards',
+              desc: 'Earn 0.1% / 0.2% / 0.3% of platform revenue at 5 / 15 / 30+ minute live sessions.',
+              href: '/live',
+              icon: <FaVideo className="text-cyan-300" />,
+              cta: 'Go live',
+            },
+            {
+              title: 'Referral monetization',
+              desc: 'Drive users through your referral funnel and earn up to 2% of qualified deposits in APTC.',
+              href: '/referral',
+              icon: <FaBullhorn className="text-blue-300" />,
+              cta: 'Referral hub',
+            },
+            {
+              title: 'Daily rewards campaigns',
+              desc: 'Promote daily streak loops (up to ~30 APTC on top day) to lift retention and repeat plays.',
+              href: '/profile',
+              icon: <FaGift className="text-amber-300" />,
+              cta: 'View profile rewards',
+            },
+            {
+              title: 'Cashback on deposits',
+              desc: 'Promote up to 1% cashback on net deposits for active Solana users.',
+              href: '/profile',
+              icon: <FaCoins className="text-emerald-300" />,
+              cta: 'Cashback details',
+            },
+            {
+              title: 'Staking income',
+              desc: 'Guide long-term users into APTC staking with APY tiers currently from 30% to 360%.',
+              href: '/stake',
+              icon: <FaLock className="text-violet-300" />,
+              cta: 'Open staking',
+            },
+            {
+              title: 'OTC lottery access',
+              desc: 'Run OTC pushes where users often avoid DEX-style swap/LP/slippage fee stack (savings vary).',
+              href: '/otc-lottery',
+              icon: <FaTicketAlt className="text-rose-300" />,
+              cta: 'Open OTC lottery',
+            },
+          ].map((item) => (
+            <a
+              key={item.title}
+              href={item.href}
+              className="rounded-lg border border-white/10 bg-black/30 p-3 hover:border-white/20 hover:bg-black/40 transition"
+            >
+              <div className="flex items-start gap-2.5">
+                <div className="mt-0.5">{item.icon}</div>
+                <div>
+                  <p className="text-sm font-medium text-white">{item.title}</p>
+                  <p className="text-xs text-white/50 mt-1 leading-relaxed">{item.desc}</p>
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-blue-magic mt-2">
+                    {item.cta} →
+                  </p>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
