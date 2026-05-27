@@ -33,17 +33,14 @@ export function getManualWithdrawUsdThreshold(): number {
 
 /**
  * Slice of the *gross deposit* (basis points) routed to the referrer on the
- * referee's first deposit. Capped at the configured deposit fee so the platform
- * never pays more than it collects.
- * Default 200 bps = 2% of deposit → 80% of the standard 10% fee goes to platform,
- * 20% of the fee goes to the referrer.
+ * referee's first deposit.
+ * Default 2000 bps = 20% of deposit value (paid in APTC).
  */
-export function getReferrerFeeShareBpsOfDeposit(depositFeeBps?: number): number {
+export function getReferrerFeeShareBpsOfDeposit(_depositFeeBps?: number): number {
   const raw =
     process.env.REFERRER_FEE_SHARE_BPS_OF_DEPOSIT ??
     process.env.NEXT_PUBLIC_REFERRER_FEE_SHARE_BPS_OF_DEPOSIT;
-  const n = raw != null ? Number(raw) : 200;
-  if (!Number.isFinite(n) || n < 0 || n > 10000) return 200;
-  const depositFee = depositFeeBps ?? getDepositFeeBps();
-  return Math.min(Math.floor(n), depositFee);
+  const n = raw != null ? Number(raw) : 2000;
+  if (!Number.isFinite(n) || n < 0 || n > 10000) return 2000;
+  return Math.floor(n);
 }

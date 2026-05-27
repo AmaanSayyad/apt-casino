@@ -76,3 +76,9 @@ supabase/.temp
 *.local
 .cache/
 .turbo/
+.env.vercel.check
+apt-casino-final.code-workspace
+fix_mineshistory.sh
+install_cli.py
+patch.diff
+replace_text.js

@@ -396,7 +396,7 @@ export default function KolPortalClient({ slug }) {
             },
             {
               title: 'Referral monetization',
-              desc: 'Drive users through your referral funnel and earn up to 2% of qualified deposits in APTC.',
+              desc: 'Drive users through your referral funnel and earn up to 20% of qualified deposits in APTC.',
               href: '/referral',
               icon: <FaBullhorn className="text-blue-300" />,
               cta: 'Referral hub',

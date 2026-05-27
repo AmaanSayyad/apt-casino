@@ -269,7 +269,7 @@ export default function ReferralsPage() {
 
   const calcReferralsN = Math.max(0, Number(calcReferrals) || 0);
   const calcAvgDepositN = Math.max(0, Number(calcAvgDeposit) || 0);
-  const referrerSharePct = config?.referrerSharePct ?? 2;
+  const referrerSharePct = config?.referrerSharePct ?? 20;
   const depositFeePct = config?.depositFeePct ?? 10;
   const usdPerReferral = (calcAvgDepositN * referrerSharePct) / 100;
   const aptcPrice = config?.aptcPriceUsd ?? 0.001;
@@ -282,9 +282,102 @@ export default function ReferralsPage() {
     <PageShell
       badge="Earn APTC"
       title="Referrals"
-      description="Share your link. When a friend connects and makes their first deposit, you earn APTC — locked for a cliff period or until they hit the volume milestone."
+      description="Share your link. When a friend connects and makes their first deposit, you earn 20% of that deposit in APTC — locked for a cliff period or until they hit the volume milestone."
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Referrals' }]}
     >
+      <section className="mb-10">
+        <SectionHeading
+          icon={<FaCalculator className="text-cyan-300" />}
+          title="Earnings calculator"
+          subtitle={
+            config
+              ? `You earn APTC worth ${referrerSharePct}% of each referee's first deposit (${Math.round((referrerSharePct / depositFeePct) * 100)}% of the ${depositFeePct}% platform fee).`
+              : 'Estimate your APTC referral rewards from valid referrals and average first-deposit size.'
+          }
+        />
+        <div className="rounded-xl border border-cyan-400/20 bg-[#1A0015]/80 p-4 sm:p-5 space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="rounded-lg border border-white/10 bg-black/40 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/45">Valid referrals</p>
+              <input
+                type="number"
+                min={0}
+                step="1"
+                inputMode="numeric"
+                value={calcReferrals}
+                onChange={(e) => setCalcReferrals(e.target.value)}
+                placeholder="e.g. 25"
+                className="mt-2 w-full bg-transparent text-lg font-bold text-white outline-none placeholder:text-white/30"
+              />
+              <div className="mt-2 flex gap-1.5 flex-wrap">
+                {[5, 25, 100, 500].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setCalcReferrals(String(n))}
+                    className="rounded border border-white/15 px-2 py-0.5 text-[10px] font-bold text-white/70 hover:text-white hover:border-white/40"
+                  >
+                    {n.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+            </label>
+            <label className="rounded-lg border border-white/10 bg-black/40 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/45">
+                Avg. first deposit (USD)
+              </p>
+              <input
+                type="number"
+                min={0}
+                step="any"
+                inputMode="decimal"
+                value={calcAvgDeposit}
+                onChange={(e) => setCalcAvgDeposit(e.target.value)}
+                placeholder="e.g. 5"
+                className="mt-2 w-full bg-transparent text-lg font-bold text-white outline-none placeholder:text-white/30"
+              />
+              <div className="mt-2 flex gap-1.5 flex-wrap">
+                {[1, 5, 20, 100].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setCalcAvgDeposit(String(n))}
+                    className="rounded border border-white/15 px-2 py-0.5 text-[10px] font-bold text-white/70 hover:text-white hover:border-white/40"
+                  >
+                    ${n}
+                  </button>
+                ))}
+              </div>
+            </label>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <CalcTile
+              tint="emerald"
+              label="APTC per referral"
+              main={`${fmtApt(earningsPerReferralAptc)} APTC`}
+              sub={`≈ $${fmtApt(usdPerReferral)} at ${referrerSharePct}% share`}
+            />
+            <CalcTile
+              tint="purple"
+              label="Total APTC"
+              main={`${fmtApt(totalEarningsAptc)} APTC`}
+              sub={`${calcReferralsN.toLocaleString()} × ${fmtApt(earningsPerReferralAptc)} APTC`}
+            />
+            <CalcTile
+              tint="cyan"
+              label="Unlock rules"
+              main={`${cliffDays}d cliff`}
+              sub={`or $${volumeUnlock} referee volume`}
+            />
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/40 p-3 text-xs text-white/70 leading-relaxed">
+            Referrers earn <strong className="text-white">APTC</strong>, not APT. Rewards accrue on the
+            referee&apos;s first deposit, stay <strong className="text-white">locked</strong> for {cliffDays} days,
+            and unlock early if your referee wagers ${volumeUnlock} (USD equivalent).
+          </div>
+        </div>
+      </section>
+
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-10">
         <SummaryTile
           icon={<FaCheckCircle className="text-emerald-300" />}
@@ -516,99 +609,6 @@ export default function ReferralsPage() {
           </div>
         )}
       </PageCard>
-
-      <section className="mb-10">
-        <SectionHeading
-          icon={<FaCalculator className="text-cyan-300" />}
-          title="Earnings calculator"
-          subtitle={
-            config
-              ? `You earn APTC worth ${referrerSharePct}% of each referee's first deposit (${Math.round((referrerSharePct / depositFeePct) * 100)}% of the ${depositFeePct}% platform fee).`
-              : undefined
-          }
-        />
-        <div className="rounded-xl border border-cyan-400/20 bg-[#1A0015]/80 p-4 sm:p-5 space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="rounded-lg border border-white/10 bg-black/40 p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/45">Valid referrals</p>
-              <input
-                type="number"
-                min={0}
-                step="1"
-                inputMode="numeric"
-                value={calcReferrals}
-                onChange={(e) => setCalcReferrals(e.target.value)}
-                placeholder="e.g. 25"
-                className="mt-2 w-full bg-transparent text-lg font-bold text-white outline-none placeholder:text-white/30"
-              />
-              <div className="mt-2 flex gap-1.5 flex-wrap">
-                {[5, 25, 100, 500].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setCalcReferrals(String(n))}
-                    className="rounded border border-white/15 px-2 py-0.5 text-[10px] font-bold text-white/70 hover:text-white hover:border-white/40"
-                  >
-                    {n.toLocaleString()}
-                  </button>
-                ))}
-              </div>
-            </label>
-            <label className="rounded-lg border border-white/10 bg-black/40 p-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/45">
-                Avg. first deposit (USD)
-              </p>
-              <input
-                type="number"
-                min={0}
-                step="any"
-                inputMode="decimal"
-                value={calcAvgDeposit}
-                onChange={(e) => setCalcAvgDeposit(e.target.value)}
-                placeholder="e.g. 5"
-                className="mt-2 w-full bg-transparent text-lg font-bold text-white outline-none placeholder:text-white/30"
-              />
-              <div className="mt-2 flex gap-1.5 flex-wrap">
-                {[1, 5, 20, 100].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setCalcAvgDeposit(String(n))}
-                    className="rounded border border-white/15 px-2 py-0.5 text-[10px] font-bold text-white/70 hover:text-white hover:border-white/40"
-                  >
-                    ${n}
-                  </button>
-                ))}
-              </div>
-            </label>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <CalcTile
-              tint="emerald"
-              label="APTC per referral"
-              main={`${fmtApt(earningsPerReferralAptc)} APTC`}
-              sub={`≈ $${fmtApt(usdPerReferral)} at ${referrerSharePct}% share`}
-            />
-            <CalcTile
-              tint="purple"
-              label="Total APTC"
-              main={`${fmtApt(totalEarningsAptc)} APTC`}
-              sub={`${calcReferralsN.toLocaleString()} × ${fmtApt(earningsPerReferralAptc)} APTC`}
-            />
-            <CalcTile
-              tint="cyan"
-              label="Unlock rules"
-              main={`${cliffDays}d cliff`}
-              sub={`or $${volumeUnlock} referee volume`}
-            />
-          </div>
-          <div className="rounded-lg border border-white/10 bg-black/40 p-3 text-xs text-white/70 leading-relaxed">
-            Referrers earn <strong className="text-white">APTC</strong>, not APT. Rewards accrue on the
-            referee&apos;s first deposit, stay <strong className="text-white">locked</strong> for {cliffDays} days,
-            and unlock early if your referee wagers ${volumeUnlock} (USD equivalent).
-          </div>
-        </div>
-      </section>
 
       <PageCard gradient="from-pink-500/40 to-amber-400/40" className="mb-10">
         <SectionHeading icon={<FaGift className="text-pink-300" />} title="Referral competition · Prize pool" />

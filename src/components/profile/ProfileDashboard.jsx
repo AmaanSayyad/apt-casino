@@ -813,7 +813,7 @@ function EarnMoreWaysPanel() {
     },
     {
       title: 'Grow referrals',
-      desc: 'Share your code and earn up to 2% of each qualified deposit as APTC referral rewards.',
+      desc: 'Share your code and earn up to 20% of each qualified deposit as APTC referral rewards.',
       href: '/referral',
       cta: 'Open referrals',
       icon: <FaBullhorn className="text-blue-300" />,

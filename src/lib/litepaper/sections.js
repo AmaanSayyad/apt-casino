@@ -260,7 +260,7 @@ export const LITEPAPER_SECTIONS = [
     title: '11. Revenue & Fee Model',
     body: [
       'Platform fees (default): 10% on deposits and 10% on withdrawals (PLATFORM_FEE_BPS_DEPOSIT/WITHDRAW = 1000 bps).',
-      'Referrer share: 2% of gross first deposit (REFERRER_FEE_SHARE_BPS_OF_DEPOSIT = 200), capped so payout never exceeds platform fee collected.',
+      'Referrer share: 20% of gross first deposit (REFERRER_FEE_SHARE_BPS_OF_DEPOSIT = 2000), paid in APTC after unlock rules.',
       'House edge on wagers is the primary GGR source; a portion funds APTC buyback rather than opaque bonus traps.',
       'Additional rails: OTC lottery spreads, staking protocol fees, future NFT/profile monetization, and partner promotions.',
       'Manual withdrawal review triggers above USD threshold (MANUAL_WITHDRAW_USD_THRESHOLD, default $50) to protect treasury continuity.',
