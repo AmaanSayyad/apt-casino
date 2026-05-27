@@ -1,5 +1,7 @@
 # Mainnet deployment guide
 
+Last updated: 2026-05-27
+
 Checklist for launching APT Casino on production infrastructure. Solana is the primary live chain; Aptos modules can run in parallel when `NEXT_PUBLIC_CASINO_MODULE_ADDRESS` is set and Aptos is marked `live` in the chain registry.
 
 ## Launch pipeline
@@ -39,6 +41,7 @@ flowchart TD
 - [ ] `NEXT_PUBLIC_SITE_URL` set to `https://aptcasino.fun` (litepaper: `https://aptcasino.fun/litepaper`)
 - [ ] Solana RPC URL (paid provider recommended for mainnet)
 - [ ] Livepeer API key for `/live` streams
+- [ ] Promotions env and migration checks complete (`promo_campaigns`, coupon/deal APIs)
 
 ### Legal & product
 
@@ -140,6 +143,7 @@ Or use `./deploy.sh -n mainnet` for combined contract + Vercel flow.
 - [ ] Bets debit/credit correctly on win/loss
 - [ ] Withdrawals complete or enter pending + approval flow
 - [ ] Game history and provably fair proof links work
+- [ ] Promotions flow works end-to-end (admin create/stop/delete, user claim/deposit boost)
 - [ ] Mobile layouts verified on iOS Safari and Android Chrome
 - [ ] Demo mode refill shows 100 native units (or `NEXT_PUBLIC_DEMO_START_NATIVE`)
 - [ ] Error rate and latency in Vercel logs acceptable

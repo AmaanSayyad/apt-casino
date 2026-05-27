@@ -4,12 +4,13 @@ export const FEATURED_DIAGRAMS = [
   {
     id: 'player-journey',
     title: 'End-to-end player journey',
-    caption: 'Deposit → play → settle → optional withdraw & share proof',
+    caption: 'Deposit → play → promotions/rewards → settle → optional withdraw & share proof',
     chart: `sequenceDiagram
     autonumber
     actor P as Player
     participant UI as APT-Casino
     participant API as Play API
+    participant PR as Promotions API
     participant DB as Supabase
     participant CH as Chain
 
@@ -20,6 +21,8 @@ export const FEATURED_DIAGRAMS = [
   P->>UI: Play Plinko / Mines / Wheel
     UI->>API: Bet + resolve
     API->>DB: Play event + GGR
+    UI->>PR: Coupon claim or deposit deal check
+    PR->>DB: Claims and deal-hit audit logs
     alt Win
         API->>DB: Credit payout
     end

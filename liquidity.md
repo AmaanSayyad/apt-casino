@@ -1,5 +1,7 @@
 # Liquidity & treasury
 
+Last updated: 2026-05-27
+
 How player funds, house edge, and payouts flow in the current APT Casino stack.
 
 ## Architecture (today)
@@ -54,6 +56,7 @@ The web app does **not** use a purely client-side fake balance for Solana play. 
 | **Withdraw fee** | `PLATFORM_FEE_BPS_WITHDRAW` (default 10%) |
 | **Referrer share** | `REFERRER_FEE_SHARE_BPS_OF_DEPOSIT` (capped by deposit fee) |
 | **GGR buyback** | `GGR_*` env vars → APTC burn / stakers / treasury |
+| **Promotions rewards** | Coupon SOL credits + deposit-deal APTC boosts |
 
 House edge is applied in app logic via `applyHouseEdgeToMultiplier()` (`src/lib/houseEdge.js`).
 
@@ -70,6 +73,8 @@ flowchart LR
     DEP[Deposit 1 SOL] --> FEE{PLATFORM_FEE_BPS_DEPOSIT}
     FEE -->|900 bps net| BAL[user_house_balances]
     FEE -->|100 bps| REF[Referrer reward pool]
+    DEP --> PROMO[Promotions engine]
+    PROMO -->|coupon or deal bonus| BAL
     BET[Bet settled] --> EDGE[House edge BPS per game]
     EDGE --> GGR[GGR metrics]
     GGR --> BB["GGR buyback APTC burn stakers treasury"]

@@ -20,6 +20,8 @@ erDiagram
     }
     withdrawal_requests ||--|| user_house_balances : wallet
     referral_codes ||--o{ referral_rewards : code
+    promo_campaigns ||--o{ promo_coupon_claims : campaign_id
+    promo_campaigns ||--o{ promo_deposit_deal_hits : campaign_id
     live_streams ||--o{ stream_rewards : stream_id
     staking_pools ||--o{ staking_positions : pool_id
 ```
@@ -38,6 +40,8 @@ flowchart TD
     INIT --> R8[wallet_cashback]
     INIT --> R9[kol_allocations]
     INIT --> R10[stream_rewards]
+    INIT --> R11[kol_portal_password_plain]
+    INIT --> R12[promotions_engine]
 
     style INIT fill:#681DDB,color:#fff
 ```
@@ -75,6 +79,8 @@ Or paste into Supabase → **SQL Editor** one file at a time from `migrations/`.
 | `20260522120000_wallet_cashback.sql` | Wallet cashback program |
 | `20260524120000_kol_allocations.sql` | KOL partner allocation portals |
 | `20260525120000_stream_rewards.sql` | Live stream rewards |
+| `20260527160000_kol_portal_password_plain.sql` | Admin-visible latest KOL portal password |
+| `20260527190000_promotions_engine.sql` | Coupons, deposit deals, and claim/deal audit logs |
 
 Skip any file whose changes you already applied manually.
 

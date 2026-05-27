@@ -1,5 +1,7 @@
 # Wheel color detector
 
+Last updated: 2026-05-27
+
 Component used by the Spin Wheel game to show which segment sits under the pointer and which multiplier applies.
 
 ## Component flow

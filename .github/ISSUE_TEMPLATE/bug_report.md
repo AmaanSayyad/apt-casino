@@ -20,6 +20,11 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
+**Chain / environment**
+- Chain: [e.g. Solana, Aptos]
+- Environment: [e.g. production aptcasino.fun, local dev]
+- Feature area: [e.g. promotions, referrals, KOL portal, deposits]
+
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 

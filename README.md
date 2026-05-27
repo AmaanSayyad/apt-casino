@@ -73,6 +73,8 @@ APT-Casino addresses these problems by offering:
 10. **Multichain play** → **Solana** is the default live chain; Aptos Move contracts and additional chains are registered in `src/lib/chains/registry.ts`.
 11. **House balance ledger** → Supabase-backed `user_house_balances` with on-chain deposit/withdraw verification.
 12. **Admin dashboard** → Ops tools for withdrawals, streams, bans, and analytics (server-gated).
+13. **Promotions engine** → Admin-created coupon credits + deposit deals with audit logs and anti-abuse controls.
+14. **KOL portal upgrades** → Self-service password reset and expanded earnings surfaces.
 
 ## Technical Architecture
 
@@ -100,6 +102,7 @@ flowchart TB
         SB[(Supabase Postgres)]
         LP[Livepeer]
         Chat[Socket.IO Chat]
+        Promo[Promotions Engine]
     end
 
     subgraph Chains["Blockchains"]
@@ -114,6 +117,7 @@ flowchart TB
     Wallet --> API
     API --> Fair
     API --> SB
+    API --> Promo
     Admin --> SB
     API --> SOL
     API --> APT

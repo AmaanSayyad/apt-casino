@@ -11,7 +11,7 @@ export const ROADMAP_PHASES_SEQUENCE = `sequenceDiagram
   participant H as Long term
 
   Note over L: 4 games · Sol + Aptos
-  Note over L: Live · GGR · referrals
+  Note over L: Live · GGR · referrals · promotions
   L->>N: Bags TGE · 10% APTC
   Note over N: Staking · LP · buybacks
   N->>M: Sui · EVM · audit

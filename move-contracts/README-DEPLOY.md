@@ -1,5 +1,7 @@
 # Aptos Move — compile & publish
 
+Last updated: 2026-05-27
+
 Move package for roulette, mines, plinko, wheel, and shared `user_balance` / `game_logger` modules.
 
 ## Deploy sequence

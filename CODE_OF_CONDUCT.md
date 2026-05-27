@@ -1,5 +1,7 @@
 # Contributor Covenant Code of Conduct
 
+Repository note: reviewed during docs refresh on 2026-05-27.
+
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our

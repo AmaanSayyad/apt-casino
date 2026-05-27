@@ -1,5 +1,7 @@
 # Solana program — APT Casino (`apt_casino`)
 
+Last updated: 2026-05-27
+
 Anchor program alongside `move-contracts/`. Mirrors Aptos **`user_balance`** (vault + per-player ledger) and **`game_logger`** (on-chain audit events). Game math and UI remain in the Next.js app + Supabase ledger for the current production path.
 
 ## Account layout (PDAs)

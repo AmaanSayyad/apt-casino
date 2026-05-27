@@ -1,5 +1,7 @@
 # Contract deployment reference
 
+Last updated: 2026-05-27
+
 On-chain integration details for APT Casino. For step-by-step publish commands see [move-contracts/README-DEPLOY.md](./move-contracts/README-DEPLOY.md) and [solana-programs/README-DEPLOY.md](./solana-programs/README-DEPLOY.md).
 
 ## Package topology
@@ -137,3 +139,4 @@ flowchart LR
 3. Play one round each of Mines and Plinko
 4. Request withdraw (or verify demo mode without wallet)
 5. Confirm Supabase `user_house_balances` and game history rows update
+6. Verify `/api/promotions/public` returns active campaigns after migration sync

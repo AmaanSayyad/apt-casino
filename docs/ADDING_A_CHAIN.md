@@ -1,5 +1,7 @@
 # Adding a new play chain
 
+Last updated: 2026-05-27
+
 Solana is the default (`NEXT_PUBLIC_DEFAULT_PLAY_CHAIN=solana`). New chains plug into the registry and shared API routes under `/api/chains/[chainId]/`.
 
 ## Integration map
@@ -106,4 +108,5 @@ Keep `/api/solana/*` as thin wrappers (see existing routes) if external tools de
 - [ ] Deposit flow in `usePlayDeposit`
 - [ ] Game pages use `usePlayBalance` / `usePlayCurrency` (chain-aware)
 - [ ] Smoke test: connect → deposit → bet one game → withdraw
+- [ ] Verify chain path compatibility with promotions/deposit-deal bonus hooks
 - [ ] Update [README.md](../README.md) and `.env.example`
