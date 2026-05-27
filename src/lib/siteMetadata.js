@@ -16,8 +16,8 @@ export const SITE_NAME = 'APT Casino';
 /** White spade on purple gradient — `public/` + `src/app/icon.png` + `src/app/apple-icon.png`. */
 export const SITE_ICON_PATH = '/APT-Casino-Logo.png';
 
-/** Static 1200×630 PNG for Telegram / WhatsApp / Discord (must not be JS-generated). */
-export const DEFAULT_OG_IMAGE_PATH = '/og/social-share.png';
+/** Versioned OG route to force social preview refresh after copy/design changes. */
+export const DEFAULT_OG_IMAGE_PATH = '/opengraph-image?v=20260527a';
 
 export const siteIcons = {
   icon: [
