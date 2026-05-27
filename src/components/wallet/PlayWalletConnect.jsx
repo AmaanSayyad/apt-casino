@@ -25,7 +25,9 @@ function walletExplorerHref(chain, address) {
 }
 
 /**
- * @param {'dropdown' | 'sheet'} layout — `sheet` = full-width inline panel (mobile nav)
+ * @param {'dropdown' | 'sheet' | 'compact'} layout
+ * — `sheet` = full-width inline panel (mobile nav)
+ * — `compact` = icon button in mobile header (left of chat)
  */
 export default function PlayWalletConnect({
   onManageBalance,
@@ -46,6 +48,7 @@ export default function PlayWalletConnect({
   const symbol = balanceSymbol ?? config?.nativeSymbol ?? play.chain;
   const balanceText = isLoadingBalance ? '…' : (balanceFormatted ?? '0.000');
   const isSheet = layout === 'sheet';
+  const isCompact = layout === 'compact';
   const explorerHref = walletExplorerHref(play.chain, play.address);
 
   useEffect(() => {
@@ -96,10 +99,21 @@ export default function PlayWalletConnect({
           className={
             isSheet
               ? 'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold uppercase tracking-widest text-white hover:bg-white/10 transition-colors'
-              : 'px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold uppercase tracking-widest border border-white/10 transition-all active:scale-95 whitespace-nowrap'
+              : isCompact
+                ? 'p-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-colors'
+                : 'px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold uppercase tracking-widest border border-white/10 transition-all active:scale-95 whitespace-nowrap'
           }
+          aria-label="Connect wallet"
+          title="Connect wallet"
         >
-          Connect wallet
+          {isCompact ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+              <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+            </svg>
+          ) : (
+            'Connect wallet'
+          )}
         </button>
         <ChainConnectModal open={modalOpen} onClose={() => setModalOpen(false)} />
       </>
@@ -108,7 +122,9 @@ export default function PlayWalletConnect({
 
   const triggerClass = isSheet
     ? 'flex w-full items-center gap-3 rounded-xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.02] px-3 py-3 text-left transition-colors hover:border-violet-500/30'
-    : 'flex max-w-[min(100%,11rem)] sm:max-w-[13.5rem] items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 hover:bg-white/10 transition-colors';
+    : isCompact
+      ? 'relative flex items-center justify-center p-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors'
+      : 'flex max-w-[min(100%,11rem)] sm:max-w-[13.5rem] items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 hover:bg-white/10 transition-colors';
 
   const menuPanel = (
     <div
@@ -215,30 +231,43 @@ export default function PlayWalletConnect({
           className={triggerClass}
           aria-expanded={menuOpen}
           aria-haspopup="menu"
+          aria-label={isCompact ? `Wallet · ${symbol} ${balanceText}` : undefined}
           title={`${symbol} ${balanceText} · ${play.address}`}
         >
-          <div className={`relative shrink-0 ${isSheet ? 'h-9 w-9' : 'h-5 w-5'}`}>
+          <div className={`relative shrink-0 ${isSheet ? 'h-9 w-9' : isCompact ? 'h-5 w-5' : 'h-5 w-5'}`}>
             <Image src={ui.logo} alt="" fill className="object-contain" sizes={isSheet ? '36px' : '20px'} />
           </div>
-          <div className="min-w-0 flex-1 leading-tight">
+          {!isCompact && (
+            <>
+              <div className="min-w-0 flex-1 leading-tight">
+                <span
+                  className={`block truncate font-mono tabular-nums text-emerald-300/95 ${isSheet ? 'text-sm font-semibold' : 'text-[11px]'}`}
+                >
+                  {symbol} {balanceText}
+                </span>
+                <span className={`block truncate font-mono text-white/55 ${isSheet ? 'text-xs' : 'text-[10px]'}`}>
+                  {shorten(play.address)}
+                </span>
+              </div>
+              <svg
+                className={`shrink-0 text-white/40 transition-transform ${menuOpen ? 'rotate-180' : ''} ${isSheet ? 'h-5 w-5' : 'h-3.5 w-3.5'}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </>
+          )}
+          {isCompact && (
             <span
-              className={`block truncate font-mono tabular-nums text-emerald-300/95 ${isSheet ? 'text-sm font-semibold' : 'text-[11px]'}`}
+              className="absolute -bottom-0.5 -right-0.5 min-w-[2.25rem] rounded-md bg-emerald-500/20 px-1 py-px text-[9px] font-mono font-semibold tabular-nums text-emerald-300 ring-1 ring-emerald-500/30"
+              aria-hidden
             >
-              {symbol} {balanceText}
+              {balanceText}
             </span>
-            <span className={`block truncate font-mono text-white/55 ${isSheet ? 'text-xs' : 'text-[10px]'}`}>
-              {shorten(play.address)}
-            </span>
-          </div>
-          <svg
-            className={`shrink-0 text-white/40 transition-transform ${menuOpen ? 'rotate-180' : ''} ${isSheet ? 'h-5 w-5' : 'h-3.5 w-3.5'}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          )}
         </button>
 
         {menuOpen && menuPanel}

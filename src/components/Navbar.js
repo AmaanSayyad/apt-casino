@@ -467,6 +467,16 @@ export default function Navbar() {
             {demoMode ? 'Demo on' : 'Demo'}
           </button>
 
+          <div className="md:hidden">
+            <PlayWalletConnect
+              layout="compact"
+              onManageBalance={() => setShowBalanceModal(true)}
+              balanceFormatted={formatPlayBalance()}
+              balanceSymbol={playSymbol}
+              isLoadingBalance={isLoadingBalance}
+            />
+          </div>
+
           <button
             type="button"
             onClick={() => setChatOpen(true)}
