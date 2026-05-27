@@ -6,6 +6,7 @@ import {
   FaCoins,
   FaExternalLinkAlt,
   FaLock,
+  FaKey,
   FaSignOutAlt,
   FaUnlock,
   FaUserFriends,
@@ -77,6 +78,14 @@ export default function KolPortalClient({ slug }) {
   const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState('');
   const [authed, setAuthed] = useState(false);
+  const [pwForm, setPwForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwMessage, setPwMessage] = useState('');
+  const [pwError, setPwError] = useState('');
 
   const countdown = useCountdown(allocation?.secondsUntilUnlock);
 
@@ -137,6 +146,33 @@ export default function KolPortalClient({ slug }) {
     await fetch(`/api/kol/${slug}/auth`, { method: 'DELETE', credentials: 'include' });
     setAuthed(false);
     setAllocation(null);
+    setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setPwMessage('');
+    setPwError('');
+  };
+
+  const changePassword = async (e) => {
+    e.preventDefault();
+    setPwLoading(true);
+    setPwMessage('');
+    setPwError('');
+    try {
+      const r = await fetch(`/api/kol/${slug}/password`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pwForm),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Password update failed');
+      setAllocation(j.allocation);
+      setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPwMessage('Password updated successfully.');
+    } catch (err) {
+      setPwError(err.message || 'Password update failed');
+    } finally {
+      setPwLoading(false);
+    }
   };
 
   const statusKey = allocation?.effectiveStatus || 'locked';
@@ -277,6 +313,62 @@ export default function KolPortalClient({ slug }) {
             </a>
           </div>
         ) : null}
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-black/20 p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <FaKey className="text-violet-400 text-sm" />
+          <h3 className="text-sm font-semibold text-white">Change portal password</h3>
+        </div>
+        <p className="text-xs text-white/45 mb-4">
+          Set a new password for this portal. Your APT Casino contact can see the updated password in the admin dashboard.
+        </p>
+        <form onSubmit={changePassword} className="space-y-3 max-w-md">
+          <label className="block text-sm">
+            <span className="text-white/60">Current password</span>
+            <input
+              type="password"
+              value={pwForm.currentPassword}
+              onChange={(e) => setPwForm((f) => ({ ...f, currentPassword: e.target.value }))}
+              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white"
+              required
+              autoComplete="current-password"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-white/60">New password</span>
+            <input
+              type="password"
+              value={pwForm.newPassword}
+              onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
+              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white"
+              required
+              minLength={6}
+              autoComplete="new-password"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-white/60">Confirm new password</span>
+            <input
+              type="password"
+              value={pwForm.confirmPassword}
+              onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white"
+              required
+              minLength={6}
+              autoComplete="new-password"
+            />
+          </label>
+          {pwError ? <p className="text-sm text-rose-300">{pwError}</p> : null}
+          {pwMessage ? <p className="text-sm text-emerald-300">{pwMessage}</p> : null}
+          <button
+            type="submit"
+            disabled={pwLoading}
+            className="rounded-lg bg-violet-600/90 hover:bg-violet-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {pwLoading ? 'Updating…' : 'Update password'}
+          </button>
+        </form>
       </div>
     </div>
   );

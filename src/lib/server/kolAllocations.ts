@@ -21,6 +21,7 @@ export type KolAllocationRow = {
   unlock_at: string;
   status: KolAllocationStatus;
   portal_password_hash: string;
+  portal_password_plain: string | null;
   fulfillment_tx_hash: string | null;
   fulfilled_at: string | null;
   created_by: string | null;
@@ -128,6 +129,7 @@ export function formatKolAllocationAdmin(row: KolAllocationRow, siteOrigin?: str
   const pub = formatKolAllocationPublic(row, siteOrigin);
   return {
     ...pub,
+    portalPassword: row.portal_password_plain ?? null,
     adminNotes: row.admin_notes,
     createdBy: row.created_by,
     createdAt: row.created_at,
@@ -216,6 +218,7 @@ export async function createKolAllocation(input: {
       unlock_at: computeUnlockAt(lockedAt, lockDays),
       status: 'locked',
       portal_password_hash: hashPortalPassword(password),
+      portal_password_plain: password,
       admin_notes: input.adminNotes?.trim() || null,
       created_by: input.createdBy?.trim() || 'admin',
     })
@@ -255,6 +258,7 @@ export async function updateKolAllocation(
     const p = patch.portalPassword.trim();
     if (p.length < 6) throw new Error('Portal password must be at least 6 characters');
     updates.portal_password_hash = hashPortalPassword(p);
+    updates.portal_password_plain = p;
   }
   if (patch.status != null) updates.status = patch.status;
 
@@ -330,4 +334,33 @@ export async function authenticateKolPortal(slug: string, password: string) {
   if (!row || row.status === 'revoked') return null;
   if (!verifyPortalPassword(password, row.portal_password_hash)) return null;
   return syncKolReadyStatus(row);
+}
+
+/** KOL changes their own portal password (requires current password + valid session). */
+export async function changeKolPortalPassword(input: {
+  slug: string;
+  allocationId: string;
+  currentPassword: string;
+  newPassword: string;
+}) {
+  const row = await getKolAllocationBySlug(input.slug);
+  if (!row || row.id !== input.allocationId) {
+    throw new Error('Allocation not found');
+  }
+  if (row.status === 'revoked') {
+    throw new Error('This allocation is no longer active');
+  }
+
+  const current = String(input.currentPassword || '');
+  const next = String(input.newPassword || '').trim();
+  if (!current) throw new Error('Current password is required');
+  if (next.length < 6) throw new Error('New password must be at least 6 characters');
+  if (!verifyPortalPassword(current, row.portal_password_hash)) {
+    throw new Error('Current password is incorrect');
+  }
+  if (verifyPortalPassword(next, row.portal_password_hash)) {
+    throw new Error('New password must be different from your current password');
+  }
+
+  return updateKolAllocation(row.id, { portalPassword: next });
 }

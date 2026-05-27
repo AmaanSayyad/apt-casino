@@ -330,6 +330,26 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                     Locked {fmtDate(row.lockedAt)} → unlock {fmtDate(row.unlockAt)}
                     {row.effectiveStatus === 'locked' ? ` · ${countdownLabel(row.unlockAt)} left` : ''}
                   </p>
+                  <p className="text-xs text-white/45 mt-1 flex flex-wrap items-center gap-2">
+                    <span>Portal password:</span>
+                    {row.portalPassword ? (
+                      <>
+                        <span className="font-mono text-white/75">{row.portalPassword}</span>
+                        <button
+                          type="button"
+                          className="text-white/40 hover:text-white"
+                          onClick={() => copyText(row.portalPassword)}
+                          title="Copy password"
+                        >
+                          <FaCopy />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-white/30 italic">
+                        Not on file — use Reset password to set and store
+                      </span>
+                    )}
+                  </p>
                   {row.fulfillmentTxHash ? (
                     <p className="text-xs text-cyan-300/80 mt-1 font-mono">TX {short(row.fulfillmentTxHash)}</p>
                   ) : null}
