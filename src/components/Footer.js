@@ -63,22 +63,48 @@ export default function Footer() {
   return (
     <footer
       id="footer"
-      className="relative overflow-hidden border-t border-white/10 bg-[#07030a] pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-8 text-white sm:pt-10 sm:pb-6"
+      className="relative overflow-hidden border-t border-white/10 bg-[#07030a] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-5 text-white sm:pt-6 sm:pb-4"
     >
       <div className="absolute -top-20 -left-20 h-60 w-60 rounded-full bg-red-magic/10 blur-[100px]" />
       <div className="absolute -bottom-20 -right-20 h-60 w-60 rounded-full bg-blue-magic/10 blur-[100px]" />
-      <div className="mb-6 h-px w-full bg-gradient-to-r from-transparent via-fuchsia-500/50 to-transparent" />
+      <div className="mb-4 h-px w-full bg-gradient-to-r from-transparent via-fuchsia-500/50 to-transparent" />
 
-      <div className="site-page-pad-x mx-auto grid max-w-[1200px] grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+      <div className="site-page-pad-x mx-auto grid max-w-[1480px] grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
         <div className="lg:col-span-4">
           <Link href="/" className="inline-block transition-transform hover:scale-[1.02]">
             <Image src="/PowerPlay.png" alt="APT-Casino logo" width={172} height={15} />
           </Link>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/65">
-            Multichain GambleFi on Solana and Aptos with provably fair play and creator rewards.
+          <p className="mt-2 max-w-md text-xs leading-relaxed text-white/65">
+            Multichain GambleFi on Solana and Aptos with provably fair play and creator rewards. Grantee{' '}
+            <a
+              href="https://x.com/aptos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-white/30 underline-offset-2 hover:text-white"
+            >
+              Aptos
+            </a>{' '}
+            x{' '}
+            <a
+              href="https://x.com/solana"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-white/30 underline-offset-2 hover:text-white"
+            >
+              Solana
+            </a>{' '}
+            x{' '}
+            <a
+              href="https://x.com/movement_xyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-white/30 underline-offset-2 hover:text-white"
+            >
+              Movementlabs
+            </a>
           </p>
 
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-3 flex items-center gap-2">
             {socialLinks.map((social) => (
               <a
                 key={social.name}
@@ -86,9 +112,9 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={social.name}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10"
               >
-                <Image src={social.icon} alt={social.name} width={18} height={18} className="invert" />
+                <Image src={social.icon} alt={social.name} width={16} height={16} className="invert" />
               </a>
             ))}
           </div>
@@ -96,11 +122,11 @@ export default function Footer() {
         </div>
 
         <div className="lg:col-span-3">
-          <div className="mb-3 flex items-center">
+          <div className="mb-2 flex items-center">
             <div className="mr-2 h-4 w-1 rounded-full magic-gradient" />
             <h3 className="font-display text-lg">Navigation</h3>
           </div>
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5">
             {navLinks.map(({ name, path, external }) => (
               <li key={path}>
                 {external ? (
@@ -108,12 +134,12 @@ export default function Footer() {
                     href={path}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-white/65 transition hover:text-white"
+                    className="text-xs text-white/65 transition hover:text-white"
                   >
                     {name}
                   </a>
                 ) : (
-                  <Link href={path} className="text-sm text-white/65 transition hover:text-white">
+                  <Link href={path} className="text-xs text-white/65 transition hover:text-white">
                     {name}
                   </Link>
                 )}
@@ -121,15 +147,15 @@ export default function Footer() {
             ))}
           </ul>
 
-          <div className="mt-4 border-t border-white/10 pt-3">
+          <div className="mt-3 border-t border-white/10 pt-2">
             <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-white/90">
               <FaShieldAlt className="text-emerald-400" /> Security & Trust
             </h3>
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/75">
+              <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/75">
                 <FaLock className="text-emerald-400" /> SSL Secured
               </span>
-              <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/75">
+              <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/75">
                 <FaShieldAlt className="text-blue-magic" /> Provably Fair
               </span>
             </div>
@@ -137,18 +163,18 @@ export default function Footer() {
         </div>
 
         <div className="lg:col-span-5">
-          <div className="mb-3 flex items-center">
+          <div className="mb-2 flex items-center">
             <div className="mr-2 h-4 w-1 rounded-full magic-gradient" />
             <h3 className="font-display text-lg">Stay Updated</h3>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-[#120818]/80 p-4">
-            <p className="mb-2 text-sm text-white/65">
+          <div className="rounded-xl border border-white/10 bg-[#120818]/80 p-3">
+            <p className="mb-2 text-xs text-white/65">
               Subscribe for product updates, new earning campaigns, and game launches.
             </p>
 
             <form onSubmit={handleSubscribe}>
-              <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="mb-1.5 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <input
                   type="email"
                   id="newsletter-email"
@@ -161,7 +187,7 @@ export default function Footer() {
                     if (subscribeError) setSubscribeError('');
                   }}
                   disabled={subscribing}
-                  className="w-full rounded-md border border-white/10 bg-black/30 px-3 py-2 text-sm focus:border-blue-magic focus:outline-none disabled:opacity-60"
+                  className="w-full rounded-md border border-white/10 bg-black/30 px-3 py-1.5 text-sm focus:border-blue-magic focus:outline-none disabled:opacity-60"
                   required
                 />
                 <button
@@ -179,8 +205,8 @@ export default function Footer() {
               </div>
             </form>
 
-            <div className="mt-3">
-              <Link href="/game" className="inline-flex w-full items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold text-white magic-gradient hover:opacity-90">
+            <div className="mt-2.5">
+              <Link href="/game" className="inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white magic-gradient hover:opacity-90">
                 Launch Game
               </Link>
             </div>
@@ -188,8 +214,8 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="site-page-pad-x mx-auto mt-6 max-w-[1200px]">
-        <div className="mb-3 h-px w-full bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+      <div className="site-page-pad-x mx-auto mt-4 max-w-[1480px]">
+        <div className="mb-2 h-px w-full bg-gradient-to-r from-transparent via-white/15 to-transparent" />
         <div className="flex flex-col items-center justify-between gap-2 text-center text-sm text-white/45 md:flex-row md:text-left">
           <p>© {new Date().getFullYear()} APT-Casino. All rights reserved.</p>
           <p className="text-xs text-white/35">

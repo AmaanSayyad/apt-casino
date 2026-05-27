@@ -1,5 +1,4 @@
 import { ImageResponse } from 'next/og';
-import { OgBrandMark } from '@/lib/og/brandMark';
 import { DEFAULT_SITE_URL, SITE_NAME } from '@/lib/siteMetadata';
 import { isValidReferralCode } from '@/lib/server/referrals';
 
@@ -14,8 +13,7 @@ export default async function Image({ params }) {
     .trim()
     .toUpperCase();
   const valid = isValidReferralCode(code);
-  const host = DEFAULT_SITE_URL.replace(/^https?:\/\//, '');
-  const shortPath = valid ? `/r/${code}` : '';
+  const logoUrl = `${DEFAULT_SITE_URL}/APT-Casino-Logo.png`;
 
   return new ImageResponse(
     (
@@ -42,138 +40,109 @@ export default async function Image({ params }) {
         <div
           style={{
             display: 'flex',
+            flex: 1,
             alignItems: 'center',
-            gap: 20,
-            marginTop: 32,
+            gap: 56,
+            marginTop: 20,
+            paddingLeft: 26,
           }}
         >
-          <OgBrandMark size={88} />
+          <img
+            src={logoUrl}
+            alt="Apt Casino Logo"
+            width={190}
+            height={190}
+            style={{
+              display: 'flex',
+              borderRadius: 20,
+              boxShadow: '0 14px 34px rgba(0,0,0,0.35)',
+            }}
+          />
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 4,
+              flex: 1,
+              gap: 14,
+              maxWidth: 780,
             }}
           >
             <div
               style={{
                 display: 'flex',
-                fontSize: 26,
-                fontWeight: 700,
-                letterSpacing: 3,
-                color: '#f5c6d8',
-                textTransform: 'uppercase',
+                fontSize: 66,
+                fontWeight: 800,
+                color: '#ffffff',
+                lineHeight: 1.04,
+                letterSpacing: -1.4,
               }}
             >
-              {SITE_NAME}
+              AptCasino.fun
             </div>
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 18,
-                color: 'rgba(255,255,255,0.55)',
-              }}
-            >
-              {valid ? 'Referral invite' : 'Join the action'}
+            <div style={{ display: 'flex', flexDirection: 'column', fontSize: 27, color: 'rgba(255,255,255,0.82)', lineHeight: 1.38 }}>
+              <div style={{ display: 'flex' }}>Provably Fair Casino Games on Solana x Aptos x Movement.</div>
+              <div style={{ display: 'flex' }}>Deposit, Play Roulette, Mines, Plinko &amp; more.</div>
+              <div style={{ display: 'flex' }}>Earn via 7 incentivization $APTC model.</div>
             </div>
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            flex: 1,
-            flexDirection: 'column',
-            justifyContent: 'center',
-            gap: 20,
-            marginTop: 8,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              fontSize: 56,
-              fontWeight: 800,
-              color: '#ffffff',
-              lineHeight: 1.05,
-            }}
-          >
-            {valid ? "You're invited" : 'Play provably fair'}
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              fontSize: 24,
-              color: 'rgba(255,255,255,0.78)',
-              lineHeight: 1.35,
-              maxWidth: 900,
-            }}
-          >
-            Roulette, mines, plinko & more on Solana and Aptos.
-          </div>
-
-          {valid ? (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-                padding: '22px 28px',
-                borderRadius: 18,
-                border: '2px solid rgba(236,72,153,0.45)',
-                background: 'rgba(0,0,0,0.45)',
-                maxWidth: 720,
-              }}
-            >
+            {valid ? (
               <div
                 style={{
                   display: 'flex',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  letterSpacing: 4,
-                  color: 'rgba(244,114,182,0.95)',
-                  textTransform: 'uppercase',
+                  flexDirection: 'column',
+                  gap: 8,
+                  padding: '16px 20px',
+                  borderRadius: 14,
+                  border: '2px solid rgba(236,72,153,0.45)',
+                  background: 'rgba(0,0,0,0.38)',
+                  maxWidth: 430,
                 }}
               >
-                Referral code
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 44,
-                  fontWeight: 800,
-                  color: '#ffffff',
-                  letterSpacing: 6,
-                  fontFamily: 'ui-monospace, monospace',
-                }}
-              >
-                {code}
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 22,
-                  color: 'rgba(255,255,255,0.65)',
-                  fontFamily: 'ui-monospace, monospace',
-                }}
-              >
-                {host}
-                {shortPath}
+                <div
+                  style={{
+                    display: 'flex',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    letterSpacing: 3,
+                    color: 'rgba(244,114,182,0.95)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Referral code
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    fontSize: 40,
+                    fontWeight: 800,
+                    color: '#ffffff',
+                    letterSpacing: 5,
+                    fontFamily: 'ui-monospace, monospace',
+                  }}
+                >
+                  {code}
+                </div>
               </div>
             </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
 
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            fontSize: 20,
+            alignItems: 'flex-end',
+            fontSize: 19,
             color: 'rgba(245,198,216,0.9)',
           }}
         >
-          <div style={{ display: 'flex' }}>Deposit · Play · Earn APTC</div>
-          <div style={{ display: 'flex' }}>Provably fair · Multichain</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div style={{ display: 'flex' }}>Grantee: Solana x Aptos x Movementlabs</div>
+            <div style={{ display: 'flex', fontSize: 16, color: 'rgba(245,198,216,0.72)' }}>15x Web3 Hackathon Winner</div>
+          </div>
+          <div style={{ display: 'flex', textAlign: 'right', maxWidth: 520 }}>
+            Autonomous Provably Transparent Casino with $APTC Rewards
+          </div>
         </div>
       </div>
     ),

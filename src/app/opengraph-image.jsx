@@ -1,6 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { OgBrandMark } from '@/lib/og/brandMark';
-import { DEFAULT_DESCRIPTION, DEFAULT_SITE_URL, SITE_NAME } from '@/lib/siteMetadata';
+import { DEFAULT_SITE_URL, SITE_NAME } from '@/lib/siteMetadata';
 
 export const runtime = 'nodejs';
 export const alt = SITE_NAME;
@@ -8,7 +7,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function Image() {
-  const host = DEFAULT_SITE_URL.replace(/^https?:\/\//, '');
+  const logoUrl = `${DEFAULT_SITE_URL}/APT-Casino-Logo.png`;
 
   return new ImageResponse(
     (
@@ -37,64 +36,48 @@ export default async function Image() {
             display: 'flex',
             flex: 1,
             alignItems: 'center',
-            gap: 40,
+            gap: 56,
             marginTop: 20,
+            paddingLeft: 26,
           }}
         >
-          <OgBrandMark size={140} />
+          <img
+            src={logoUrl}
+            alt="Apt Casino Logo"
+            width={190}
+            height={190}
+            style={{
+              display: 'flex',
+              borderRadius: 20,
+              boxShadow: '0 14px 34px rgba(0,0,0,0.35)',
+            }}
+          />
 
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               flex: 1,
-              gap: 18,
+              gap: 14,
+              maxWidth: 780,
             }}
           >
             <div
               style={{
                 display: 'flex',
-                fontSize: 22,
-                fontWeight: 700,
-                letterSpacing: 4,
-                color: '#f5c6d8',
-                textTransform: 'uppercase',
-              }}
-            >
-              {SITE_NAME}
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 52,
+                fontSize: 66,
                 fontWeight: 800,
                 color: '#ffffff',
-                lineHeight: 1.06,
-                letterSpacing: -1,
+                lineHeight: 1.04,
+                letterSpacing: -1.4,
               }}
             >
-              100% on-chain randomness
+              AptCasino.fun
             </div>
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 22,
-                color: 'rgba(255,255,255,0.78)',
-                lineHeight: 1.4,
-                maxWidth: 720,
-              }}
-            >
-              {DEFAULT_DESCRIPTION}
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 20,
-                color: 'rgba(244,114,182,0.9)',
-                fontFamily: 'ui-monospace, monospace',
-              }}
-            >
-              {host}
+            <div style={{ display: 'flex', flexDirection: 'column', fontSize: 27, color: 'rgba(255,255,255,0.82)', lineHeight: 1.38 }}>
+              <div style={{ display: 'flex' }}>Provably Fair Casino Games on Solana x Aptos x Movement.</div>
+              <div style={{ display: 'flex' }}>Deposit, Play Roulette, Mines, Plinko &amp; more.</div>
+              <div style={{ display: 'flex' }}>Earn via 7 incentivization $APTC model.</div>
             </div>
           </div>
         </div>
@@ -103,12 +86,18 @@ export default async function Image() {
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            fontSize: 20,
+            alignItems: 'flex-end',
+            fontSize: 19,
             color: 'rgba(245,198,216,0.9)',
           }}
         >
-          <div style={{ display: 'flex' }}>Solana · Aptos</div>
-          <div style={{ display: 'flex' }}>Provably fair · APTC rewards</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div style={{ display: 'flex' }}>Grantee: Solana x Aptos x Movementlabs</div>
+            <div style={{ display: 'flex', fontSize: 16, color: 'rgba(245,198,216,0.72)' }}>15x Web3 Hackathon Winner</div>
+          </div>
+          <div style={{ display: 'flex', textAlign: 'right', maxWidth: 520 }}>
+            Autonomous Provably Transparent Casino with $APTC Rewards
+          </div>
         </div>
       </div>
     ),

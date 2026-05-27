@@ -429,6 +429,13 @@ export default function KolPortalClient({ slug }) {
               icon: <FaTicketAlt className="text-rose-300" />,
               cta: 'Open OTC lottery',
             },
+            {
+              title: 'Coupon + deposit promo campaigns',
+              desc: 'Share coupon drops (e.g. +0.02 SOL) and deposit milestones (e.g. $500 => $50 APTC).',
+              href: '/profile',
+              icon: <FaGift className="text-fuchsia-300" />,
+              cta: 'See active promos',
+            },
           ].map((item) => (
             <a
               key={item.title}

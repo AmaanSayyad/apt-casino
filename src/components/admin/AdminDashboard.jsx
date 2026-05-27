@@ -6,6 +6,7 @@ import { FaSync, FaSignOutAlt } from 'react-icons/fa';
 import OtcLotteryAdminPanel from '@/components/OtcLotteryAdminPanel';
 import KolAllocationsAdminPanel from '@/components/admin/KolAllocationsAdminPanel';
 import StreamerRewardsAdminPanel from '@/components/admin/StreamerRewardsAdminPanel';
+import PromotionsAdminPanel from '@/components/admin/PromotionsAdminPanel';
 import TournamentsAdminPanel from '@/components/admin/TournamentsAdminPanel';
 import GgrBuybackPanel from '@/components/GgrBuybackPanel';
 import WalletIntelPanel from '@/components/admin/WalletIntelPanel';
@@ -74,6 +75,7 @@ function buildTabGroups(pendingCount, dangerCount) {
       label: 'Integrations',
       tabs: [
         { id: 'otc', label: 'OTC lottery' },
+        { id: 'promotions', label: 'Promotions' },
         { id: 'kol', label: 'KOL allocations' },
         { id: 'streamers', label: 'Streamer rewards' },
         { id: 'ggr', label: 'GGR buyback' },
@@ -1091,6 +1093,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'tournaments' && <TournamentsAdminPanel adminToken={adminToken} />}
           {activeTab === 'otc' && <OtcLotteryAdminPanel adminToken={adminToken} />}
+          {activeTab === 'promotions' && <PromotionsAdminPanel adminToken={adminToken} />}
           {activeTab === 'kol' && <KolAllocationsAdminPanel adminToken={adminToken} />}
           {activeTab === 'streamers' && <StreamerRewardsAdminPanel adminToken={adminToken} />}
           {activeTab === 'ggr' && <GgrBuybackPanel adminToken={adminToken} />}

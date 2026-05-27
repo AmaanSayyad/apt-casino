@@ -14,6 +14,7 @@ import { getDepositAptcBonusStatus } from '@/lib/server/depositAptcBonus';
 import { getDailyStreakStatus } from '@/lib/server/dailyStreak';
 import { getFeeTiersPublicPayload } from '@/lib/server/feeTiers';
 import { resolveReferralChain } from '@/lib/server/referrals';
+import { getWalletPromotionSummary } from '@/lib/server/promotions';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,7 @@ export async function GET(req: NextRequest) {
     cashbackStatus,
     depositAptcBonus,
     dailyStreakStatus,
+    promotionsSummary,
   ] = await Promise.all([
     supabase
       .from('user_profiles')
@@ -83,6 +85,7 @@ export async function GET(req: NextRequest) {
     chainId === 'solana' ? getCashbackStatus(wallet, chainId) : Promise.resolve(null),
     getDepositAptcBonusStatus(wallet, chainId),
     getDailyStreakStatus(wallet, chainId),
+    getWalletPromotionSummary(wallet, chainId),
   ]);
 
   if (depositsFetch.error) {
@@ -202,6 +205,7 @@ export async function GET(req: NextRequest) {
         }
       : null,
     dailyStreak: dailyStreakStatus,
+    promotions: promotionsSummary,
     feeTiers: getFeeTiersPublicPayload(),
   });
 }

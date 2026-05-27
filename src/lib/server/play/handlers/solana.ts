@@ -31,6 +31,7 @@ import {
   accrueDepositAptcBonus,
   getDepositBonusLockDays,
 } from '@/lib/server/depositAptcBonus';
+import { getDepositDealBoost } from '@/lib/server/promotions';
 
 const CHAIN = 'solana' as const;
 
@@ -118,13 +119,14 @@ export async function solanaDepositPOST(request: Request) {
     const amountRaw = nativeToRaw(CHAIN, amountNative);
     const feeQuote = await quoteDepositFees(CHAIN, amountNative);
     const depositFeeBps = feeQuote.depositFeeBps;
+    const nativeUsd = Number(feeQuote.nativeUsd || 150);
     const feeRaw = BigInt(feeFromGrossOctas(Number(amountRaw), depositFeeBps));
-    const netRaw = amountRaw > feeRaw ? amountRaw - feeRaw : 0n;
+    const netRaw = amountRaw > feeRaw ? amountRaw - feeRaw : BigInt(0);
 
     const feeNative = rawToNative(CHAIN, feeRaw);
     const netNative = rawToNative(CHAIN, netRaw);
 
-    if (netRaw <= 0n) {
+    if (netRaw <= BigInt(0)) {
       return NextResponse.json(
         {
           error: `Deposit too small — after the ${depositFeeBps / 100}% platform fee nothing would credit to your balance.`,
@@ -213,16 +215,25 @@ export async function solanaDepositPOST(request: Request) {
       console.warn('[chains/solana/deposit] cashback cap sync', e),
     );
 
+    const dealBoost = await getDepositDealBoost({
+      wallet,
+      chain: CHAIN,
+      depositTxHash: txSignature,
+      depositUsd: amountNative * nativeUsd,
+    });
+
     const depositBonusResult = await accrueDepositAptcBonus({
       wallet,
       chain: CHAIN,
       depositTxHash: txSignature,
       depositNative: amountNative,
+      nativeUsdPrice: nativeUsd,
+      extraAptc: dealBoost.extraAptc,
     });
 
     let platformFeeTx: string | null = null;
     let feeSweepPending = false;
-    if (feeRaw > 0n) {
+    if (feeRaw > BigInt(0)) {
       const feeWallet = getResolvedFeeWalletAddress(CHAIN);
       if (feeWallet?.trim()) {
         try {

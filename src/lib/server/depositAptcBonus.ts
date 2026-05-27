@@ -68,6 +68,7 @@ export async function accrueDepositAptcBonus(params: {
   depositTxHash: string;
   depositNative: number;
   nativeUsdPrice?: number;
+  extraAptc?: number;
 }): Promise<{ rewardAptc: number; unlockAt: string } | null> {
   const db = getSupabaseAdmin();
   if (!db) return null;
@@ -80,7 +81,8 @@ export async function accrueDepositAptcBonus(params: {
       ? params.nativeUsdPrice
       : await fetchNativeUsdPrice(params.chain);
 
-  const rewardAptc = await computeDepositAptcBonus(params.depositNative, nativeUsd);
+  const baseRewardAptc = await computeDepositAptcBonus(params.depositNative, nativeUsd);
+  const rewardAptc = baseRewardAptc + Math.max(0, Number(params.extraAptc || 0));
   if (rewardAptc <= 0) {
     console.warn(
       '[depositAptcBonus] skip accrue — reward is 0 (set APTC_USD_PRICE_OVERRIDE or DEPOSIT_APTC_USD_FALLBACK)',

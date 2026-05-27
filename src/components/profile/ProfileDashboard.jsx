@@ -37,6 +37,7 @@ import ProfileEditModal from './ProfileEditModal';
 import CashbackPanel from './CashbackPanel';
 import DepositAptcBonusPanel from './DepositAptcBonusPanel';
 import DailyStreakPanel from './DailyStreakPanel';
+import PromotionsPanel from './PromotionsPanel';
 const TABS = [
   { id: 'overview', label: 'Overview', icon: FaChartLine },
   { id: 'games', label: 'Games', icon: FaDice },
@@ -407,6 +408,7 @@ export default function ProfileDashboard({
               demoMode={demoMode}
               wallet={address}
               onRefresh={onRefresh}
+              onHouseBalanceUpdated={onCashbackClaimed}
               onCashbackClaimed={onCashbackClaimed}
             />
           )}
@@ -432,6 +434,8 @@ export default function ProfileDashboard({
               wallet={address}
               demoMode={demoMode}
               onRefresh={onRefresh}
+              onClaimed={onRefresh}
+              onHouseBalanceUpdated={onCashbackClaimed}
             />
           )}
         </motion.div>
@@ -463,12 +467,20 @@ function OverviewTab({
   demoMode,
   wallet,
   onRefresh,
+  onHouseBalanceUpdated,
   onCashbackClaimed,
 }) {
   if (loading) return <SkeletonGrid cols={4} />;
 
   return (
     <div className="space-y-5">
+      <PromotionsPanel
+        profile={profile}
+        chain={chain}
+        wallet={wallet}
+        onClaimed={onRefresh}
+        onBalanceUpdated={onHouseBalanceUpdated}
+      />
       <CashbackPanel
         cashback={profile?.cashback}
         nativeLabel={nativeLabel}
@@ -681,11 +693,28 @@ function ActivityTab({ profile, chain, nativeLabel, demoMode, view, onViewChange
   );
 }
 
-function EarnTab({ profile, referralStats, loading, chain, wallet, demoMode, onRefresh }) {
+function EarnTab({
+  profile,
+  referralStats,
+  loading,
+  chain,
+  wallet,
+  demoMode,
+  onRefresh,
+  onClaimed,
+  onHouseBalanceUpdated,
+}) {
   if (loading) return <SkeletonGrid cols={2} tall />;
 
   return (
     <div className="space-y-6">
+      <PromotionsPanel
+        profile={profile}
+        chain={chain}
+        wallet={wallet}
+        onClaimed={onClaimed}
+        onBalanceUpdated={onHouseBalanceUpdated}
+      />
       <DailyStreakPanel
         dailyStreak={profile?.dailyStreak}
         chain={chain}

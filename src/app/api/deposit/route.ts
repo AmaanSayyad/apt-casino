@@ -17,6 +17,7 @@ import {
   accrueDepositAptcBonus,
   getDepositBonusLockDays,
 } from '@/lib/server/depositAptcBonus';
+import { getDepositDealBoost } from '@/lib/server/promotions';
 
 function normalizeWallet(input: string): string | null {
   if (!input) return null;
@@ -254,12 +255,20 @@ export async function POST(request: NextRequest) {
         console.warn('deposits_log write failed:', logErr.message);
       }
 
+      const dealBoost = await getDepositDealBoost({
+        wallet,
+        chain: 'aptos',
+        depositTxHash: transactionHash,
+        depositUsd: depositAmount * aptUsd,
+      });
+
       depositBonusResult = await accrueDepositAptcBonus({
         wallet,
         chain: 'aptos',
         depositTxHash: transactionHash,
         depositNative: depositAmount,
         nativeUsdPrice: aptUsd,
+        extraAptc: dealBoost.extraAptc,
       });
 
       // Track the player too so unique counters move on first deposit.
