@@ -16,9 +16,6 @@ export const SITE_NAME = 'APT Casino';
 /** White spade on purple gradient — `public/` + `src/app/icon.png` + `src/app/apple-icon.png`. */
 export const SITE_ICON_PATH = '/APT-Casino-Logo.png';
 
-/** Versioned OG route to force social preview refresh after copy/design changes. */
-export const DEFAULT_OG_IMAGE_PATH = '/opengraph-image?v=20260527a';
-
 export const siteIcons = {
   icon: [
     { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
@@ -70,7 +67,11 @@ export function litepaperPath(fragment = '') {
   return `${LITEPAPER_PATH}${hash}`;
 }
 
-/** @param {{ title?: string; description?: string; path?: string; ogImagePath?: string }} opts */
+/**
+ * @param {{ title?: string; description?: string; path?: string; ogImagePath?: string }} opts
+ * When `ogImagePath` is omitted, rely on segment `opengraph-image` (e.g. `src/app/opengraph-image.jsx`)
+ * so crawlers get a single image URL — duplicate `og:image` tags break Telegram previews.
+ */
 export function buildPageMetadata(opts = {}) {
   const siteUrl = getSiteUrl();
   const title = opts.title ?? DEFAULT_TITLE;
@@ -78,8 +79,38 @@ export function buildPageMetadata(opts = {}) {
   const path = opts.path ?? '/';
   const canonical = new URL(path.startsWith('/') ? path : `/${path}`, siteUrl).toString();
 
-  const ogImagePath = opts.ogImagePath ?? DEFAULT_OG_IMAGE_PATH;
-  const ogImage = new URL(ogImagePath.startsWith('/') ? ogImagePath : `/${ogImagePath}`, siteUrl).toString();
+  const openGraph = {
+    type: 'website',
+    locale: 'en_US',
+    url: canonical,
+    siteName: SITE_NAME,
+    title,
+    description,
+  };
+
+  const twitter = {
+    card: 'summary_large_image',
+    title,
+    description,
+  };
+
+  if (opts.ogImagePath) {
+    const ogImage = new URL(
+      opts.ogImagePath.startsWith('/') ? opts.ogImagePath : `/${opts.ogImagePath}`,
+      siteUrl,
+    ).toString();
+    openGraph.images = [
+      {
+        url: ogImage,
+        secureUrl: ogImage,
+        width: 1200,
+        height: 630,
+        alt: SITE_NAME,
+        type: 'image/png',
+      },
+    ];
+    twitter.images = [{ url: ogImage, alt: SITE_NAME }];
+  }
 
   return {
     title,
@@ -87,30 +118,8 @@ export function buildPageMetadata(opts = {}) {
     metadataBase: new URL(siteUrl),
     icons: siteIcons,
     alternates: { canonical },
-    openGraph: {
-      type: 'website',
-      locale: 'en_US',
-      url: canonical,
-      siteName: SITE_NAME,
-      title,
-      description,
-      images: [
-        {
-          url: ogImage,
-          secureUrl: ogImage,
-          width: 1200,
-          height: 630,
-          alt: SITE_NAME,
-          type: 'image/png',
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [{ url: ogImage, alt: SITE_NAME }],
-    },
+    openGraph,
+    twitter,
   };
 }
 
