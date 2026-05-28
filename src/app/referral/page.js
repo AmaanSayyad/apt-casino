@@ -228,7 +228,7 @@ export default function ReferralsPage() {
     if (!referralLinkShort) return null;
     const text = encodeURIComponent(getReferralTweetText());
     const url = encodeURIComponent(referralLinkShort);
-    return `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+    return `https://x.com/intent/post?text=${text}&url=${url}`;
   }, [referralLinkShort]);
 
   const shareChannels = useMemo(

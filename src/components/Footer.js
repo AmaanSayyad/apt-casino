@@ -15,7 +15,7 @@ export default function Footer() {
   const [subscribing, setSubscribing] = useState(false);
 
   const socialLinks = [
-    { name: 'X (Twitter)', url: 'https://x.com/AptCasino', icon: '/icons/twitter.svg' },
+    { name: 'X (Twitter)', url: 'https://x.com/aptcasinofun', icon: '/icons/twitter.svg' },
     { name: 'Discord', url: 'https://discord.gg/8dhBmbgMke', icon: '/icons/discord.svg' },
     { name: 'Telegram', url: 'https://t.me/apt_casino', icon: '/icons/telegram.svg' },
     { name: 'GitHub', url: 'https://github.com/AmaanSayyad/apt-casino', icon: '/icons/github.svg' },
