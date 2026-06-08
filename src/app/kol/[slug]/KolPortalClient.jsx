@@ -53,10 +53,16 @@ function useCountdown(secondsUntilUnlock) {
   }, [remaining]);
 }
 
+function lockTermsCopy(allocation) {
+  if (!allocation) return 'the configured cliff and lock period';
+  const { cliffDays, lockDays } = allocation;
+  if (cliffDays === lockDays) return `the ${lockDays}-day cliff & lock`;
+  return `the ${cliffDays}-day cliff and ${lockDays}-day total lock`;
+}
+
 const STATUS_COPY = {
   locked: {
     title: 'Allocation locked',
-    body: 'Your APTC partner allocation is reserved. Tokens unlock after the 14-day cliff, then the team processes your payout.',
     tone: 'amber',
   },
   ready: {
@@ -182,6 +188,10 @@ export default function KolPortalClient({ slug }) {
 
   const statusKey = allocation?.effectiveStatus || 'locked';
   const status = STATUS_COPY[statusKey] || STATUS_COPY.locked;
+  const statusBody =
+    statusKey === 'locked'
+      ? `Your APTC partner allocation is reserved. Tokens unlock after ${lockTermsCopy(allocation)}, then the team processes your payout.`
+      : status.body;
 
   if (loading && !authed) {
     return (
@@ -270,7 +280,7 @@ export default function KolPortalClient({ slug }) {
           )}
           <h2 className="text-lg font-semibold text-white">{status.title}</h2>
         </div>
-        <p className="text-sm text-white/65 leading-relaxed">{status.body}</p>
+        <p className="text-sm text-white/65 leading-relaxed">{statusBody}</p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
@@ -300,6 +310,12 @@ export default function KolPortalClient({ slug }) {
         <div className="flex justify-between gap-4">
           <span className="text-white/45">Lock started</span>
           <span className="text-white/80">{fmtDate(allocation.lockedAt)}</span>
+        </div>
+        <div className="flex justify-between gap-4">
+          <span className="text-white/45">Cliff period</span>
+          <span className="text-white/80">
+            {allocation.cliffDays} days · ends {fmtDate(allocation.cliffEndsAt)}
+          </span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-white/45">Lock duration</span>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaCopy, FaExternalLinkAlt, FaGift, FaPlus, FaSync, FaUserFriends } from 'react-icons/fa';
+import { FaCopy, FaExternalLinkAlt, FaGift, FaPlus, FaSync, FaTrash } from 'react-icons/fa';
 import { Badge, EmptyState, Panel, SectionHeading } from '@/components/admin/ui';
 
 function fmtNum(n) {
@@ -49,6 +49,9 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
     slug: '',
     displayName: '',
     walletAddress: '',
+    amountAptc: '',
+    cliffDays: '',
+    lockDays: '',
     portalPassword: '',
     autoGeneratePassword: true,
     adminNotes: '',
@@ -78,8 +81,33 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!defaults) return;
+    setForm((f) => ({
+      ...f,
+      amountAptc: f.amountAptc || String(defaults.amountAptc ?? ''),
+      cliffDays: f.cliffDays || String(defaults.cliffDays ?? ''),
+      lockDays: f.lockDays || String(defaults.lockDays ?? ''),
+    }));
+  }, [defaults]);
+
   const createAllocation = async (e) => {
     e.preventDefault();
+    const amountAptc = Number(form.amountAptc);
+    const cliffDays = Number(form.cliffDays);
+    const lockDays = Number(form.lockDays);
+    if (!Number.isFinite(amountAptc) || amountAptc <= 0) {
+      alert('Enter a valid APTC allocation amount');
+      return;
+    }
+    if (!Number.isFinite(lockDays) || lockDays < 1) {
+      alert('Lock duration must be at least 1 day');
+      return;
+    }
+    if (!Number.isFinite(cliffDays) || cliffDays < 0 || cliffDays > lockDays) {
+      alert('Cliff period must be between 0 and the lock duration');
+      return;
+    }
     setActionId('create');
     setCreatedCreds(null);
     try {
@@ -89,7 +117,12 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
           'Content-Type': 'application/json',
           'x-admin-token': adminToken,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          amountAptc: Number(form.amountAptc),
+          cliffDays: Number(form.cliffDays),
+          lockDays: Number(form.lockDays),
+        }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || 'Create failed');
@@ -102,6 +135,9 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
         slug: '',
         displayName: '',
         walletAddress: '',
+        amountAptc: String(defaults?.amountAptc ?? ''),
+        cliffDays: String(defaults?.cliffDays ?? ''),
+        lockDays: String(defaults?.lockDays ?? ''),
         portalPassword: '',
         autoGeneratePassword: true,
         adminNotes: '',
@@ -109,6 +145,32 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
       await load();
     } catch (err) {
       alert(err.message || 'Create failed');
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const deleteAllocation = async (row) => {
+    const label = row.displayName || row.slug;
+    const warn =
+      row.status === 'fulfilled'
+        ? `Permanently delete "${label}"? This fulfilled allocation will be removed from records.`
+        : row.status === 'locked' || row.effectiveStatus === 'locked' || row.effectiveStatus === 'ready'
+          ? `Permanently delete "${label}"? Their portal will stop working immediately.`
+          : `Permanently delete "${label}"? This cannot be undone.`;
+    if (!window.confirm(warn)) return;
+
+    setActionId(row.id);
+    try {
+      const r = await fetch(`/api/admin/kol-allocations/${row.id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-token': adminToken },
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Delete failed');
+      await load();
+    } catch (err) {
+      alert(err.message || 'Delete failed');
     } finally {
       setActionId(null);
     }
@@ -183,8 +245,8 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
         title="KOL allocations"
         description={
           defaults
-            ? `${fmtNum(defaults.amountAptc)} APTC (${defaults.pctOfSupply}% supply) · ${defaults.lockDays}-day lock · password portal at /kol/[slug]`
-            : 'Partner token allocations with 14-day lock'
+            ? `Defaults: ${fmtNum(defaults.amountAptc)} APTC · ${defaults.cliffDays}-day cliff · ${defaults.lockDays}-day lock · portal at /kol/[slug]`
+            : 'Partner token allocations with customizable cliff and lock'
         }
       />
 
@@ -232,6 +294,58 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
               onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
               required
             />
+          </label>
+          <label className="block text-sm">
+            <span className="text-white/60">APTC allocation</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+              placeholder={defaults ? String(defaults.amountAptc) : '1000000'}
+              value={form.amountAptc}
+              onChange={(e) => setForm((f) => ({ ...f, amountAptc: e.target.value }))}
+              required
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-white/60">% of max supply</span>
+            <input
+              readOnly
+              className="mt-1 w-full rounded-lg bg-black/20 border border-white/10 px-3 py-2 text-white/50"
+              value={
+                form.amountAptc
+                  ? `${((Number(form.amountAptc) / 1_000_000_000) * 100).toFixed(4)}%`
+                  : '—'
+              }
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-white/60">Cliff period (days)</span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+              placeholder={defaults ? String(defaults.cliffDays) : '14'}
+              value={form.cliffDays}
+              onChange={(e) => setForm((f) => ({ ...f, cliffDays: e.target.value }))}
+              required
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-white/60">Lock duration (days)</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+              placeholder={defaults ? String(defaults.lockDays) : '14'}
+              value={form.lockDays}
+              onChange={(e) => setForm((f) => ({ ...f, lockDays: e.target.value }))}
+              required
+            />
+            <span className="mt-1 block text-[11px] text-white/40">Must be ≥ cliff. Unlock date = lock start + lock duration.</span>
           </label>
           <label className="block text-sm md:col-span-2">
             <span className="text-white/60">Solana wallet (payout address)</span>
@@ -324,10 +438,10 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                     <span className="text-xs text-white/40 font-mono">/{row.slug}</span>
                   </div>
                   <p className="text-sm text-white/60 mt-1">
-                    {fmtNum(row.amountAptc)} APTC ({row.pctOfSupply}% supply) · wallet {short(row.walletAddress)}
+                    {fmtNum(row.amountAptc)} APTC ({row.pctOfSupply}% supply) · cliff {row.cliffDays}d · lock {row.lockDays}d · wallet {short(row.walletAddress)}
                   </p>
                   <p className="text-xs text-white/45 mt-1">
-                    Locked {fmtDate(row.lockedAt)} → unlock {fmtDate(row.unlockAt)}
+                    Locked {fmtDate(row.lockedAt)} → cliff ends {fmtDate(row.cliffEndsAt)} → unlock {fmtDate(row.unlockAt)}
                     {row.effectiveStatus === 'locked' ? ` · ${countdownLabel(row.unlockAt)} left` : ''}
                   </p>
                   <p className="text-xs text-white/45 mt-1 flex flex-wrap items-center gap-2">
@@ -373,6 +487,27 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                   >
                     Edit wallet
                   </button>
+                  {row.status !== 'fulfilled' && row.status !== 'revoked' ? (
+                    <button
+                      type="button"
+                      className="text-xs px-2 py-1 rounded border border-white/15 hover:bg-white/5"
+                      onClick={() => {
+                        const amount = window.prompt('APTC allocation amount', String(row.amountAptc));
+                        if (amount == null) return;
+                        const cliff = window.prompt('Cliff period (days)', String(row.cliffDays ?? row.lockDays));
+                        if (cliff == null) return;
+                        const lock = window.prompt('Lock duration (days)', String(row.lockDays));
+                        if (lock == null) return;
+                        patchAllocation(row.id, {
+                          amountAptc: Number(amount),
+                          cliffDays: Number(cliff),
+                          lockDays: Number(lock),
+                        });
+                      }}
+                    >
+                      Edit terms
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="text-xs px-2 py-1 rounded border border-white/15 hover:bg-white/5 inline-flex items-center gap-1"
@@ -406,6 +541,14 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                       Revoke
                     </button>
                   ) : null}
+                  <button
+                    type="button"
+                    disabled={actionId === row.id}
+                    className="text-xs px-2 py-1 rounded border border-rose-500/50 text-rose-300 hover:bg-rose-500/15 inline-flex items-center gap-1 disabled:opacity-50"
+                    onClick={() => deleteAllocation(row)}
+                  >
+                    <FaTrash /> Delete
+                  </button>
                 </div>
               </div>
             </Panel>

@@ -5,8 +5,8 @@ import {
   formatKolAllocationAdmin,
   listKolAllocations,
   KOL_DEFAULT_AMOUNT_APTC,
+  KOL_DEFAULT_CLIFF_DAYS,
   KOL_DEFAULT_LOCK_DAYS,
-  KOL_DEFAULT_PCT_SUPPLY,
 } from '@/lib/server/kolAllocations';
 import { generatePortalPassword } from '@/lib/server/kolPortalAuth';
 
@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
       allocations: rows.map((r) => formatKolAllocationAdmin(r, origin)),
       defaults: {
         amountAptc: KOL_DEFAULT_AMOUNT_APTC,
-        pctOfSupply: KOL_DEFAULT_PCT_SUPPLY,
         lockDays: KOL_DEFAULT_LOCK_DAYS,
+        cliffDays: KOL_DEFAULT_CLIFF_DAYS,
       },
     });
   } catch (e) {
@@ -43,6 +43,7 @@ type CreateBody = {
   adminNotes?: string;
   amountAptc?: number;
   lockDays?: number;
+  cliffDays?: number;
 };
 
 export async function POST(request: NextRequest) {
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
       createdBy: 'dashboard',
       amountAptc: body.amountAptc,
       lockDays: body.lockDays,
+      cliffDays: body.cliffDays,
     });
 
     const origin = request.nextUrl.origin;

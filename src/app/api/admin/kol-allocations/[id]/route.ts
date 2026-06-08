@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireDashboardAdmin } from '@/lib/admin/requireDashboardAdmin';
 import {
+  deleteKolAllocation,
   formatKolAllocationAdmin,
   updateKolAllocation,
 } from '@/lib/server/kolAllocations';
@@ -13,6 +14,9 @@ type PatchBody = {
   portalPassword?: string;
   adminNotes?: string;
   status?: 'locked' | 'ready' | 'fulfilled' | 'revoked';
+  amountAptc?: number;
+  lockDays?: number;
+  cliffDays?: number;
 };
 
 export async function PATCH(
@@ -38,6 +42,24 @@ export async function PATCH(
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Update failed';
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  const denied = requireDashboardAdmin(request);
+  if (denied) return denied;
+
+  const { id } = await context.params;
+
+  try {
+    await deleteKolAllocation(id);
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Delete failed';
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
