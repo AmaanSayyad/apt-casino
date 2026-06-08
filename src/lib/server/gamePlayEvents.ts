@@ -75,24 +75,31 @@ export async function aggregateGameActivityFromPlayEvents(opts?: {
   }
   if (!db) return activity;
 
+  await Promise.all(
+    LIVE_GAME_SLUGS.map(async (slug) => {
+      const { count, error } = await db
+        .from('game_play_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('game', slug)
+        .neq('chain', 'aptos');
+      if (!error) activity[slug].totalBets = count ?? 0;
+    }),
+  );
+
+  const onlineCutoff = opts?.onlineSinceMs ?? Date.now() - 60 * 60 * 1000;
   const { data, error } = await db
     .from('game_play_events')
-    .select('chain, game, wallet, created_at')
-    .neq('chain', 'aptos');
+    .select('game, wallet')
+    .neq('chain', 'aptos')
+    .gte('created_at', new Date(onlineCutoff).toISOString())
+    .limit(5000);
 
   if (error || !data?.length) return activity;
 
-  const onlineCutoff = opts?.onlineSinceMs ?? Date.now() - 60 * 60 * 1000;
   const onlineByGame = new Map<string, Set<string>>();
-
   for (const row of data) {
     const game = String(row.game || '').toLowerCase();
     if (!LIVE_GAME_SLUGS.includes(game as (typeof LIVE_GAME_SLUGS)[number])) continue;
-
-    activity[game].totalBets += 1;
-
-    const createdAt = row.created_at ? new Date(String(row.created_at)).getTime() : 0;
-    if (createdAt < onlineCutoff) continue;
 
     const wallet = String(row.wallet || '').trim();
     if (!wallet) continue;
@@ -112,14 +119,22 @@ export async function aggregateGameActivityFromPlayEvents(opts?: {
   return activity;
 }
 
-export async function aggregatePlayEventsSince(sinceMs: number | null): Promise<{
+const ALL_TIME_AGGREGATE_TTL_MS = 5 * 60_000;
+const MAX_AGGREGATE_ROWS = 50_000;
+
+type PlayEventsAggregate = {
   totalBets: number;
   totalWageredByChain: Record<string, number>;
   maxWinByChain: Record<string, number>;
   playerWins: number;
   activePlayers: number;
   uniqueWallets: number;
-}> {
+};
+
+let allTimeAggregateCache: { at: number; data: PlayEventsAggregate } | null = null;
+let allTimeAggregateInflight: Promise<PlayEventsAggregate> | null = null;
+
+async function aggregatePlayEventsSinceUncached(sinceMs: number | null): Promise<PlayEventsAggregate> {
   const db = getSupabaseAdmin();
   const empty = {
     totalBets: 0,
@@ -133,11 +148,17 @@ export async function aggregatePlayEventsSince(sinceMs: number | null): Promise<
 
   let q = db
     .from('game_play_events')
-    .select('chain, bet_raw, payout_raw, currency, created_at, wallet');
+    .select('chain, bet_raw, payout_raw, currency, created_at, wallet')
+    .limit(MAX_AGGREGATE_ROWS);
   if (sinceMs) {
     q = q.gte('created_at', new Date(sinceMs).toISOString());
   }
-  const { data, error } = await q;
+  const [{ data, error }, allTimeCount] = await Promise.all([
+    q,
+    sinceMs
+      ? Promise.resolve(null)
+      : db.from('game_play_events').select('*', { count: 'exact', head: true }),
+  ]);
   if (error || !data) return empty;
 
   const totalWageredByChain: Record<string, number> = {};
@@ -162,13 +183,36 @@ export async function aggregatePlayEventsSince(sinceMs: number | null): Promise<
   }
 
   return {
-    totalBets: data.length,
+    totalBets: allTimeCount?.count ?? data.length,
     totalWageredByChain,
     maxWinByChain,
     playerWins,
     activePlayers: wallets.size,
     uniqueWallets: wallets.size,
   };
+}
+
+export async function aggregatePlayEventsSince(sinceMs: number | null): Promise<PlayEventsAggregate> {
+  if (sinceMs != null) return aggregatePlayEventsSinceUncached(sinceMs);
+
+  const now = Date.now();
+  if (allTimeAggregateCache && now - allTimeAggregateCache.at < ALL_TIME_AGGREGATE_TTL_MS) {
+    return allTimeAggregateCache.data;
+  }
+  if (allTimeAggregateInflight) return allTimeAggregateInflight;
+
+  allTimeAggregateInflight = aggregatePlayEventsSinceUncached(null)
+    .then((data) => {
+      allTimeAggregateCache = { at: Date.now(), data };
+      allTimeAggregateInflight = null;
+      return data;
+    })
+    .catch((e) => {
+      allTimeAggregateInflight = null;
+      throw e;
+    });
+
+  return allTimeAggregateInflight;
 }
 
 const GAME_DISPLAY: Record<string, string> = {
