@@ -17,6 +17,8 @@ type PatchBody = {
   amountAptc?: number;
   lockDays?: number;
   cliffDays?: number;
+  lockedAt?: string;
+  unlockAt?: string;
 };
 
 export async function PATCH(

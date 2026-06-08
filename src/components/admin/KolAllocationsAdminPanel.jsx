@@ -29,6 +29,37 @@ function countdownLabel(unlockAt) {
   return `${d}d ${h}h ${m}m`;
 }
 
+function toDatetimeLocal(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fromDatetimeLocal(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function addDays(base, days) {
+  const d = new Date(base);
+  d.setDate(d.getDate() + Number(days || 0));
+  return d;
+}
+
+function computeSchedulePreview({ lockedAt, cliffDays, lockDays, unlockAt, useExactUnlock }) {
+  const start = fromDatetimeLocal(lockedAt);
+  if (!start) return null;
+  const cliff = addDays(start, Number(cliffDays) || 0);
+  const unlock = useExactUnlock
+    ? fromDatetimeLocal(unlockAt)
+    : addDays(start, Number(lockDays) || 0);
+  if (!unlock) return null;
+  return { cliffEndsAt: cliff, unlockAt: unlock };
+}
+
 const STATUS_BADGE = {
   locked: 'warning',
   ready: 'success',
@@ -44,6 +75,8 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
   const [error, setError] = useState('');
   const [actionId, setActionId] = useState(null);
   const [createdCreds, setCreatedCreds] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [editForm, setEditForm] = useState(null);
 
   const [form, setForm] = useState({
     slug: '',
@@ -52,6 +85,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
     amountAptc: '',
     cliffDays: '',
     lockDays: '',
+    lockedAt: '',
     portalPassword: '',
     autoGeneratePassword: true,
     adminNotes: '',
@@ -122,6 +156,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
           amountAptc: Number(form.amountAptc),
           cliffDays: Number(form.cliffDays),
           lockDays: Number(form.lockDays),
+          lockedAt: form.lockedAt ? new Date(form.lockedAt).toISOString() : undefined,
         }),
       });
       const j = await r.json();
@@ -138,6 +173,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
         amountAptc: String(defaults?.amountAptc ?? ''),
         cliffDays: String(defaults?.cliffDays ?? ''),
         lockDays: String(defaults?.lockDays ?? ''),
+        lockedAt: '',
         portalPassword: '',
         autoGeneratePassword: true,
         adminNotes: '',
@@ -219,6 +255,80 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
       setActionId(null);
     }
   };
+
+  const openEditSchedule = (row) => {
+    setEditId(row.id);
+    setEditForm({
+      amountAptc: String(row.amountAptc),
+      lockedAt: toDatetimeLocal(row.lockedAt),
+      cliffDays: String(row.cliffDays ?? row.lockDays),
+      lockDays: String(row.lockDays),
+      unlockAt: toDatetimeLocal(row.unlockAt),
+      useExactUnlock: false,
+    });
+  };
+
+  const saveEditSchedule = async () => {
+    if (!editForm || !editId) return;
+    const amountAptc = Number(editForm.amountAptc);
+    const cliffDays = Number(editForm.cliffDays);
+    const lockDays = Number(editForm.lockDays);
+    const lockedAt = fromDatetimeLocal(editForm.lockedAt);
+    if (!lockedAt) {
+      alert('Enter a valid lock start date/time');
+      return;
+    }
+    if (!Number.isFinite(amountAptc) || amountAptc <= 0) {
+      alert('Enter a valid APTC allocation amount');
+      return;
+    }
+    if (!Number.isFinite(lockDays) || lockDays < 1) {
+      alert('Lock duration must be at least 1 day');
+      return;
+    }
+    if (!Number.isFinite(cliffDays) || cliffDays < 0 || cliffDays > lockDays) {
+      alert('Cliff period must be between 0 and the lock duration');
+      return;
+    }
+
+    const patch = {
+      amountAptc,
+      cliffDays,
+      lockedAt: lockedAt.toISOString(),
+    };
+
+    if (editForm.useExactUnlock) {
+      const unlockAt = fromDatetimeLocal(editForm.unlockAt);
+      if (!unlockAt || unlockAt <= lockedAt) {
+        alert('Unlock time must be after lock start');
+        return;
+      }
+      patch.unlockAt = unlockAt.toISOString();
+    } else {
+      patch.lockDays = lockDays;
+    }
+
+    await patchAllocation(editId, patch);
+    setEditId(null);
+    setEditForm(null);
+  };
+
+  const syncEditUnlockFromDays = (next) => {
+    const preview = computeSchedulePreview({ ...next, useExactUnlock: false });
+    if (preview) next.unlockAt = toDatetimeLocal(preview.unlockAt.toISOString());
+    next.useExactUnlock = false;
+    return next;
+  };
+
+  const editPreview = editForm ? computeSchedulePreview(editForm) : null;
+
+  const createPreview = computeSchedulePreview({
+    lockedAt: form.lockedAt || toDatetimeLocal(new Date().toISOString()),
+    cliffDays: form.cliffDays,
+    lockDays: form.lockDays,
+    unlockAt: '',
+    useExactUnlock: false,
+  });
 
   const copyText = async (text) => {
     try {
@@ -347,6 +457,22 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
             />
             <span className="mt-1 block text-[11px] text-white/40">Must be ≥ cliff. Unlock date = lock start + lock duration.</span>
           </label>
+          <label className="block text-sm md:col-span-2">
+            <span className="text-white/60">Lock start (optional)</span>
+            <input
+              type="datetime-local"
+              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+              value={form.lockedAt}
+              onChange={(e) => setForm((f) => ({ ...f, lockedAt: e.target.value }))}
+            />
+            <span className="mt-1 block text-[11px] text-white/40">Leave blank to start the lock immediately on create.</span>
+          </label>
+          {createPreview ? (
+            <div className="md:col-span-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-white/50">
+              Preview: cliff ends {fmtDate(createPreview.cliffEndsAt.toISOString())} · unlock{' '}
+              {fmtDate(createPreview.unlockAt.toISOString())}
+            </div>
+          ) : null}
           <label className="block text-sm md:col-span-2">
             <span className="text-white/60">Solana wallet (payout address)</span>
             <input
@@ -490,22 +616,12 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                   {row.status !== 'fulfilled' && row.status !== 'revoked' ? (
                     <button
                       type="button"
-                      className="text-xs px-2 py-1 rounded border border-white/15 hover:bg-white/5"
-                      onClick={() => {
-                        const amount = window.prompt('APTC allocation amount', String(row.amountAptc));
-                        if (amount == null) return;
-                        const cliff = window.prompt('Cliff period (days)', String(row.cliffDays ?? row.lockDays));
-                        if (cliff == null) return;
-                        const lock = window.prompt('Lock duration (days)', String(row.lockDays));
-                        if (lock == null) return;
-                        patchAllocation(row.id, {
-                          amountAptc: Number(amount),
-                          cliffDays: Number(cliff),
-                          lockDays: Number(lock),
-                        });
-                      }}
+                      className={`text-xs px-2 py-1 rounded border hover:bg-white/5 ${
+                        editId === row.id ? 'border-violet-400/50 bg-violet-500/10 text-white' : 'border-white/15'
+                      }`}
+                      onClick={() => (editId === row.id ? (setEditId(null), setEditForm(null)) : openEditSchedule(row))}
                     >
-                      Edit terms
+                      {editId === row.id ? 'Close editor' : 'Edit schedule'}
                     </button>
                   ) : null}
                   <button
@@ -551,6 +667,102 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                   </button>
                 </div>
               </div>
+
+              {editId === row.id && editForm ? (
+                <div className="mt-4 rounded-xl border border-violet-500/25 bg-violet-950/15 p-4">
+                  <p className="text-sm font-medium text-white mb-3">Edit allocation & schedule</p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <label className="block text-sm md:col-span-2">
+                      <span className="text-white/60">APTC allocation</span>
+                      <input
+                        type="number"
+                        min="1"
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={editForm.amountAptc}
+                        onChange={(e) => setEditForm((f) => ({ ...f, amountAptc: e.target.value }))}
+                      />
+                    </label>
+                    <label className="block text-sm md:col-span-2">
+                      <span className="text-white/60">Lock started</span>
+                      <input
+                        type="datetime-local"
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={editForm.lockedAt}
+                        onChange={(e) =>
+                          setEditForm((f) => syncEditUnlockFromDays({ ...f, lockedAt: e.target.value }))
+                        }
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-white/60">Cliff period (days)</span>
+                      <input
+                        type="number"
+                        min="0"
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={editForm.cliffDays}
+                        onChange={(e) => setEditForm((f) => ({ ...f, cliffDays: e.target.value }))}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-white/60">Lock duration (days)</span>
+                      <input
+                        type="number"
+                        min="1"
+                        disabled={editForm.useExactUnlock}
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 disabled:opacity-50"
+                        value={editForm.lockDays}
+                        onChange={(e) =>
+                          setEditForm((f) => syncEditUnlockFromDays({ ...f, lockDays: e.target.value }))
+                        }
+                      />
+                    </label>
+                    <label className="block text-sm md:col-span-2">
+                      <span className="text-white/60">Unlock at (exact time)</span>
+                      <input
+                        type="datetime-local"
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={editForm.unlockAt}
+                        onChange={(e) =>
+                          setEditForm((f) => ({
+                            ...f,
+                            unlockAt: e.target.value,
+                            useExactUnlock: true,
+                          }))
+                        }
+                      />
+                      <span className="mt-1 block text-[11px] text-white/40">
+                        Edit this to set an exact unlock datetime. Otherwise lock duration (days) is used.
+                      </span>
+                    </label>
+                    {editPreview ? (
+                      <div className="md:col-span-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/55">
+                        Cliff ends {fmtDate(editPreview.cliffEndsAt.toISOString())} · Unlock{' '}
+                        {fmtDate(editPreview.unlockAt.toISOString())}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={actionId === row.id}
+                      onClick={() => saveEditSchedule()}
+                      className="text-xs px-3 py-1.5 rounded bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-50"
+                    >
+                      Save schedule
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditId(null);
+                        setEditForm(null);
+                      }}
+                      className="text-xs px-3 py-1.5 rounded border border-white/15 text-white/70 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </Panel>
           ))}
         </div>

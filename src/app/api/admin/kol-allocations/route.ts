@@ -44,6 +44,7 @@ type CreateBody = {
   amountAptc?: number;
   lockDays?: number;
   cliffDays?: number;
+  lockedAt?: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
       amountAptc: body.amountAptc,
       lockDays: body.lockDays,
       cliffDays: body.cliffDays,
+      lockedAt: body.lockedAt,
     });
 
     const origin = request.nextUrl.origin;

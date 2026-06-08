@@ -23,6 +23,18 @@ export function validateKolLockTerms(lockDays: number, cliffDays: number) {
   }
 }
 
+function parseIsoDate(value: string, label: string): Date {
+  const d = new Date(String(value || '').trim());
+  if (Number.isNaN(d.getTime())) throw new Error(`Invalid ${label}`);
+  return d;
+}
+
+function lockDaysBetween(start: Date, end: Date): number {
+  const ms = end.getTime() - start.getTime();
+  if (ms <= 0) throw new Error('Unlock time must be after lock start');
+  return Math.max(1, Math.ceil(ms / 86_400_000));
+}
+
 export type KolAllocationStatus = 'locked' | 'ready' | 'fulfilled' | 'revoked';
 
 export type KolAllocationRow = {
@@ -219,6 +231,7 @@ export async function createKolAllocation(input: {
   amountAptc?: number;
   lockDays?: number;
   cliffDays?: number;
+  lockedAt?: string;
 }) {
   const db = getSupabaseAdmin();
   if (!db) throw new Error('Database not configured');
@@ -234,7 +247,7 @@ export async function createKolAllocation(input: {
   const password = String(input.portalPassword || '').trim();
   if (password.length < 6) throw new Error('Portal password must be at least 6 characters');
 
-  const lockedAt = new Date();
+  const lockedAt = input.lockedAt ? parseIsoDate(input.lockedAt, 'lock start time') : new Date();
   const lockDays = input.lockDays ?? KOL_DEFAULT_LOCK_DAYS;
   const cliffDays = input.cliffDays ?? KOL_DEFAULT_CLIFF_DAYS;
   const amountAptc = input.amountAptc ?? KOL_DEFAULT_AMOUNT_APTC;
@@ -283,6 +296,8 @@ export async function updateKolAllocation(
     amountAptc?: number;
     lockDays?: number;
     cliffDays?: number;
+    lockedAt?: string;
+    unlockAt?: string;
   },
 ) {
   const db = getSupabaseAdmin();
@@ -319,18 +334,49 @@ export async function updateKolAllocation(
     updates.pct_of_supply = aptcPctOfSupply(amountAptc);
   }
 
-  if (patch.lockDays != null || patch.cliffDays != null) {
+  const schedulePatch =
+    patch.lockedAt != null ||
+    patch.unlockAt != null ||
+    patch.lockDays != null ||
+    patch.cliffDays != null;
+
+  if (schedulePatch) {
     if (existing.status === 'fulfilled' || existing.status === 'revoked') {
-      throw new Error('Cannot change lock terms after fulfillment or revoke');
+      throw new Error('Cannot change schedule after fulfillment or revoke');
     }
-    const lockDays = patch.lockDays ?? existing.lock_days;
+
+    const lockedAt =
+      patch.lockedAt != null
+        ? parseIsoDate(patch.lockedAt, 'lock start time')
+        : new Date(String(existing.locked_at));
+
+    let lockDays = patch.lockDays ?? existing.lock_days;
     const cliffDays = patch.cliffDays ?? Number(existing.cliff_days ?? existing.lock_days);
+
+    let unlockAt: Date;
+    if (patch.unlockAt != null) {
+      unlockAt = parseIsoDate(patch.unlockAt, 'unlock time');
+      if (unlockAt.getTime() <= lockedAt.getTime()) {
+        throw new Error('Unlock time must be after lock start');
+      }
+      lockDays = lockDaysBetween(lockedAt, unlockAt);
+    } else {
+      validateKolLockTerms(lockDays, cliffDays);
+      unlockAt = new Date(computeUnlockAt(lockedAt, lockDays));
+    }
+
     validateKolLockTerms(lockDays, cliffDays);
+
+    updates.locked_at = lockedAt.toISOString();
     updates.lock_days = lockDays;
     updates.cliff_days = cliffDays;
-    updates.unlock_at = computeUnlockAt(new Date(String(existing.locked_at)), lockDays);
-    if (existing.status === 'ready' && new Date(String(updates.unlock_at)).getTime() > Date.now()) {
+    updates.unlock_at = unlockAt.toISOString();
+
+    const unlockMs = unlockAt.getTime();
+    if (existing.status === 'ready' && unlockMs > Date.now()) {
       updates.status = 'locked';
+    } else if (existing.status === 'locked' && unlockMs <= Date.now()) {
+      updates.status = 'ready';
     }
   }
 
