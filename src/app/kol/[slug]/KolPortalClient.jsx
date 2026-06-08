@@ -2,14 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FaClock,
-  FaCoins,
-  FaExternalLinkAlt,
   FaBullhorn,
   FaChartLine,
+  FaCheck,
+  FaChevronDown,
+  FaClock,
+  FaCoins,
+  FaCopy,
+  FaExternalLinkAlt,
   FaGift,
-  FaLock,
   FaKey,
+  FaLock,
   FaSignOutAlt,
   FaTicketAlt,
   FaUnlock,
@@ -30,12 +33,17 @@ function fmtDate(iso) {
   });
 }
 
-function useCountdown(secondsUntilUnlock) {
-  const [remaining, setRemaining] = useState(secondsUntilUnlock ?? 0);
+function fmtShortDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function useCountdown(secondsRemaining) {
+  const [remaining, setRemaining] = useState(secondsRemaining ?? 0);
 
   useEffect(() => {
-    setRemaining(secondsUntilUnlock ?? 0);
-  }, [secondsUntilUnlock]);
+    setRemaining(secondsRemaining ?? 0);
+  }, [secondsRemaining]);
 
   useEffect(() => {
     if (remaining <= 0) return undefined;
@@ -44,12 +52,15 @@ function useCountdown(secondsUntilUnlock) {
   }, [remaining]);
 
   return useMemo(() => {
-    if (remaining <= 0) return { done: true, label: 'Lock period complete' };
+    if (remaining <= 0) return { done: true, label: 'Complete', seconds: 0 };
     const d = Math.floor(remaining / 86400);
     const h = Math.floor((remaining % 86400) / 3600);
     const m = Math.floor((remaining % 3600) / 60);
     const s = remaining % 60;
-    return { done: false, label: `${d}d ${h}h ${m}m ${s}s` };
+    const parts = [];
+    if (d > 0) parts.push(`${d}d`);
+    parts.push(`${h}h`, `${m}m`, `${s}s`);
+    return { done: false, label: parts.join(' '), seconds: remaining };
   }, [remaining]);
 }
 
@@ -60,27 +71,139 @@ function lockTermsCopy(allocation) {
   return `the ${cliffDays}-day cliff and ${lockDays}-day total lock`;
 }
 
-const STATUS_COPY = {
+const STATUS = {
   locked: {
     title: 'Allocation locked',
     tone: 'amber',
+    pill: 'Locked',
+    icon: FaLock,
   },
   ready: {
     title: 'Unlock complete — payout queued',
     body: 'Your lock period has ended. APT Casino ops will send APTC to your registered Solana wallet shortly.',
     tone: 'emerald',
+    pill: 'Ready for payout',
+    icon: FaUnlock,
   },
   fulfilled: {
     title: 'APTC delivered',
     body: 'Your allocation has been sent. Check your wallet and the transaction link below.',
     tone: 'cyan',
+    pill: 'Delivered',
+    icon: FaCheck,
   },
   revoked: {
     title: 'Allocation revoked',
     body: 'This allocation is no longer active. Contact the APT Casino team if you believe this is an error.',
     tone: 'rose',
+    pill: 'Revoked',
+    icon: FaLock,
   },
 };
+
+const TONE_STYLES = {
+  amber: {
+    border: 'border-amber-500/35',
+    bg: 'bg-amber-950/25',
+    text: 'text-amber-300',
+    pill: 'bg-amber-500/15 text-amber-200 ring-amber-500/30',
+    glow: 'from-amber-500/20',
+  },
+  emerald: {
+    border: 'border-emerald-500/35',
+    bg: 'bg-emerald-950/25',
+    text: 'text-emerald-300',
+    pill: 'bg-emerald-500/15 text-emerald-200 ring-emerald-500/30',
+    glow: 'from-emerald-500/20',
+  },
+  cyan: {
+    border: 'border-cyan-500/35',
+    bg: 'bg-cyan-950/25',
+    text: 'text-cyan-300',
+    pill: 'bg-cyan-500/15 text-cyan-200 ring-cyan-500/30',
+    glow: 'from-cyan-500/20',
+  },
+  rose: {
+    border: 'border-rose-500/35',
+    bg: 'bg-rose-950/25',
+    text: 'text-rose-300',
+    pill: 'bg-rose-500/15 text-rose-200 ring-rose-500/30',
+    glow: 'from-rose-500/20',
+  },
+};
+
+function VestingTimeline({ allocation, cliffCountdown, unlockCountdown }) {
+  const lockedMs = new Date(allocation.lockedAt).getTime();
+  const cliffMs = new Date(allocation.cliffEndsAt).getTime();
+  const unlockMs = new Date(allocation.unlockAt).getTime();
+  const now = Date.now();
+  const total = Math.max(1, unlockMs - lockedMs);
+  const progress = Math.min(100, Math.max(0, ((now - lockedMs) / total) * 100));
+  const cliffPct = Math.min(100, Math.max(0, ((cliffMs - lockedMs) / total) * 100));
+  const cliffDone = cliffCountdown.done;
+  const unlockDone = unlockCountdown.done;
+
+  const steps = [
+    { id: 'start', label: 'Allocated', date: allocation.lockedAt, done: true },
+    { id: 'cliff', label: 'Cliff ends', date: allocation.cliffEndsAt, done: cliffDone },
+    { id: 'unlock', label: 'Full unlock', date: allocation.unlockAt, done: unlockDone },
+    {
+      id: 'payout',
+      label: allocation.effectiveStatus === 'fulfilled' ? 'Paid out' : 'Payout',
+      date: allocation.fulfilledAt,
+      done: allocation.effectiveStatus === 'fulfilled',
+    },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/30 p-5 sm:p-6">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Vesting schedule</p>
+          <p className="text-sm text-white/70 mt-1">
+            {allocation.cliffDays}-day cliff · {allocation.lockDays}-day total lock
+          </p>
+        </div>
+        <span className="text-xs font-mono tabular-nums text-white/50">{Math.round(progress)}% elapsed</span>
+      </div>
+
+      <div className="relative h-2 rounded-full bg-white/10 overflow-hidden mb-6">
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-1000"
+          style={{ width: `${progress}%` }}
+        />
+        {cliffPct > 0 && cliffPct < 100 ? (
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-amber-400/80"
+            style={{ left: `${cliffPct}%` }}
+            title="Cliff milestone"
+          />
+        ) : null}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {steps.map((step) => (
+          <div
+            key={step.id}
+            className={`rounded-xl border px-3 py-3 ${
+              step.done ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-white/10 bg-white/[0.02]'
+            }`}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              {step.done ? (
+                <FaCheck className="text-emerald-400 text-[10px]" />
+              ) : (
+                <span className="h-2 w-2 rounded-full bg-white/20" />
+              )}
+              <span className="text-[10px] font-bold uppercase tracking-wider text-white/45">{step.label}</span>
+            </div>
+            <p className="text-xs text-white/75">{step.date ? fmtShortDate(step.date) : '—'}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function KolPortalClient({ slug }) {
   const [password, setPassword] = useState('');
@@ -89,6 +212,8 @@ export default function KolPortalClient({ slug }) {
   const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState('');
   const [authed, setAuthed] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [copied, setCopied] = useState('');
   const [pwForm, setPwForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -98,7 +223,8 @@ export default function KolPortalClient({ slug }) {
   const [pwMessage, setPwMessage] = useState('');
   const [pwError, setPwError] = useState('');
 
-  const countdown = useCountdown(allocation?.secondsUntilUnlock);
+  const cliffCountdown = useCountdown(allocation?.secondsUntilCliff);
+  const unlockCountdown = useCountdown(allocation?.secondsUntilUnlock);
 
   const loadAllocation = useCallback(async () => {
     setLoading(true);
@@ -186,284 +312,351 @@ export default function KolPortalClient({ slug }) {
     }
   };
 
-  const statusKey = allocation?.effectiveStatus || 'locked';
-  const status = STATUS_COPY[statusKey] || STATUS_COPY.locked;
-  const statusBody =
-    statusKey === 'locked'
-      ? `Your APTC partner allocation is reserved. Tokens unlock after ${lockTermsCopy(allocation)}, then the team processes your payout.`
-      : status.body;
+  const copyText = async (text, key) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      setTimeout(() => setCopied(''), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
 
   if (loading && !authed) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-white/60">
-        Loading partner portal…
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 text-white/60">
+        <div className="h-10 w-10 rounded-full border-2 border-fuchsia-500/30 border-t-fuchsia-400 animate-spin" />
+        <p className="text-sm">Loading partner portal…</p>
       </div>
     );
   }
 
   if (!authed) {
     return (
-      <div className="max-w-md mx-auto">
-        <div className="rounded-2xl border border-purple-500/30 bg-[#120818]/90 p-8 shadow-2xl backdrop-blur">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600/40 to-fuchsia-600/20 flex items-center justify-center">
-              <FaUserFriends className="text-fuchsia-300 text-xl" />
+      <div className="max-w-lg mx-auto">
+        <div className="rounded-2xl p-[1px] bg-gradient-to-br from-fuchsia-500/40 via-violet-500/20 to-transparent">
+          <div className="rounded-2xl bg-[#0c0510]/95 p-8 shadow-2xl backdrop-blur">
+            <div className="text-center mb-8">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600/50 to-fuchsia-600/30 ring-1 ring-white/10">
+                <FaUserFriends className="text-fuchsia-200 text-2xl" />
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-fuchsia-300/80">APTC KOL program</p>
+              <h1 className="mt-2 text-2xl font-display font-bold text-white">Partner portal</h1>
+              <p className="mt-2 text-sm text-white/50">
+                Private view for <span className="font-mono text-white/70">/kol/{slug}</span>
+              </p>
             </div>
-            <div>
-              <h1 className="text-xl font-display font-bold text-white">KOL Partner Portal</h1>
-              <p className="text-xs text-white/50">Private allocation view</p>
-            </div>
+            <form onSubmit={login} className="space-y-4">
+              <label className="block text-sm">
+                <span className="text-white/60">Portal password</span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1.5 w-full rounded-xl bg-black/50 border border-white/10 px-4 py-3 text-white placeholder:text-white/25 focus:border-fuchsia-500/50 focus:outline-none"
+                  placeholder="Provided by APT Casino team"
+                  required
+                  autoComplete="current-password"
+                />
+              </label>
+              {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 py-3 font-semibold text-white shadow-lg shadow-fuchsia-900/30 disabled:opacity-50"
+              >
+                {authLoading ? 'Verifying…' : 'View my allocation'}
+              </button>
+            </form>
+            <p className="mt-6 text-center text-[11px] text-white/35">
+              Do not share your portal password. Contact APT Casino if you need a reset.
+            </p>
           </div>
-          <form onSubmit={login} className="space-y-4">
-            <label className="block text-sm">
-              <span className="text-white/60">Portal password</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2.5 text-white"
-                placeholder="Provided by APT Casino team"
-                required
-                autoComplete="current-password"
-              />
-            </label>
-            {error ? <p className="text-sm text-rose-300">{error}</p> : null}
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 py-2.5 font-medium text-white disabled:opacity-50"
-            >
-              {authLoading ? 'Verifying…' : 'View allocation'}
-            </button>
-          </form>
         </div>
       </div>
     );
   }
 
-  const toneBorder =
-    status.tone === 'emerald'
-      ? 'border-emerald-500/40'
-      : status.tone === 'cyan'
-        ? 'border-cyan-500/40'
-        : status.tone === 'rose'
-          ? 'border-rose-500/40'
-          : 'border-amber-500/40';
+  const statusKey = allocation.effectiveStatus || 'locked';
+  const status = STATUS[statusKey] || STATUS.locked;
+  const tone = TONE_STYLES[status.tone] || TONE_STYLES.amber;
+  const StatusIcon = status.icon;
+  const statusBody =
+    statusKey === 'locked'
+      ? `Your APTC partner allocation is reserved. Tokens unlock after ${lockTermsCopy(allocation)}, then the team processes your payout.`
+      : status.body;
+
+  const earningsTracks = [
+    {
+      title: 'Live streaming rewards',
+      desc: '0.1% / 0.2% / 0.3% of platform revenue for 5 / 15 / 30+ minute sessions.',
+      href: '/live',
+      icon: <FaVideo className="text-cyan-300" />,
+      cta: 'Go live',
+    },
+    {
+      title: 'Referral monetization',
+      desc: 'Earn up to 20% of qualified first deposits in APTC via your referral link.',
+      href: '/referral',
+      icon: <FaBullhorn className="text-blue-300" />,
+      cta: 'Referral hub',
+    },
+    {
+      title: 'Daily rewards',
+      desc: 'Promote daily streak loops — up to ~30 APTC on the top day.',
+      href: '/profile',
+      icon: <FaGift className="text-amber-300" />,
+      cta: 'Profile rewards',
+    },
+    {
+      title: 'Deposit cashback',
+      desc: 'Up to 1% cashback on net deposits for active Solana players.',
+      href: '/profile',
+      icon: <FaCoins className="text-emerald-300" />,
+      cta: 'Cashback',
+    },
+    {
+      title: 'APTC staking',
+      desc: 'Guide holders into fixed-term pools — APY tiers from 30% to 360%.',
+      href: '/stake',
+      icon: <FaLock className="text-violet-300" />,
+      cta: 'Stake page',
+    },
+    {
+      title: 'OTC lottery',
+      desc: 'Size-friendly SOL → APTC entries that skip thin DEX books.',
+      href: '/otc-lottery',
+      icon: <FaTicketAlt className="text-rose-300" />,
+      cta: 'OTC lottery',
+    },
+  ];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-white/40 mb-1">Partner allocation</p>
-          <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-white to-fuchsia-200 bg-clip-text text-transparent">
-            {allocation.displayName}
-          </h1>
-          <p className="text-sm text-white/50 mt-1">APTC KOL program · {allocation.pctOfSupply}% of max supply</p>
-        </div>
-        <button
-          type="button"
-          onClick={logout}
-          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white px-3 py-1.5 rounded-lg border border-white/10"
-        >
-          <FaSignOutAlt /> Sign out
-        </button>
-      </div>
-
-      <div className={`rounded-2xl border ${toneBorder} bg-[#120818]/80 p-6`}>
-        <div className="flex items-center gap-2 mb-2">
-          {statusKey === 'locked' ? (
-            <FaLock className="text-amber-400" />
-          ) : statusKey === 'fulfilled' ? (
-            <FaUnlock className="text-cyan-400" />
-          ) : (
-            <FaClock className="text-emerald-400" />
-          )}
-          <h2 className="text-lg font-semibold text-white">{status.title}</h2>
-        </div>
-        <p className="text-sm text-white/65 leading-relaxed">{statusBody}</p>
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-white/10 bg-black/30 p-5">
-          <div className="flex items-center gap-2 text-white/50 text-xs uppercase tracking-wide mb-2">
-            <FaCoins className="text-amber-400" /> Allocation
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Hero */}
+      <div className={`relative overflow-hidden rounded-2xl border ${tone.border} ${tone.bg} p-6 sm:p-8`}>
+        <div className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br ${tone.glow} to-transparent blur-3xl`} />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40">Partner allocation</p>
+            <h1 className="mt-1 text-3xl sm:text-4xl font-display font-bold text-white">{allocation.displayName}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${tone.pill}`}>
+                <StatusIcon className="text-[10px]" /> {status.pill}
+              </span>
+              <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/60 ring-1 ring-white/10">
+                {allocation.pctOfSupply}% of max supply
+              </span>
+              <span className="rounded-full bg-white/5 px-3 py-1 text-xs font-mono text-white/50 ring-1 ring-white/10">
+                /kol/{allocation.slug}
+              </span>
+            </div>
           </div>
-          <p className="text-3xl font-display font-bold text-white tabular-nums">{fmtNum(allocation.amountAptc)}</p>
-          <p className="text-sm text-white/50 mt-1">APTC tokens</p>
+          <button
+            type="button"
+            onClick={logout}
+            className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+          >
+            <FaSignOutAlt /> Sign out
+          </button>
         </div>
-        <div className="rounded-xl border border-white/10 bg-black/30 p-5">
-          <div className="flex items-center gap-2 text-white/50 text-xs uppercase tracking-wide mb-2">
-            <FaClock className="text-violet-400" /> Unlock timer
+        <p className="relative mt-4 max-w-2xl text-sm text-white/65 leading-relaxed">{statusBody}</p>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-amber-500/10 to-transparent p-5">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/45 mb-2">
+            <FaCoins className="text-amber-400" /> Your allocation
+          </div>
+          <p className="text-3xl sm:text-4xl font-display font-bold text-white tabular-nums leading-none">
+            {fmtNum(allocation.amountAptc)}
+          </p>
+          <p className="text-sm text-amber-200/70 mt-2">APTC tokens</p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/10 to-transparent p-5">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/45 mb-2">
+            <FaClock className="text-violet-400" /> Cliff countdown
           </div>
           <p className="text-2xl font-display font-bold text-white tabular-nums">
-            {countdown.done ? 'Unlocked' : countdown.label}
+            {cliffCountdown.done ? 'Cliff passed' : cliffCountdown.label}
           </p>
-          <p className="text-sm text-white/50 mt-1">{fmtDate(allocation.unlockAt)}</p>
+          <p className="text-xs text-white/50 mt-2">{fmtDate(allocation.cliffEndsAt)}</p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-fuchsia-500/10 to-transparent p-5">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-white/45 mb-2">
+            <FaUnlock className="text-fuchsia-400" /> Full unlock
+          </div>
+          <p className="text-2xl font-display font-bold text-white tabular-nums">
+            {unlockCountdown.done ? 'Unlocked' : unlockCountdown.label}
+          </p>
+          <p className="text-xs text-white/50 mt-2">{fmtDate(allocation.unlockAt)}</p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-black/20 p-5 space-y-3 text-sm">
-        <div className="flex justify-between gap-4">
-          <span className="text-white/45">Payout wallet</span>
-          <span className="font-mono text-white/80 text-right break-all">{allocation.walletAddress}</span>
+      <VestingTimeline allocation={allocation} cliffCountdown={cliffCountdown} unlockCountdown={unlockCountdown} />
+
+      {/* Details */}
+      <div className="rounded-2xl border border-white/10 bg-black/25 overflow-hidden">
+        <div className="border-b border-white/10 px-5 py-3">
+          <h3 className="text-sm font-semibold text-white">Allocation details</h3>
         </div>
-        <div className="flex justify-between gap-4">
-          <span className="text-white/45">Lock started</span>
-          <span className="text-white/80">{fmtDate(allocation.lockedAt)}</span>
-        </div>
-        <div className="flex justify-between gap-4">
-          <span className="text-white/45">Cliff period</span>
-          <span className="text-white/80">
-            {allocation.cliffDays} days · ends {fmtDate(allocation.cliffEndsAt)}
-          </span>
-        </div>
-        <div className="flex justify-between gap-4">
-          <span className="text-white/45">Lock duration</span>
-          <span className="text-white/80">{allocation.lockDays} days</span>
-        </div>
-        {allocation.fulfillmentTxHash ? (
-          <div className="flex justify-between gap-4 items-center pt-2 border-t border-white/10">
-            <span className="text-white/45">Payout tx</span>
-            <a
-              href={`https://solscan.io/tx/${allocation.fulfillmentTxHash}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1 font-mono text-xs"
-            >
-              View on Solscan <FaExternalLinkAlt />
-            </a>
+        <dl className="divide-y divide-white/5 text-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-4">
+            <dt className="text-white/45 shrink-0">Payout wallet</dt>
+            <dd className="flex items-center gap-2 min-w-0">
+              <span className="font-mono text-xs sm:text-sm text-white/85 break-all text-right sm:text-left">
+                {allocation.walletAddress}
+              </span>
+              <button
+                type="button"
+                onClick={() => copyText(allocation.walletAddress, 'wallet')}
+                className="shrink-0 rounded-lg border border-white/10 p-2 text-white/50 hover:text-white hover:bg-white/5"
+                title="Copy wallet"
+              >
+                {copied === 'wallet' ? <FaCheck className="text-emerald-400 text-xs" /> : <FaCopy className="text-xs" />}
+              </button>
+              <a
+                href={`https://solscan.io/account/${allocation.walletAddress}`}
+                target="_blank"
+                rel="noreferrer"
+                className="shrink-0 rounded-lg border border-white/10 p-2 text-white/50 hover:text-cyan-300 hover:bg-white/5"
+                title="View on Solscan"
+              >
+                <FaExternalLinkAlt className="text-xs" />
+              </a>
+            </dd>
+          </div>
+          <div className="flex justify-between gap-4 px-5 py-4">
+            <dt className="text-white/45">Lock started</dt>
+            <dd className="text-white/85">{fmtDate(allocation.lockedAt)}</dd>
+          </div>
+          <div className="flex justify-between gap-4 px-5 py-4">
+            <dt className="text-white/45">Cliff period</dt>
+            <dd className="text-white/85 text-right">
+              {allocation.cliffDays} days
+              <span className="block text-xs text-white/45">ends {fmtDate(allocation.cliffEndsAt)}</span>
+            </dd>
+          </div>
+          <div className="flex justify-between gap-4 px-5 py-4">
+            <dt className="text-white/45">Total lock</dt>
+            <dd className="text-white/85 text-right">
+              {allocation.lockDays} days
+              <span className="block text-xs text-white/45">unlock {fmtDate(allocation.unlockAt)}</span>
+            </dd>
+          </div>
+          {allocation.fulfillmentTxHash ? (
+            <div className="flex justify-between gap-4 items-center px-5 py-4">
+              <dt className="text-white/45">Payout transaction</dt>
+              <dd>
+                <a
+                  href={`https://solscan.io/tx/${allocation.fulfillmentTxHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1.5 font-mono text-xs"
+                >
+                  View on Solscan <FaExternalLinkAlt />
+                </a>
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      </div>
+
+      {/* Password — collapsible */}
+      <div className="rounded-2xl border border-white/10 bg-black/20 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setPwOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left hover:bg-white/[0.02] transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <FaKey className="text-violet-400 text-sm" />
+            <span className="text-sm font-semibold text-white">Portal password</span>
+          </div>
+          <FaChevronDown className={`text-white/40 text-xs transition-transform ${pwOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {pwOpen ? (
+          <div className="border-t border-white/10 px-5 py-4">
+            <p className="text-xs text-white/45 mb-4">
+              Update your private portal password. Your APT Casino contact can see the latest value in the admin dashboard.
+            </p>
+            <form onSubmit={changePassword} className="grid gap-3 sm:grid-cols-2 max-w-xl">
+              <label className="block text-sm sm:col-span-2">
+                <span className="text-white/60">Current password</span>
+                <input
+                  type="password"
+                  value={pwForm.currentPassword}
+                  onChange={(e) => setPwForm((f) => ({ ...f, currentPassword: e.target.value }))}
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white"
+                  required
+                  autoComplete="current-password"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-white/60">New password</span>
+                <input
+                  type="password"
+                  value={pwForm.newPassword}
+                  onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white"
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-white/60">Confirm new password</span>
+                <input
+                  type="password"
+                  value={pwForm.confirmPassword}
+                  onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white"
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                />
+              </label>
+              {pwError ? <p className="text-sm text-rose-300 sm:col-span-2">{pwError}</p> : null}
+              {pwMessage ? <p className="text-sm text-emerald-300 sm:col-span-2">{pwMessage}</p> : null}
+              <div className="sm:col-span-2">
+                <button
+                  type="submit"
+                  disabled={pwLoading}
+                  className="rounded-lg bg-violet-600/90 hover:bg-violet-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                >
+                  {pwLoading ? 'Updating…' : 'Update password'}
+                </button>
+              </div>
+            </form>
           </div>
         ) : null}
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-black/20 p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <FaKey className="text-violet-400 text-sm" />
-          <h3 className="text-sm font-semibold text-white">Change portal password</h3>
+      {/* Earnings hub */}
+      <section className="rounded-2xl border border-white/10 bg-black/20 p-5 sm:p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <FaChartLine className="text-fuchsia-300" />
+          <h3 className="text-base font-semibold text-white">Grow your partner income</h3>
         </div>
-        <p className="text-xs text-white/45 mb-4">
-          Set a new password for this portal. Your APT Casino contact can see the updated password in the admin dashboard.
+        <p className="text-xs text-white/50 mb-5 max-w-2xl leading-relaxed">
+          Stack multiple earning tracks — streams, referrals, staking, OTC, and promos — to maximize total partner revenue beyond your APTC allocation.
         </p>
-        <form onSubmit={changePassword} className="space-y-3 max-w-md">
-          <label className="block text-sm">
-            <span className="text-white/60">Current password</span>
-            <input
-              type="password"
-              value={pwForm.currentPassword}
-              onChange={(e) => setPwForm((f) => ({ ...f, currentPassword: e.target.value }))}
-              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white"
-              required
-              autoComplete="current-password"
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="text-white/60">New password</span>
-            <input
-              type="password"
-              value={pwForm.newPassword}
-              onChange={(e) => setPwForm((f) => ({ ...f, newPassword: e.target.value }))}
-              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white"
-              required
-              minLength={6}
-              autoComplete="new-password"
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="text-white/60">Confirm new password</span>
-            <input
-              type="password"
-              value={pwForm.confirmPassword}
-              onChange={(e) => setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white"
-              required
-              minLength={6}
-              autoComplete="new-password"
-            />
-          </label>
-          {pwError ? <p className="text-sm text-rose-300">{pwError}</p> : null}
-          {pwMessage ? <p className="text-sm text-emerald-300">{pwMessage}</p> : null}
-          <button
-            type="submit"
-            disabled={pwLoading}
-            className="rounded-lg bg-violet-600/90 hover:bg-violet-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {pwLoading ? 'Updating…' : 'Update password'}
-          </button>
-        </form>
-      </div>
-
-      <section className="rounded-xl border border-white/10 bg-black/20 p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <FaChartLine className="text-fuchsia-300 text-sm" />
-          <h3 className="text-sm font-semibold text-white">Partner earnings hub</h3>
-        </div>
-        <p className="text-xs text-white/50 mb-4 leading-relaxed">
-          Increase your total partner income by combining multiple tracks. You can promote these flows to different
-          audience types — traders, stream viewers, long-term holders, and community members.
-        </p>
-        <div className="grid gap-3 md:grid-cols-2">
-          {[
-            {
-              title: 'Live streaming rewards',
-              desc: 'Earn 0.1% / 0.2% / 0.3% of platform revenue at 5 / 15 / 30+ minute live sessions.',
-              href: '/live',
-              icon: <FaVideo className="text-cyan-300" />,
-              cta: 'Go live',
-            },
-            {
-              title: 'Referral monetization',
-              desc: 'Drive users through your referral funnel and earn up to 20% of qualified deposits in APTC.',
-              href: '/referral',
-              icon: <FaBullhorn className="text-blue-300" />,
-              cta: 'Referral hub',
-            },
-            {
-              title: 'Daily rewards campaigns',
-              desc: 'Promote daily streak loops (up to ~30 APTC on top day) to lift retention and repeat plays.',
-              href: '/profile',
-              icon: <FaGift className="text-amber-300" />,
-              cta: 'View profile rewards',
-            },
-            {
-              title: 'Cashback on deposits',
-              desc: 'Promote up to 1% cashback on net deposits for active Solana users.',
-              href: '/profile',
-              icon: <FaCoins className="text-emerald-300" />,
-              cta: 'Cashback details',
-            },
-            {
-              title: 'Staking income',
-              desc: 'Guide long-term users into APTC staking with APY tiers currently from 30% to 360%.',
-              href: '/stake',
-              icon: <FaLock className="text-violet-300" />,
-              cta: 'Open staking',
-            },
-            {
-              title: 'OTC lottery access',
-              desc: 'Run OTC pushes where users often avoid DEX-style swap/LP/slippage fee stack (savings vary).',
-              href: '/otc-lottery',
-              icon: <FaTicketAlt className="text-rose-300" />,
-              cta: 'Open OTC lottery',
-            },
-            {
-              title: 'Coupon + deposit promo campaigns',
-              desc: 'Share coupon drops (e.g. +0.02 SOL) and deposit milestones (e.g. $500 => $50 APTC).',
-              href: '/profile',
-              icon: <FaGift className="text-fuchsia-300" />,
-              cta: 'See active promos',
-            },
-          ].map((item) => (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {earningsTracks.map((item) => (
             <a
               key={item.title}
               href={item.href}
-              className="rounded-lg border border-white/10 bg-black/30 p-3 hover:border-white/20 hover:bg-black/40 transition"
+              className="group rounded-xl border border-white/10 bg-black/30 p-4 hover:border-fuchsia-500/30 hover:bg-fuchsia-500/5 transition-all"
             >
-              <div className="flex items-start gap-2.5">
-                <div className="mt-0.5">{item.icon}</div>
-                <div>
-                  <p className="text-sm font-medium text-white">{item.title}</p>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 rounded-lg bg-white/5 p-2 ring-1 ring-white/10 group-hover:ring-fuchsia-500/20">
+                  {item.icon}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white">{item.title}</p>
                   <p className="text-xs text-white/50 mt-1 leading-relaxed">{item.desc}</p>
-                  <p className="text-[11px] uppercase tracking-wider font-semibold text-blue-magic mt-2">
+                  <p className="text-[11px] uppercase tracking-wider font-bold text-fuchsia-300/90 mt-2.5">
                     {item.cta} →
                   </p>
                 </div>
