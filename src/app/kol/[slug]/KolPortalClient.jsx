@@ -38,6 +38,68 @@ function fmtShortDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+function fmtDateOnly(value) {
+  if (!value) return '—';
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(String(value))
+    ? new Date(`${value}T12:00:00`)
+    : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString(undefined, { dateStyle: 'medium' });
+}
+
+function xProfileUrl(handle) {
+  const raw = String(handle || '').trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw.split('?')[0];
+  const h = raw.replace(/^@/, '');
+  return h ? `https://x.com/${encodeURIComponent(h)}` : null;
+}
+
+function xProfileLabel(handle) {
+  const raw = String(handle || '').trim();
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const segment = new URL(raw).pathname.replace(/^\//, '').split('/')[0];
+      return segment ? `@${segment}` : raw;
+    } catch {
+      return raw;
+    }
+  }
+  return raw.startsWith('@') ? raw : `@${raw}`;
+}
+
+function telegramUrl(username) {
+  const raw = String(username || '').trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw.split('?')[0];
+  const u = raw.replace(/^@/, '');
+  return u ? `https://t.me/${encodeURIComponent(u)}` : null;
+}
+
+function telegramLabel(username) {
+  const raw = String(username || '').trim();
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const segment = new URL(raw).pathname.replace(/^\//, '').split('/')[0];
+      return segment ? `@${segment}` : raw;
+    } catch {
+      return raw;
+    }
+  }
+  return raw.startsWith('@') ? raw : `@${raw}`;
+}
+
+function DetailRow({ label, children, multiline = false }) {
+  return (
+    <div
+      className={`flex gap-4 px-5 py-4 ${multiline ? 'flex-col sm:flex-row sm:items-start sm:justify-between' : 'justify-between items-center'}`}
+    >
+      <dt className="text-white/45 shrink-0">{label}</dt>
+      <dd className={`text-white/85 ${multiline ? 'sm:max-w-[65%] sm:text-right' : 'text-right'}`}>{children}</dd>
+    </div>
+  );
+}
+
 function useCountdown(secondsRemaining) {
   const [remaining, setRemaining] = useState(secondsRemaining ?? 0);
 
@@ -545,6 +607,45 @@ export default function KolPortalClient({ slug }) {
               <span className="block text-xs text-white/45">unlock {fmtDate(allocation.unlockAt)}</span>
             </dd>
           </div>
+          {allocation.xHandle ? (
+            <DetailRow label="X">
+              <a
+                href={xProfileUrl(allocation.xHandle)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-cyan-300 hover:text-cyan-200 transition-colors"
+              >
+                {xProfileLabel(allocation.xHandle)}
+                <FaExternalLinkAlt className="text-[10px] opacity-70" />
+              </a>
+            </DetailRow>
+          ) : null}
+          {allocation.country ? <DetailRow label="Country">{allocation.country}</DetailRow> : null}
+          {allocation.telegram ? (
+            <DetailRow label="Tg">
+              <a
+                href={telegramUrl(allocation.telegram)}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-cyan-300 hover:text-cyan-200 transition-colors"
+              >
+                {telegramLabel(allocation.telegram)}
+                <FaExternalLinkAlt className="text-[10px] opacity-70" />
+              </a>
+            </DetailRow>
+          ) : null}
+          {allocation.avgPostViews != null ? (
+            <DetailRow label="Avg post views">{fmtNum(allocation.avgPostViews)}</DetailRow>
+          ) : null}
+          {allocation.promotionCondition ? (
+            <DetailRow label="Promotion condition" multiline>
+              <span className="whitespace-pre-wrap text-sm leading-relaxed">{allocation.promotionCondition}</span>
+            </DetailRow>
+          ) : null}
+          {allocation.broughtBy ? <DetailRow label="Brought by">{allocation.broughtBy}</DetailRow> : null}
+          {allocation.broughtOn ? (
+            <DetailRow label="Brought on">{fmtDateOnly(allocation.broughtOn)}</DetailRow>
+          ) : null}
           {allocation.fulfillmentTxHash ? (
             <div className="flex justify-between gap-4 items-center px-5 py-4">
               <dt className="text-white/45">Payout transaction</dt>

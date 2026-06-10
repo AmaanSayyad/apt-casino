@@ -67,6 +67,28 @@ const STATUS_BADGE = {
   revoked: 'danger',
 };
 
+const EMPTY_PARTNER_FIELDS = {
+  xHandle: '',
+  country: '',
+  telegram: '',
+  avgPostViews: '',
+  promotionCondition: '',
+  broughtBy: '',
+  broughtOn: '',
+};
+
+function partnerFieldsFromRow(row) {
+  return {
+    xHandle: row.xHandle || '',
+    country: row.country || '',
+    telegram: row.telegram || '',
+    avgPostViews: row.avgPostViews != null ? String(row.avgPostViews) : '',
+    promotionCondition: row.promotionCondition || '',
+    broughtBy: row.broughtBy || '',
+    broughtOn: row.broughtOn || '',
+  };
+}
+
 export default function KolAllocationsAdminPanel({ adminToken }) {
   const [allocations, setAllocations] = useState([]);
   const [defaults, setDefaults] = useState(null);
@@ -77,6 +99,8 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
   const [createdCreds, setCreatedCreds] = useState(null);
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState(null);
+  const [detailsId, setDetailsId] = useState(null);
+  const [detailsForm, setDetailsForm] = useState(null);
 
   const [form, setForm] = useState({
     slug: '',
@@ -89,6 +113,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
     portalPassword: '',
     autoGeneratePassword: true,
     adminNotes: '',
+    ...EMPTY_PARTNER_FIELDS,
   });
 
   const load = useCallback(async () => {
@@ -157,6 +182,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
           cliffDays: Number(form.cliffDays),
           lockDays: Number(form.lockDays),
           lockedAt: form.lockedAt ? new Date(form.lockedAt).toISOString() : undefined,
+          avgPostViews: form.avgPostViews ? Number(form.avgPostViews) : undefined,
         }),
       });
       const j = await r.json();
@@ -177,6 +203,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
         portalPassword: '',
         autoGeneratePassword: true,
         adminNotes: '',
+        ...EMPTY_PARTNER_FIELDS,
       });
       await load();
     } catch (err) {
@@ -266,6 +293,24 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
       unlockAt: toDatetimeLocal(row.unlockAt),
       useExactUnlock: false,
     });
+  };
+
+  const openEditDetails = (row) => {
+    setDetailsId(row.id);
+    setDetailsForm(partnerFieldsFromRow(row));
+    setEditId(null);
+    setEditForm(null);
+  };
+
+  const saveEditDetails = async () => {
+    if (!detailsForm || !detailsId) return;
+    await patchAllocation(detailsId, {
+      ...detailsForm,
+      avgPostViews: detailsForm.avgPostViews ? Number(detailsForm.avgPostViews) : null,
+      broughtOn: detailsForm.broughtOn || null,
+    });
+    setDetailsId(null);
+    setDetailsForm(null);
   };
 
   const saveEditSchedule = async () => {
@@ -473,6 +518,79 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
               {fmtDate(createPreview.unlockAt.toISOString())}
             </div>
           ) : null}
+          <div className="md:col-span-2 pt-2 border-t border-white/10">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 mb-3">
+              Partner details (optional)
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="block text-sm">
+                <span className="text-white/60">X</span>
+                <input
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                  placeholder="@handle"
+                  value={form.xHandle}
+                  onChange={(e) => setForm((f) => ({ ...f, xHandle: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-white/60">Country</span>
+                <input
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                  placeholder="United States"
+                  value={form.country}
+                  onChange={(e) => setForm((f) => ({ ...f, country: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-white/60">Tg</span>
+                <input
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                  placeholder="@username"
+                  value={form.telegram}
+                  onChange={(e) => setForm((f) => ({ ...f, telegram: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-white/60">Avg post views</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                  placeholder="50000"
+                  value={form.avgPostViews}
+                  onChange={(e) => setForm((f) => ({ ...f, avgPostViews: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm md:col-span-2">
+                <span className="text-white/60">Promotion condition</span>
+                <textarea
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 min-h-[72px]"
+                  placeholder="e.g. 2 posts + 1 space per month"
+                  value={form.promotionCondition}
+                  onChange={(e) => setForm((f) => ({ ...f, promotionCondition: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-white/60">Brought by</span>
+                <input
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                  placeholder="Referrer or team member"
+                  value={form.broughtBy}
+                  onChange={(e) => setForm((f) => ({ ...f, broughtBy: e.target.value }))}
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="text-white/60">Brought on</span>
+                <input
+                  type="date"
+                  className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                  value={form.broughtOn}
+                  onChange={(e) => setForm((f) => ({ ...f, broughtOn: e.target.value }))}
+                />
+              </label>
+            </div>
+          </div>
           <label className="block text-sm md:col-span-2">
             <span className="text-white/60">Solana wallet (payout address)</span>
             <input
@@ -570,6 +688,21 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                     Locked {fmtDate(row.lockedAt)} → cliff ends {fmtDate(row.cliffEndsAt)} → unlock {fmtDate(row.unlockAt)}
                     {row.effectiveStatus === 'locked' ? ` · ${countdownLabel(row.unlockAt)} left` : ''}
                   </p>
+                  {row.xHandle || row.country || row.telegram || row.avgPostViews != null || row.promotionCondition || row.broughtBy || row.broughtOn ? (
+                    <p className="text-xs text-white/45 mt-2 leading-relaxed">
+                      {row.xHandle ? <span className="mr-3">X: {row.xHandle}</span> : null}
+                      {row.country ? <span className="mr-3">{row.country}</span> : null}
+                      {row.telegram ? <span className="mr-3">Tg: {row.telegram}</span> : null}
+                      {row.avgPostViews != null ? (
+                        <span className="mr-3">Avg views: {fmtNum(row.avgPostViews)}</span>
+                      ) : null}
+                      {row.broughtBy ? <span className="mr-3">Brought by: {row.broughtBy}</span> : null}
+                      {row.broughtOn ? <span className="mr-3">Brought on: {row.broughtOn}</span> : null}
+                    </p>
+                  ) : null}
+                  {row.promotionCondition ? (
+                    <p className="text-xs text-white/40 mt-1">Promotion: {row.promotionCondition}</p>
+                  ) : null}
                   <p className="text-xs text-white/45 mt-1 flex flex-wrap items-center gap-2">
                     <span>Portal password:</span>
                     {row.portalPassword ? (
@@ -605,6 +738,19 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                   </a>
                   <button
                     type="button"
+                    className={`text-xs px-2 py-1 rounded border hover:bg-white/5 ${
+                      detailsId === row.id ? 'border-violet-400/50 bg-violet-500/10 text-white' : 'border-white/15'
+                    }`}
+                    onClick={() =>
+                      detailsId === row.id
+                        ? (setDetailsId(null), setDetailsForm(null))
+                        : openEditDetails(row)
+                    }
+                  >
+                    {detailsId === row.id ? 'Close details' : 'Edit details'}
+                  </button>
+                  <button
+                    type="button"
                     className="text-xs px-2 py-1 rounded border border-white/15 hover:bg-white/5"
                     onClick={() => {
                       const w = window.prompt('Update wallet address', row.walletAddress);
@@ -619,7 +765,16 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                       className={`text-xs px-2 py-1 rounded border hover:bg-white/5 ${
                         editId === row.id ? 'border-violet-400/50 bg-violet-500/10 text-white' : 'border-white/15'
                       }`}
-                      onClick={() => (editId === row.id ? (setEditId(null), setEditForm(null)) : openEditSchedule(row))}
+                      onClick={() => {
+                        if (editId === row.id) {
+                          setEditId(null);
+                          setEditForm(null);
+                        } else {
+                          setDetailsId(null);
+                          setDetailsForm(null);
+                          openEditSchedule(row);
+                        }
+                      }}
                     >
                       {editId === row.id ? 'Close editor' : 'Edit schedule'}
                     </button>
@@ -667,6 +822,93 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                   </button>
                 </div>
               </div>
+
+              {detailsId === row.id && detailsForm ? (
+                <div className="mt-4 rounded-xl border border-cyan-500/25 bg-cyan-950/10 p-4">
+                  <p className="text-sm font-medium text-white mb-3">Partner details</p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <label className="block text-sm">
+                      <span className="text-white/60">X</span>
+                      <input
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={detailsForm.xHandle}
+                        onChange={(e) => setDetailsForm((f) => ({ ...f, xHandle: e.target.value }))}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-white/60">Country</span>
+                      <input
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={detailsForm.country}
+                        onChange={(e) => setDetailsForm((f) => ({ ...f, country: e.target.value }))}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-white/60">Tg</span>
+                      <input
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={detailsForm.telegram}
+                        onChange={(e) => setDetailsForm((f) => ({ ...f, telegram: e.target.value }))}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-white/60">Avg post views</span>
+                      <input
+                        type="number"
+                        min="0"
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={detailsForm.avgPostViews}
+                        onChange={(e) => setDetailsForm((f) => ({ ...f, avgPostViews: e.target.value }))}
+                      />
+                    </label>
+                    <label className="block text-sm md:col-span-2">
+                      <span className="text-white/60">Promotion condition</span>
+                      <textarea
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 min-h-[72px]"
+                        value={detailsForm.promotionCondition}
+                        onChange={(e) => setDetailsForm((f) => ({ ...f, promotionCondition: e.target.value }))}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-white/60">Brought by</span>
+                      <input
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={detailsForm.broughtBy}
+                        onChange={(e) => setDetailsForm((f) => ({ ...f, broughtBy: e.target.value }))}
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="text-white/60">Brought on</span>
+                      <input
+                        type="date"
+                        className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                        value={detailsForm.broughtOn}
+                        onChange={(e) => setDetailsForm((f) => ({ ...f, broughtOn: e.target.value }))}
+                      />
+                    </label>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={actionId === row.id}
+                      onClick={() => saveEditDetails()}
+                      className="text-xs px-3 py-1.5 rounded bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-50"
+                    >
+                      Save details
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDetailsId(null);
+                        setDetailsForm(null);
+                      }}
+                      className="text-xs px-3 py-1.5 rounded border border-white/15 text-white/70 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
               {editId === row.id && editForm ? (
                 <div className="mt-4 rounded-xl border border-violet-500/25 bg-violet-950/15 p-4">

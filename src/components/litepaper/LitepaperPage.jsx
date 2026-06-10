@@ -7,7 +7,7 @@ import LitepaperMedia from './LitepaperMedia';
 import LitepaperDiagramGallery from './LitepaperDiagramGallery';
 import LitepaperPrograms from './LitepaperPrograms';
 import LitepaperContent from './LitepaperContent';
-import LitepaperFounder from './LitepaperFounder';
+
 export default function LitepaperPage() {
   return (
     <main className="litepaper-root site-page-top min-h-screen pb-20">
@@ -19,7 +19,6 @@ export default function LitepaperPage() {
         <LitepaperDiagramGallery />
         <LitepaperPrograms />
         <LitepaperContent />
-        <LitepaperFounder />
       </div>
     </main>
   );

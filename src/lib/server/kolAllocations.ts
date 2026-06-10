@@ -37,6 +37,16 @@ function lockDaysBetween(start: Date, end: Date): number {
 
 export type KolAllocationStatus = 'locked' | 'ready' | 'fulfilled' | 'revoked';
 
+export type KolPartnerMeta = {
+  xHandle: string | null;
+  country: string | null;
+  telegram: string | null;
+  avgPostViews: number | null;
+  promotionCondition: string | null;
+  broughtBy: string | null;
+  broughtOn: string | null;
+};
+
 export type KolAllocationRow = {
   id: string;
   kol_slug: string;
@@ -55,9 +65,59 @@ export type KolAllocationRow = {
   fulfilled_at: string | null;
   created_by: string | null;
   admin_notes: string | null;
+  x_handle: string | null;
+  country: string | null;
+  telegram: string | null;
+  avg_post_views: number | null;
+  promotion_condition: string | null;
+  brought_by: string | null;
+  brought_on: string | null;
   created_at: string;
   updated_at: string;
 };
+
+function optionalText(value: string | null | undefined): string | null {
+  const s = String(value ?? '').trim();
+  return s || null;
+}
+
+function optionalPostViews(value: number | string | null | undefined): number | null {
+  if (value == null || value === '') return null;
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) throw new Error('Avg post views must be a non-negative number');
+  return Math.trunc(n);
+}
+
+function optionalDate(value: string | null | undefined): string | null {
+  const s = String(value ?? '').trim();
+  if (!s) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) throw new Error('Brought on date must be YYYY-MM-DD');
+  return s;
+}
+
+function partnerMetaFromRow(row: KolAllocationRow): KolPartnerMeta {
+  return {
+    xHandle: row.x_handle ?? null,
+    country: row.country ?? null,
+    telegram: row.telegram ?? null,
+    avgPostViews: row.avg_post_views ?? null,
+    promotionCondition: row.promotion_condition ?? null,
+    broughtBy: row.brought_by ?? null,
+    broughtOn: row.brought_on ?? null,
+  };
+}
+
+function partnerMetaToDb(input: Partial<KolPartnerMeta>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  if (input.xHandle !== undefined) out.x_handle = optionalText(input.xHandle);
+  if (input.country !== undefined) out.country = optionalText(input.country);
+  if (input.telegram !== undefined) out.telegram = optionalText(input.telegram);
+  if (input.avgPostViews !== undefined) out.avg_post_views = optionalPostViews(input.avgPostViews);
+  if (input.promotionCondition !== undefined) out.promotion_condition = optionalText(input.promotionCondition);
+  if (input.broughtBy !== undefined) out.brought_by = optionalText(input.broughtBy);
+  if (input.broughtOn !== undefined) out.brought_on = optionalDate(input.broughtOn);
+  return out;
+}
 
 export type KolAllocationPublic = {
   id: string;
@@ -80,7 +140,7 @@ export type KolAllocationPublic = {
   fulfillmentTxHash: string | null;
   fulfilledAt: string | null;
   portalUrl: string;
-};
+} & KolPartnerMeta;
 
 export function normalizeKolSlug(raw: string): string {
   const input = String(raw || '').trim().toLowerCase().slice(0, 64);
@@ -166,6 +226,7 @@ export function formatKolAllocationPublic(
     fulfillmentTxHash: row.fulfillment_tx_hash,
     fulfilledAt: row.fulfilled_at,
     portalUrl: `${origin.replace(/\/$/, '')}/kol/${row.kol_slug}`,
+    ...partnerMetaFromRow(row),
   };
 }
 
@@ -173,6 +234,7 @@ export function formatKolAllocationAdmin(row: KolAllocationRow, siteOrigin?: str
   const pub = formatKolAllocationPublic(row, siteOrigin);
   return {
     ...pub,
+    ...partnerMetaFromRow(row),
     portalPassword: row.portal_password_plain ?? null,
     adminNotes: row.admin_notes,
     createdBy: row.created_by,
@@ -232,7 +294,7 @@ export async function createKolAllocation(input: {
   lockDays?: number;
   cliffDays?: number;
   lockedAt?: string;
-}) {
+} & Partial<KolPartnerMeta>) {
   const db = getSupabaseAdmin();
   if (!db) throw new Error('Database not configured');
 
@@ -256,6 +318,16 @@ export async function createKolAllocation(input: {
     throw new Error('APTC allocation amount must be greater than zero');
   }
 
+  const partnerFields = partnerMetaToDb({
+    xHandle: input.xHandle,
+    country: input.country,
+    telegram: input.telegram,
+    avgPostViews: input.avgPostViews,
+    promotionCondition: input.promotionCondition,
+    broughtBy: input.broughtBy,
+    broughtOn: input.broughtOn,
+  });
+
   const { data, error } = await db
     .from('kol_allocations')
     .insert({
@@ -273,6 +345,7 @@ export async function createKolAllocation(input: {
       portal_password_plain: password,
       admin_notes: input.adminNotes?.trim() || null,
       created_by: input.createdBy?.trim() || 'admin',
+      ...partnerFields,
     })
     .select('*')
     .single();
@@ -298,7 +371,7 @@ export async function updateKolAllocation(
     cliffDays?: number;
     lockedAt?: string;
     unlockAt?: string;
-  },
+  } & Partial<KolPartnerMeta>,
 ) {
   const db = getSupabaseAdmin();
   if (!db) throw new Error('Database not configured');
@@ -321,6 +394,8 @@ export async function updateKolAllocation(
     updates.portal_password_plain = p;
   }
   if (patch.status != null) updates.status = patch.status;
+
+  Object.assign(updates, partnerMetaToDb(patch));
 
   if (patch.amountAptc != null) {
     const amountAptc = Number(patch.amountAptc);

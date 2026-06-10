@@ -19,6 +19,13 @@ type PatchBody = {
   cliffDays?: number;
   lockedAt?: string;
   unlockAt?: string;
+  xHandle?: string;
+  country?: string;
+  telegram?: string;
+  avgPostViews?: number | string | null;
+  promotionCondition?: string;
+  broughtBy?: string;
+  broughtOn?: string | null;
 };
 
 export async function PATCH(

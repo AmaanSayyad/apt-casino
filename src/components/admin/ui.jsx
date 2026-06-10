@@ -179,9 +179,9 @@ export function TabNav({ groups, activeTab, onSelect }) {
 export function AdminTable({ children, className = '', stickyHeader }) {
   return (
     <div
-      className={`overflow-x-auto rounded-2xl border border-white/10 bg-black/20 shadow-inner shadow-black/40 ${className}`}
+      className={`max-w-full overflow-x-auto rounded-2xl border border-white/10 bg-black/20 shadow-inner shadow-black/40 ${className}`}
     >
-      <table className={`w-full min-w-[640px] text-sm text-left ${stickyHeader ? '[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10' : ''}`}>
+      <table className={`w-full min-w-0 sm:min-w-[640px] text-sm text-left ${stickyHeader ? '[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10' : ''}`}>
         {children}
       </table>
     </div>
@@ -343,9 +343,9 @@ export function ChainPills({ options, value, onChange }) {
   );
 }
 
-export function SearchInput({ value, onChange, placeholder }) {
+export function SearchInput({ value, onChange, placeholder, className = '' }) {
   return (
-    <div className="relative max-w-md">
+    <div className={`relative max-w-md w-full ${className}`}>
       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-xs pointer-events-none">
         ⌕
       </span>

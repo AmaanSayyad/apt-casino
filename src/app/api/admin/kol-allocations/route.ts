@@ -45,6 +45,13 @@ type CreateBody = {
   lockDays?: number;
   cliffDays?: number;
   lockedAt?: string;
+  xHandle?: string;
+  country?: string;
+  telegram?: string;
+  avgPostViews?: number | string;
+  promotionCondition?: string;
+  broughtBy?: string;
+  broughtOn?: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -75,6 +82,13 @@ export async function POST(request: NextRequest) {
       lockDays: body.lockDays,
       cliffDays: body.cliffDays,
       lockedAt: body.lockedAt,
+      xHandle: body.xHandle,
+      country: body.country,
+      telegram: body.telegram,
+      avgPostViews: body.avgPostViews,
+      promotionCondition: body.promotionCondition,
+      broughtBy: body.broughtBy,
+      broughtOn: body.broughtOn,
     });
 
     const origin = request.nextUrl.origin;

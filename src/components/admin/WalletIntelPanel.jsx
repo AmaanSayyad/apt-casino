@@ -16,25 +16,25 @@ export default function WalletIntelPanel({
   const bet = a?.betting;
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-6 sm:space-y-8">
       <SectionHeading
         title="Wallet intelligence"
         description="Cross-chain lookup: balances, deposits, withdrawals, play, referrals, staking, and OTC."
       />
 
-      <div className="flex flex-col sm:flex-row gap-3 max-w-3xl">
+      <div className="flex w-full min-w-0 flex-col gap-3 sm:max-w-3xl sm:flex-row">
         <input
           value={walletQuery}
           onChange={(e) => setWalletQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onAnalyze()}
           placeholder="Solana base58 or 0x Aptos address…"
-          className="flex-1 rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-mono focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+          className="min-w-0 w-full flex-1 rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-mono focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
         />
         <button
           type="button"
           onClick={onAnalyze}
           disabled={loading}
-          className="px-8 py-3 rounded-xl magic-gradient font-display font-bold text-sm disabled:opacity-50 shadow-lg shadow-violet-900/20"
+          className="w-full shrink-0 px-8 py-3 rounded-xl magic-gradient font-display font-bold text-sm disabled:opacity-50 shadow-lg shadow-violet-900/20 sm:w-auto"
         >
           {loading ? 'Scanning…' : 'Analyze'}
         </button>
@@ -49,7 +49,7 @@ export default function WalletIntelPanel({
       {intel && (
         <div className="space-y-8 pt-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1.5 rounded-xl bg-black/40 border border-white/10 font-mono text-sm">
+            <span className="max-w-full break-all px-3 py-1.5 rounded-xl bg-black/40 border border-white/10 font-mono text-xs sm:text-sm">
               {shortWallet(intel.query)}
             </span>
             {intel.bannedGlobally && <Badge tone="danger">Globally banned</Badge>}
@@ -123,12 +123,12 @@ export default function WalletIntelPanel({
                 intel.balances.map((b) => (
                   <div
                     key={`${b.chain}-${b.currency}`}
-                    className="flex justify-between text-sm border-b border-white/5 pb-3 last:border-0"
+                    className="flex flex-col gap-1 border-b border-white/5 pb-3 text-sm last:border-0 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <span className="text-white/70">
                       {b.chain} · {b.currency}
                     </span>
-                    <span className="font-mono text-white/90">
+                    <span className="font-mono text-white/90 break-all sm:text-right">
                       {fmtNum(b.balance)}{' '}
                       <span className="text-white/35 text-xs">wd {fmtNum(b.withdrawableNow)}</span>
                     </span>
@@ -140,15 +140,15 @@ export default function WalletIntelPanel({
             <Panel className="p-5 space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Cash flow</p>
               {Object.entries(fin?.totalDepositsByCurrency || {}).map(([c, v]) => (
-                <div key={`d-${c}`} className="flex justify-between text-sm font-mono">
+                <div key={`d-${c}`} className="flex flex-col gap-0.5 text-sm font-mono sm:flex-row sm:justify-between">
                   <span className="text-white/50">Σ deposit {c}</span>
-                  <span className="text-emerald-400">+{fmtNum(v)}</span>
+                  <span className="text-emerald-400 break-all sm:text-right">+{fmtNum(v)}</span>
                 </div>
               ))}
               {Object.entries(fin?.totalWithdrawalsByCurrency || {}).map(([c, v]) => (
-                <div key={`w-${c}`} className="flex justify-between text-sm font-mono">
+                <div key={`w-${c}`} className="flex flex-col gap-0.5 text-sm font-mono sm:flex-row sm:justify-between">
                   <span className="text-white/50">Σ withdraw {c}</span>
-                  <span className="text-rose-400">−{fmtNum(v)}</span>
+                  <span className="text-rose-400 break-all sm:text-right">−{fmtNum(v)}</span>
                 </div>
               ))}
             </Panel>

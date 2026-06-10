@@ -400,10 +400,10 @@ export default function AdminDashboard() {
   const activeTabMeta = tabGroups.flatMap((g) => g.tabs).find((t) => t.id === activeTab);
 
   return (
-    <div className="site-page-top min-h-screen bg-[#060005] text-white pb-16">
+    <div className="site-page-top min-h-screen bg-[#060005] text-white pb-16 overflow-x-hidden max-w-[100vw]">
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(124,58,237,0.15),transparent)]" />
 
-      <div className="relative max-w-[1680px] mx-auto px-4 md:px-6 lg:px-8">
+      <div className="relative max-w-[1680px] mx-auto w-full min-w-0 px-4 md:px-6 lg:px-8">
         <header className="sticky top-0 z-30 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8 py-4 mb-6 border-b border-white/10 bg-[#060005]/85 backdrop-blur-xl">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -621,36 +621,39 @@ export default function AdminDashboard() {
           )}
         </section>
 
-        <div className="grid lg:grid-cols-[220px_1fr] gap-6 lg:gap-8">
-          <aside className="lg:sticky lg:top-24 lg:self-start">
+        <div className="grid w-full min-w-0 lg:grid-cols-[220px_minmax(0,1fr)] gap-6 lg:gap-8">
+          <aside className="min-w-0 w-full lg:sticky lg:top-24 lg:self-start">
             <Panel className="p-4 hidden lg:block">
               <TabNav groups={tabGroups} activeTab={activeTab} onSelect={setActiveTab} />
             </Panel>
-            <div className="lg:hidden overflow-x-auto pb-2 -mx-1 px-1">
-              <div className="flex gap-1.5 min-w-max">
-                {tabGroups.flatMap((g) => g.tabs).map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setActiveTab(t.id)}
-                    className={`shrink-0 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                      activeTab === t.id
-                        ? 'bg-violet-600/30 border-violet-400/40 text-white'
-                        : 'border-white/10 text-white/50'
-                    }`}
-                  >
-                    {t.label}
-                    {t.badge > 0 ? ` (${t.badge})` : ''}
-                  </button>
+            <div className="lg:hidden w-full min-w-0">
+              <label htmlFor="admin-tab-select" className="sr-only">
+                Admin section
+              </label>
+              <select
+                id="admin-tab-select"
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-semibold text-white focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+              >
+                {tabGroups.map((g) => (
+                  <optgroup key={g.label} label={g.label}>
+                    {g.tabs.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.label}
+                        {t.badge > 0 ? ` (${t.badge})` : ''}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
-              </div>
+              </select>
             </div>
           </aside>
 
-          <main className="min-w-0">
-            <Panel className="p-5 md:p-6 lg:p-7">
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-5 border-b border-white/10">
-                <div>
+          <main className="min-w-0 w-full">
+            <Panel className="min-w-0 overflow-hidden p-4 sm:p-5 md:p-6 lg:p-7">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3 mb-6 pb-5 border-b border-white/10">
+                <div className="min-w-0">
                   <h2 className="text-lg font-display font-semibold">{activeTabMeta?.label ?? 'Workspace'}</h2>
                   <p className="text-xs text-white/40 mt-0.5">
                     {activeTab === 'wallet_intel' && 'Cross-chain wallet lookup and risk signals'}
@@ -662,11 +665,14 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 {TABLE_TABS.has(activeTab) && (
-                  <SearchInput
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Filter by wallet…"
-                  />
+                  <div className="w-full sm:w-auto sm:max-w-md min-w-0">
+                    <SearchInput
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Filter by wallet…"
+                      className="w-full"
+                    />
+                  </div>
                 )}
               </div>
 
