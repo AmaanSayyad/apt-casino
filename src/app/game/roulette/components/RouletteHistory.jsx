@@ -63,7 +63,7 @@ const RouletteHistory = ({ bettingHistory = [] }) => {
         background: 'linear-gradient(135deg, rgba(9, 0, 5, 0.9) 0%, rgba(25, 5, 30, 0.85) 100%)',
         backdropFilter: 'blur(15px)',
         border: '1px solid rgba(104, 29, 219, 0.2)',
-        mb: 5,
+        mb: 0,
         position: 'relative',
         overflow: 'hidden',
         boxShadow: '0 10px 30px rgba(0,0,0,0.5)',

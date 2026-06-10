@@ -14,7 +14,6 @@ import Image from "next/image";
 import MuiAlert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 
-import { gameData, bettingTableData } from "./config/gameDetail";
 import { useToken } from "@/hooks/useToken";
 
 import useWalletStatus from '@/hooks/useWalletStatus';
@@ -28,6 +27,7 @@ import { GiCardRandom, GiDiceTarget, GiRollingDices, GiPokerHand } from "react-i
 import { motion } from "framer-motion";
 import RouletteLeaderboard from './components/RouletteLeaderboard';
 import StrategyGuide from './components/StrategyGuide';
+import RouletteGameIntro from './components/RouletteGameIntro';
 import RoulettePayout from './components/RoulettePayout';
 import WinProbabilities from './components/WinProbabilities';
 import RouletteHistory from './components/RouletteHistory';
@@ -760,23 +760,23 @@ const BettingStats = ({ history, chain = 'solana', symbol = 'SOL' }) => {
 
   return (
     <Box sx={{
-      p: 2,
+      p: 1.5,
       border: '1px solid rgba(255,255,255,0.1)',
       borderRadius: '8px',
       background: 'rgba(0,0,0,0.3)'
     }}>
-      <Typography variant="h6" color="white" sx={{ mb: 2 }}>Session Statistics</Typography>
-      <Grid container spacing={2}>
+      <Typography variant="subtitle1" color="white" sx={{ mb: 1, fontWeight: 700 }}>Session Statistics</Typography>
+      <Grid container spacing={1}>
         <Grid xs={6} md={4}>
-          <Typography variant="body2" color="text.secondary">Win Rate</Typography>
-          <Typography variant="h5">{stats.winRate}%</Typography>
+          <Typography variant="caption" color="text.secondary">Win Rate</Typography>
+          <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{stats.winRate}%</Typography>
           <Typography variant="caption" color="text.secondary">
             {stats.roundsWon}/{stats.rounds} rounds
           </Typography>
         </Grid>
         <Grid xs={6} md={4}>
-          <Typography variant="body2" color="text.secondary">Rounds</Typography>
-          <Typography variant="h5">{stats.rounds}</Typography>
+          <Typography variant="caption" color="text.secondary">Rounds</Typography>
+          <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{stats.rounds}</Typography>
           {stats.chipSelections !== stats.rounds && (
             <Typography variant="caption" color="text.secondary">
               {stats.chipSelections} selections
@@ -784,15 +784,15 @@ const BettingStats = ({ history, chain = 'solana', symbol = 'SOL' }) => {
           )}
         </Grid>
         <Grid xs={6} md={4}>
-          <Typography variant="body2" color="text.secondary">P/L</Typography>
-          <Typography variant="h5" color={stats.profitLoss >= 0 ? 'success.main' : 'error.main'}>
+          <Typography variant="caption" color="text.secondary">P/L</Typography>
+          <Typography variant="h6" color={stats.profitLoss >= 0 ? 'success.main' : 'error.main'} sx={{ lineHeight: 1.2 }}>
             {plPrefix}{plFormatted} {symbol}
           </Typography>
         </Grid>
 
         <Grid xs={12}>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>Hot Numbers</Typography>
-          <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>Hot Numbers</Typography>
+          <Box sx={{ display: 'flex', gap: 0.75, mt: 0.5 }}>
             {stats.mostCommonNumbers.map((item) => (
               <Box
                 key={item.number}
@@ -2821,13 +2821,13 @@ export default function GameRoulette() {
 
           <Box
             sx={{
-              mt: 2,
+              mt: 1.5,
               display: 'flex',
               flexDirection: { xs: 'column', md: 'row' },
               alignItems: { xs: 'center', md: 'flex-start' },
               justifyContent: "center",
-              mb: { xs: 3, md: 5 },
-              gap: { xs: 2, md: 4 },
+              mb: { xs: 2, md: 2.5 },
+              gap: { xs: 1.5, md: 2 },
               px: { xs: 2, md: 0 },
             }}
           >
@@ -2974,19 +2974,8 @@ export default function GameRoulette() {
             </Box>
 
             {/* Stats Only */}
-            <Box sx={{ width: { xs: '100%', md: '300px' }, mt: { xs: 4, md: 0 } }}>
-              <Typography variant="h6" color="white" sx={{ mb: 2, fontWeight: 'bold' }}>
-                Stats
-              </Typography>
-              <Box sx={{
-                backgroundColor: 'rgba(0,0,0,0.3)',
-                borderRadius: 2,
-                p: 2,
-                minHeight: { xs: 200, md: 300 },
-                border: '1px solid rgba(255,255,255,0.1)'
-              }}>
-                <BettingStats history={bettingHistory} chain={playChain} symbol={symbol} />
-              </Box>
+            <Box sx={{ width: { xs: '100%', md: '260px' }, mt: { xs: 1, md: 0 }, flexShrink: 0 }}>
+              <BettingStats history={bettingHistory} chain={playChain} symbol={symbol} />
             </Box>
           </Box>
         </Box>
@@ -2994,159 +2983,17 @@ export default function GameRoulette() {
 
         {/* New enhanced sections */}
         <Box sx={{
-          mt: { xs: 4, md: 8 },
-          px: { xs: 2, md: 8 },
+          mt: { xs: 4, md: 6 },
+          px: { xs: 2, md: 4 },
           mx: 'auto',
           maxWidth: '1600px',
         }}>
-          {/* Video and Description Section */}
-          <Grid container spacing={4} sx={{ mb: 7 }}>
-            {/* Video on left */}
-            <Grid xs={12} md={6}>
-
-              <Box
-                sx={{
-                  position: 'relative',
-                  width: '100%',
-                  paddingTop: { xs: '56.25%', md: '56.25%' },
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
-                  border: '2px solid rgba(104, 29, 219, 0.4)',
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    transform: 'scale(1.02)',
-                    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7)',
-                    border: '2px solid rgba(216, 38, 51, 0.5)',
-                  },
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: '-3px',
-                    left: '-3px',
-                    right: '-3px',
-                    bottom: '-3px',
-                    borderRadius: '20px',
-                    background: 'linear-gradient(45deg, #d82633, #681DDB, #14D854, #d82633)',
-                    backgroundSize: '400% 400%',
-                    zIndex: -1,
-                    filter: 'blur(10px)',
-                    opacity: 0.7,
-                    animation: 'gradient 15s ease infinite',
-                    '@keyframes gradient': {
-                      '0%': { backgroundPosition: '0% 50%' },
-                      '50%': { backgroundPosition: '100% 50%' },
-                      '100%': { backgroundPosition: '0% 50%' }
-                    }
-                  }
-                }}
-              >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    py: 1.5,
-                    background: 'linear-gradient(to bottom, rgba(9, 0, 5, 0.8), rgba(9, 0, 5, 0))',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 2
-                  }}
-                >
-                </Box>
-                <iframe
-                  src={`https://www.youtube.com/embed/${gameData.youtube}?si=${gameData.youtube}`}
-                  title={`${gameData.title} Tutorial`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '12px',
-                    zIndex: 1
-                  }}
-                />
-              </Box>
-            </Grid>
-
-            {/* Description on right */}
-            <Grid xs={12} md={6}>
-              <Box
-                sx={{
-                  background: 'linear-gradient(135deg, rgba(9, 0, 5, 0.6) 0%, rgba(9, 0, 5, 0.3) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: '16px',
-                  p: { xs: 2.5, md: 3 },
-                  minHeight: '280px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  border: '1px solid rgba(104, 29, 219, 0.2)',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '5px',
-                    height: '100%',
-                    background: 'linear-gradient(to bottom, #d82633, #681DDB)',
-                  }
-                }}
-              >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    mb: 2,
-                    fontWeight: 'bold',
-                    background: 'linear-gradient(90deg, #FFFFFF, #FFA500)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    display: 'inline-block'
-                  }}
-                >
-                  European Roulette
-                </Typography>
-
-                <Typography
-                  variant="body1"
-                  sx={{
-                    mb: 2.5,
-                    lineHeight: 1.8,
-                    fontSize: '1rem',
-                    color: 'rgba(255, 255, 255, 0.92)',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                  }}
-                >
-                  European Roulette with a single zero and just 2.7% house edge — better odds than traditional casinos. Provably fair on Solana and Aptos with verifiable on-chain randomness.
-                </Typography>
-
-                <Typography
-                  variant="body1"
-                  sx={{
-                    mb: 1,
-                    lineHeight: 1.8,
-                    fontSize: '1rem',
-                    color: 'rgba(255, 255, 255, 0.92)',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                  }}
-                >
-                  Bet on numbers, colors, or combinations for payouts up to 35:1. Every spin is secure and transparent on the blockchain.
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
+          <Box sx={{ mb: { xs: 8, md: 10 } }}>
+            <RouletteGameIntro />
+          </Box>
 
           {/* First row - Strategy Guide and Win Probabilities (most important for players) */}
-          <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
+          <Grid container spacing={3} sx={{ mb: { xs: 5, md: 6 } }}>
             <Grid xs={12} md={7}>
               <div id="strategy" className="scroll-mt-16">
                 <StrategyGuide />
@@ -3158,7 +3005,7 @@ export default function GameRoulette() {
           </Grid>
 
           {/* Second row - Roulette Payout (full width for clarity) */}
-          <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
+          <Grid container spacing={3} sx={{ mb: { xs: 5, md: 6 } }}>
             <Grid xs={12}>
               <div id="payouts" className="scroll-mt-16">
                 <RoulettePayout />
@@ -3167,7 +3014,7 @@ export default function GameRoulette() {
           </Grid>
 
           {/* Third row - Roulette History and Leaderboard */}
-          <Grid container spacing={4} sx={{ mb: 6, pt: 4 }}>
+          <Grid container spacing={3} sx={{ mb: { xs: 5, md: 6 } }}>
             <Grid xs={12} md={7}>
               <div id="history" className="scroll-mt-16">
                 <RouletteHistory bettingHistory={bettingHistory} />

@@ -68,9 +68,10 @@ const buildStrategies = (symbol) => [
 const PlinkoStrategyGuide = () => {
   const { symbol } = usePlayCurrency();
   const strategies = buildStrategies(symbol);
-  const [expanded, setExpanded] = useState(false);
-  const handleChange = (panel) => (event, isExpanded) =>
-    setExpanded(isExpanded ? panel : false);
+  const [expanded, setExpanded] = useState('s1');
+  const handleChange = (panel) => (_event, isExpanded) => {
+    if (isExpanded) setExpanded(panel);
+  };
 
   return (
     <Paper

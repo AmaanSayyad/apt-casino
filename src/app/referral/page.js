@@ -76,7 +76,7 @@ function fmtApt(apt) {
 
 const HOW_IT_WORKS = [
   { icon: <FaShareAlt className="text-blue-magic" />, title: 'Share your link', body: 'Copy the hype message or blast it on X / TG / WA — ref saves automatically when they land.' },
-  { icon: <FaUserPlus className="text-emerald-300" />, title: 'Friend deposits', body: 'When they connect and make a first deposit, you accrue APTC (not APT).' },
+  { icon: <FaUserPlus className="text-emerald-300" />, title: 'Friend deposits', body: 'When they make a first deposit, you accrue APTC worth 20% of that deposit (not native APT).' },
   { icon: <FaGift className="text-pink-300" />, title: 'Unlock & claim', body: 'Rewards unlock after the cliff or when your referee hits the volume milestone.' },
 ];
 
@@ -291,8 +291,8 @@ export default function ReferralsPage() {
           title="Earnings calculator"
           subtitle={
             config
-              ? `You earn APTC worth ${referrerSharePct}% of each referee's first deposit (${Math.round((referrerSharePct / depositFeePct) * 100)}% of the ${depositFeePct}% platform fee).`
-              : 'Estimate your APTC referral rewards from valid referrals and average first-deposit size.'
+              ? `You earn APTC worth ${referrerSharePct}% of each referee's first deposit — paid in APTC after unlock.`
+              : `Estimate your APTC referral rewards (${referrerSharePct}% of each qualifying first deposit).`
           }
         />
         <div className="rounded-xl border border-cyan-400/20 bg-[#1A0015]/80 p-4 sm:p-5 space-y-4">

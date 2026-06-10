@@ -6,11 +6,7 @@ import {
   FaTrophy,
   FaWallet,
   FaUsers,
-  FaBolt,
-  FaCoins,
-  FaMedal,
 } from 'react-icons/fa';
-import { formatCombinedNative } from '@/lib/formatVolume';
 
 function useCountUp(target, duration = 1400, started = false) {
   const [value, setValue] = useState(0);
@@ -38,14 +34,6 @@ function fmtCount(n) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
   if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
   return Math.round(n).toLocaleString();
-}
-
-function fmtCombined(byChain, fallback) {
-  if (byChain && Object.keys(byChain).length) return formatCombinedNative(byChain);
-  if (fallback != null && Number.isFinite(fallback)) {
-    return formatCombinedNative({ aptos: fallback });
-  }
-  return '0';
 }
 
 function StatCard({ label, value, display, icon: Icon, started }) {
@@ -118,19 +106,6 @@ export default function PlatformIntelligenceSection() {
     { key: 'uniqueTraders', label: 'Unique Traders', icon: FaUsers, value: pub?.uniqueTraders ?? 0 },
   ];
 
-  const liveStats = [
-    { key: 'activePlayers', label: 'Active Players (24h)', icon: FaBolt, value: live?.activePlayers ?? 0 },
-    {
-      key: 'totalWagered',
-      label: 'Total Wagered (all chains)',
-      icon: FaCoins,
-      value: 1,
-      display: () =>
-        fmtCombined(live?.totalWagered24hByChain, live?.totalWageredApt),
-    },
-    { key: 'dailyWinners', label: 'Daily Winners (24h)', icon: FaMedal, value: live?.dailyWinners ?? 0 },
-  ];
-
   const recentWinners = live?.recentWinners ?? [];
 
   return (
@@ -160,24 +135,6 @@ export default function PlatformIntelligenceSection() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {allTime.map((s) => (
                 <StatCard key={s.key} label={s.label} value={s.value} icon={s.icon} started={started} />
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2 mt-8 mb-4">
-              <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-white/80 text-sm font-semibold tracking-wide">Live (last 24h)</span>
-              <div className="flex-1 h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {liveStats.map((s) => (
-                <StatCard
-                  key={s.key}
-                  label={s.label}
-                  value={s.value}
-                  icon={s.icon}
-                  display={s.display}
-                  started={started}
-                />
               ))}
             </div>
 

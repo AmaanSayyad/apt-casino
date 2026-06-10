@@ -82,7 +82,7 @@ const StrategyGuide = () => {
         background: 'linear-gradient(135deg, rgba(9, 0, 5, 0.9) 0%, rgba(25, 5, 30, 0.85) 100%)',
         backdropFilter: 'blur(15px)',
         border: '1px solid rgba(104, 29, 219, 0.2)',
-        mb: 5,
+        mb: 0,
         position: 'relative',
         overflow: 'hidden',
         boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
@@ -121,7 +121,7 @@ const StrategyGuide = () => {
       <Typography 
         variant="body2" 
         color="rgba(255,255,255,0.7)"
-        sx={{ mb: 3 }}
+        sx={{ mb: 1.5 }}
       >
         Popular betting strategies to enhance your roulette experience. Remember that no strategy can overcome the house edge entirely.
       </Typography>
@@ -142,7 +142,7 @@ const StrategyGuide = () => {
               backgroundColor: 'transparent',
               backgroundImage: 'none',
               boxShadow: 'none',
-              mb: 2,
+                mb: 1,
               '&:before': {
                 display: 'none',
               },
