@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useSharedLiveStats, useSharedPublicStats } from '@/hooks/useSharedStats';
+import { useSharedPublicStats } from '@/hooks/useSharedStats';
 import {
   FaChartLine,
   FaTrophy,
@@ -55,7 +55,6 @@ function StatCard({ label, value, display, icon: Icon, started }) {
 
 export default function PlatformIntelligenceSection() {
   const { data: pub } = useSharedPublicStats();
-  const { data: live } = useSharedLiveStats();
   const [started, setStarted] = useState(false);
   const sectionRef = useRef(null);
 
@@ -80,8 +79,6 @@ export default function PlatformIntelligenceSection() {
     { key: 'depositsProcessed', label: 'Deposits Processed', icon: FaWallet, value: pub?.depositsProcessed ?? 0 },
     { key: 'uniqueTraders', label: 'Unique Traders', icon: FaUsers, value: pub?.uniqueTraders ?? 0 },
   ];
-
-  const recentWinners = live?.recentWinners ?? [];
 
   return (
     <section ref={sectionRef} className="py-16 md:py-20 px-4 md:px-8 lg:px-16">
@@ -111,40 +108,6 @@ export default function PlatformIntelligenceSection() {
               {allTime.map((s) => (
                 <StatCard key={s.key} label={s.label} value={s.value} icon={s.icon} started={started} />
               ))}
-            </div>
-
-            <div className="mt-8">
-              <h3 className="text-white font-medium mb-4 flex items-center">
-                <div className="w-1 h-4 magic-gradient rounded-full mr-2" />
-                Recent Big Winners
-              </h3>
-
-              {recentWinners.length === 0 ? (
-                <p className="text-white/50 text-sm">No wins recorded yet. Play a round to appear here.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {recentWinners.map((winner, idx) => (
-                    <div
-                      key={`${winner.wallet}-${winner.timestampSec}-${idx}`}
-                      className="p-[1px] bg-gradient-to-r from-red-magic/40 to-blue-magic/40 rounded-lg"
-                    >
-                      <div className="bg-[#1A0015] rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="text-white font-medium truncate font-mono text-sm" title={winner.wallet}>
-                            {winner.walletShort || 'Player'}
-                          </p>
-                          <span className="text-xs text-white/50 shrink-0 ml-2">{winner.timeAgo}</span>
-                        </div>
-                        <p className="text-sm text-white/70 mb-1">Game: {winner.game}</p>
-                        <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-magic to-blue-magic tabular-nums">
-                          {winner.payoutDisplay ||
-                            `${winner.payoutApt?.toLocaleString('en-US', { maximumFractionDigits: 4 }) ?? '0'} SOL · APT`}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             {pub && pub.supabaseConfigured === false && (
