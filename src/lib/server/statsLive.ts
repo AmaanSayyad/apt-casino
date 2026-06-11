@@ -8,7 +8,7 @@ import {
 } from '@/lib/server/gamePlayEvents';
 import { formatCombinedNative } from '@/lib/formatVolume';
 
-const CACHE_TTL_MS = 45_000;
+const CACHE_TTL_MS = 120_000;
 
 const GAME_NAME: Record<number, string> = {
   1: 'Plinko',

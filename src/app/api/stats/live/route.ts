@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 const CACHE_HEADERS = {
-  'Cache-Control': 'public, s-maxage=45, stale-while-revalidate=120',
+  'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300',
 };
 
 export async function GET(request: NextRequest) {
-  if (rateLimitRequest(request, { key: 'stats-live', limit: 40, windowMs: 60_000 })) {
+  if (rateLimitRequest(request, { key: 'stats-live', limit: 20, windowMs: 60_000 })) {
     return NextResponse.json(
       { error: 'Too many requests. Try again shortly.' },
       { status: 429, headers: { 'Retry-After': '60', ...CACHE_HEADERS } },

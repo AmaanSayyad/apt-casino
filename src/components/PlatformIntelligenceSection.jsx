@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSharedLiveStats, useSharedPublicStats } from '@/hooks/useSharedStats';
 import {
   FaChartLine,
   FaTrophy,
@@ -53,39 +54,13 @@ function StatCard({ label, value, display, icon: Icon, started }) {
 }
 
 export default function PlatformIntelligenceSection() {
-  const [pub, setPub] = useState(null);
-  const [live, setLive] = useState(null);
+  const { data: pub } = useSharedPublicStats();
+  const { data: live } = useSharedLiveStats();
   const [started, setStarted] = useState(false);
   const sectionRef = useRef(null);
 
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const [p, l] = await Promise.all([
-          fetch('/api/stats/public').then((r) => r.json()).catch(() => ({})),
-          fetch('/api/stats/live').then((r) => r.json()).catch(() => ({})),
-        ]);
-        if (cancelled) return;
-        setPub(p);
-        setLive(l);
-      } catch {
-        if (!cancelled) {
-          setPub({});
-          setLive({});
-        }
-      }
-    };
-    load();
-    const id = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!sectionRef.current || pub === null) return;
+    if (!sectionRef.current) return;
     const obs = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -97,7 +72,7 @@ export default function PlatformIntelligenceSection() {
     );
     obs.observe(sectionRef.current);
     return () => obs.disconnect();
-  }, [pub]);
+  }, []);
 
   const allTime = [
     { key: 'totalRoundsPlayed', label: 'Total Rounds Played', icon: FaChartLine, value: pub?.totalRoundsPlayed ?? 0 },

@@ -268,7 +268,7 @@ export default function LivePage() {
       );
     }
     fetchAll();
-    timer = setInterval(fetchAll, 10000);
+    timer = setInterval(fetchAll, 60_000);
     return () => clearInterval(timer);
   }, [streams]);
 

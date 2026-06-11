@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-const PING_INTERVAL_MS = 30_000;
+const PING_INTERVAL_MS = 60_000;
 
 export function useSessionTracker(
   walletAddress: string | null,

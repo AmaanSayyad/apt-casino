@@ -63,7 +63,7 @@ export default function LiveChat({ open, onClose }) {
           /* ignore */
         }
       };
-      poller = setInterval(fetchLatest, 1000);
+      poller = setInterval(fetchLatest, 30_000);
     })();
 
     return () => {

@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { FaDice, FaCoins, FaTrophy } from 'react-icons/fa';
 import { formatCombinedNative } from '@/lib/formatVolume';
+import { useSharedLiveStats } from '@/hooks/useSharedStats';
 
 function fmtCount(n) {
   if (n == null || !Number.isFinite(n)) return '0';
@@ -12,24 +12,7 @@ function fmtCount(n) {
 }
 
 const GameStats = () => {
-  const [stats, setStats] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch('/api/stats/live')
-        .then((r) => r.json())
-        .then((d) => {
-          if (!cancelled) setStats(d);
-        })
-        .catch(() => {});
-    load();
-    const id = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, []);
+  const { data: stats } = useSharedLiveStats();
 
   const totalBets = stats?.totalBets ?? 0;
   const volumeDisplay =

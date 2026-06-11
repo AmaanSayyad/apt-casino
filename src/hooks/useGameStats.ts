@@ -91,7 +91,7 @@ export function formatGameStats(
   };
 }
 
-export function useGameStats(slug: GameSlug, intervalMs = 60_000, enabled = true) {
+export function useGameStats(slug: GameSlug, intervalMs = 120_000, enabled = true) {
   const activeChain = useSelector((s: { balance: { activeChain?: string } }) => s.balance.activeChain) || DEFAULT_PLAY_CHAIN;
   const [stats, setStats] = useState<GameStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

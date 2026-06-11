@@ -2,7 +2,7 @@ import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
 import { aggregatePlayEventsSince } from '@/lib/server/gamePlayEvents';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 
-const CACHE_TTL_MS = 60_000;
+const CACHE_TTL_MS = 120_000;
 
 type PublicStatsPayload = Record<string, unknown>;
 

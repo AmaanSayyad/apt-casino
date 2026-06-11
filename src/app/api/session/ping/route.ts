@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
+import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 const SESSION_TIMEOUT_SECONDS = 90;
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  if (rateLimitRequest(req, { key: 'session-ping', limit: 30, windowMs: 60_000 })) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
   try {
     const body = await req.json();
     const { wallet_address, chain, session_id } = body as {

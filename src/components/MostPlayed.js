@@ -7,6 +7,7 @@ import MagicBorder from './MagicBorder';
 import Link from 'next/link';
 import { FaFire, FaUsers, FaTrophy, FaBolt, FaChevronRight, FaClock } from 'react-icons/fa';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useSharedLiveStats } from '@/hooks/useSharedStats';
 import { MOBILE_LIVE_GAME_ORDER, sortGamesByDisplayOrder } from '@/lib/gameDisplayOrder';
 
 const LIVE_GAMES = [
@@ -155,25 +156,9 @@ const FILTERS = [
 export default function MostPlayed() {
   const isMobile = useIsMobile();
   const [activeFilter, setActiveFilter] = useState('all');
-  const [gameActivity, setGameActivity] = useState({});
+  const { data: liveStats } = useSharedLiveStats();
+  const gameActivity = liveStats?.gameActivity ?? {};
   const [featuredIndex, setFeaturedIndex] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch('/api/stats/live')
-        .then((r) => r.json())
-        .then((d) => {
-          if (!cancelled && d?.gameActivity) setGameActivity(d.gameActivity);
-        })
-        .catch(() => {});
-    load();
-    const id = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, []);
 
   const enriched = useMemo(() => {
     const live = LIVE_GAMES.map((g) => ({

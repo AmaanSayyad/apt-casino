@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FaArrowLeft, FaArrowRight, FaUsers, FaStar, FaBolt, FaFire, FaTrophy } from "react-icons/fa6";
 import HeaderText from "@/components/HeaderText";
 import GameStats from "@/components/GameStats";
+import { useSharedLiveStats } from "@/hooks/useSharedStats";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MOBILE_LIVE_GAME_ORDER, sortGamesByDisplayOrder } from "@/lib/gameDisplayOrder";
 
@@ -74,25 +75,8 @@ const GameCarousel = () => {
   const scrollContainerRef = useRef(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [visibleGames, setVisibleGames] = useState(FEATURED_GAMES);
-  const [gameActivity, setGameActivity] = useState({});
-
-  // Pull live per-game activity (unique wallets active in the last hour) from on-chain logs.
-  useEffect(() => {
-    let cancelled = false;
-    const load = () =>
-      fetch('/api/stats/live')
-        .then((r) => r.json())
-        .then((d) => {
-          if (!cancelled && d?.gameActivity) setGameActivity(d.gameActivity);
-        })
-        .catch(() => {});
-    load();
-    const id = setInterval(load, 30_000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, []);
+  const { data: liveStats } = useSharedLiveStats();
+  const gameActivity = liveStats?.gameActivity ?? {};
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
