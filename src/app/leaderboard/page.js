@@ -7,6 +7,7 @@ import {
   FaTrophy,
   FaMedal,
   FaCrown,
+  FaUserFriends,
   FaDice,
   FaFire,
   FaPercent,
