@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import ChainConnectModal from '@/components/wallet/ChainConnectModal';
@@ -23,9 +24,17 @@ import {
   FaShieldAlt,
   FaHandshake,
 } from 'react-icons/fa';
-import OtcSavingsCalculator from '@/components/OtcSavingsCalculator';
-import OtcFeeBreakdown from '@/components/OtcFeeBreakdown';
 import { toast } from 'react-toastify';
+
+const OtcSavingsCalculator = dynamic(() => import('@/components/OtcSavingsCalculator'), {
+  ssr: false,
+  loading: () => <FeeSectionSkeleton />,
+});
+
+const OtcFeeBreakdown = dynamic(() => import('@/components/OtcFeeBreakdown'), {
+  ssr: false,
+  loading: () => <FeeSectionSkeleton />,
+});
 
 function fmtNum(n, max = 6) {
   if (n == null || !Number.isFinite(Number(n))) return '—';
@@ -46,9 +55,11 @@ function shortAddr(a) {
 function useCountdown(unlockAt) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    if (!unlockAt) return undefined;
+    const tickMs = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? 5000 : 1000;
+    const id = setInterval(() => setNow(Date.now()), tickMs);
     return () => clearInterval(id);
-  }, []);
+  }, [unlockAt]);
   return useMemo(() => {
     if (!unlockAt) return { done: false, label: '—' };
     const end = new Date(unlockAt).getTime();
@@ -99,7 +110,7 @@ const BENEFITS = [
 ];
 
 export default function OtcLotteryPage() {
-  const { publicKey, connected, sendTransaction, disconnect } = useWallet();
+  const { publicKey, connected, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const [connectOpen, setConnectOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -303,26 +314,27 @@ export default function OtcLotteryPage() {
   const step = registeredEntry ? 4 : solAddress ? (parseFloat(solAmount) > 0 ? 3 : 2) : 1;
 
   return (
-    <div className="site-game-page min-h-[100dvh] bg-[#070005] text-white md:min-h-screen">
-      {/* Ambient background */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-red-magic/10 blur-[120px]" />
-        <div className="absolute top-1/4 -right-24 w-80 h-80 rounded-full bg-blue-magic/10 blur-[100px]" />
-        <div className="absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-purple-600/8 blur-[90px]" />
+    <div className="site-game-page bg-[#070005] text-white">
+      {/* Mobile: flat gradients only — large fixed blurs cause iOS black-screen / jank */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#14000f] via-[#070005] to-[#070005] md:hidden" />
+        <div className="hidden md:block absolute -top-32 -left-32 w-96 h-96 rounded-full bg-red-magic/10 blur-[120px]" />
+        <div className="hidden md:block absolute top-1/4 -right-24 w-80 h-80 rounded-full bg-blue-magic/10 blur-[100px]" />
+        <div className="hidden md:block absolute bottom-0 left-1/3 w-72 h-72 rounded-full bg-purple-600/8 blur-[90px]" />
       </div>
 
-      <div className="site-page-top site-page-pad-x relative mx-auto max-w-[1600px] pb-20">
+      <div className="site-page-top site-page-pad-x relative z-10 mx-auto max-w-[1600px] pb-20">
         {/* Hero */}
         <header className="relative mb-12 md:mb-16">
           <div className="p-[1px] rounded-2xl bg-gradient-to-r from-red-magic via-purple-500/80 to-blue-magic">
-            <div className="rounded-2xl bg-[#0c000a]/95 backdrop-blur-sm px-6 py-10 md:px-12 md:py-14 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-cyan-500/10 to-transparent rounded-full blur-2xl" />
+            <div className="rounded-2xl bg-[#0c000a]/95 md:backdrop-blur-sm px-5 py-8 sm:px-6 sm:py-10 md:px-12 md:py-14 relative overflow-hidden">
+              <div className="hidden md:block absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-cyan-500/10 to-transparent rounded-full blur-2xl" />
               <div className="relative flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
                 <div>
                   <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-purple-500/20 border border-amber-400/30 text-xs font-display font-semibold text-amber-200 mb-4">
                     <FaBolt className="text-amber-400" /> OTC Deal · SOL → APTC
                   </span>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold leading-tight">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold leading-tight">
                     <span className="bg-gradient-to-r from-white via-purple-100 to-cyan-200 bg-clip-text text-transparent">
                       OTC Lottery
                     </span>
@@ -350,7 +362,7 @@ export default function OtcLotteryPage() {
         )}
 
         {/* Main grid: calculator left, action right */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
           {/* Left column */}
           <div className="lg:col-span-7 space-y-8">
             <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -454,9 +466,9 @@ export default function OtcLotteryPage() {
 
           {/* Right column — sticky enter card */}
           <div className="lg:col-span-5">
-            <div className="lg:sticky lg:top-28">
+            <div className="lg:sticky lg:top-28 max-lg:static">
               <div className="p-[1px] rounded-2xl bg-gradient-to-b from-purple-500/60 via-red-magic/40 to-blue-magic/50">
-                <div className="rounded-2xl bg-[#120010]/95 backdrop-blur-md p-6 md:p-7 shadow-2xl shadow-purple-900/20">
+                <div className="rounded-2xl bg-[#120010]/95 md:backdrop-blur-md p-5 sm:p-6 md:p-7 shadow-xl md:shadow-2xl shadow-purple-900/20">
                   <div className="flex items-center gap-2 mb-6">
                     <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center">
                       <FaTicketAlt className="text-purple-300" />
@@ -625,7 +637,7 @@ export default function OtcLotteryPage() {
           </div>
         </div>
 
-        <section className="mt-8 lg:mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+        <section className="mt-8 lg:mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch [content-visibility:auto]">
           <SectionShell
             icon={<FaBalanceScale className="text-emerald-400" />}
             title="DEX vs OTC — fee comparison"
@@ -647,7 +659,7 @@ export default function OtcLotteryPage() {
             subtitle="Why DEX buys cost more — sources & wallet rates"
             className="h-full"
           >
-            <OtcFeeBreakdown />
+            <OtcFeeBreakdown compact />
           </SectionShell>
         </section>
 
@@ -670,6 +682,15 @@ export default function OtcLotteryPage() {
         )}
       </div>
       <ChainConnectModal open={connectOpen} onClose={() => setConnectOpen(false)} />
+    </div>
+  );
+}
+
+function FeeSectionSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse" aria-hidden>
+      <div className="h-10 rounded-xl bg-white/5" />
+      <div className="h-28 rounded-xl bg-white/5" />
     </div>
   );
 }
