@@ -9,6 +9,54 @@
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // skip 0/O/1/I/L
 const CODE_LENGTH = 8;
 
+export const CUSTOM_REFERRAL_MIN = 3;
+export const CUSTOM_REFERRAL_MAX = 20;
+
+/** 3–20 chars; letters, digits, hyphen/underscore; no leading/trailing separator. */
+const CUSTOM_REFERRAL_PATTERN = /^[A-Z0-9](?:[A-Z0-9_-]{0,18}[A-Z0-9])?$/;
+
+export const REFERRAL_RESERVED_CODES = new Set([
+  'ADMIN',
+  'API',
+  'APT',
+  'APTC',
+  'APTOS',
+  'BANK',
+  'CASINO',
+  'CODE',
+  'DASHBOARD',
+  'GAME',
+  'GAMES',
+  'HELP',
+  'HOME',
+  'LEADERBOARD',
+  'LIVE',
+  'LOGIN',
+  'LOTTERY',
+  'MINES',
+  'NULL',
+  'OTC',
+  'PLINKO',
+  'PROFILE',
+  'REF',
+  'REFER',
+  'REFERRAL',
+  'REFERRALS',
+  'ROULETTE',
+  'SOL',
+  'SOLANA',
+  'STAKE',
+  'STAKING',
+  'SUPPORT',
+  'UNDEFINED',
+  'WHEEL',
+  'WWW',
+]);
+
+export function normalizeReferralCodeInput(code: string | null | undefined): string {
+  return String(code || '').trim().toUpperCase();
+}
+
 export function normalizeWallet(input: string | null | undefined): string | null {
   if (!input) return null;
   const trimmed = String(input).trim().toLowerCase();
@@ -90,14 +138,27 @@ export function generateReferralCode(): string {
   return out;
 }
 
-export function isValidReferralCode(code: string | null | undefined): boolean {
-  if (!code) return false;
-  if (typeof code !== 'string') return false;
+export function isAutoReferralCode(code: string | null | undefined): boolean {
+  if (!code || typeof code !== 'string') return false;
   if (code.length !== CODE_LENGTH) return false;
   for (let i = 0; i < code.length; i += 1) {
     if (!CODE_ALPHABET.includes(code[i])) return false;
   }
   return true;
+}
+
+export function isValidCustomReferralName(name: string | null | undefined): boolean {
+  const n = normalizeReferralCodeInput(name);
+  if (n.length < CUSTOM_REFERRAL_MIN || n.length > CUSTOM_REFERRAL_MAX) return false;
+  if (!CUSTOM_REFERRAL_PATTERN.test(n)) return false;
+  if (REFERRAL_RESERVED_CODES.has(n)) return false;
+  return true;
+}
+
+export function isValidReferralCode(code: string | null | undefined): boolean {
+  if (!code || typeof code !== 'string') return false;
+  const n = normalizeReferralCodeInput(code);
+  return isAutoReferralCode(n) || isValidCustomReferralName(n);
 }
 
 export const REFERRAL_CODE_LENGTH = CODE_LENGTH;

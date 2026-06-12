@@ -19,7 +19,7 @@ export async function findReferralCodeRow(
 
   const { data } = await supabase
     .from('referral_codes')
-    .select('code, wallet, created_at')
+    .select('code, wallet, created_at, updated_at')
     .eq('wallet', wallet)
     .maybeSingle();
 
@@ -30,7 +30,7 @@ export async function findReferralCodeRow(
     if (legacy !== wallet) {
       const { data: legacyRow } = await supabase
         .from('referral_codes')
-        .select('code, wallet, created_at')
+        .select('code, wallet, created_at, updated_at')
         .eq('wallet', legacy)
         .maybeSingle();
       if (legacyRow) return { wallet: legacyRow.wallet, row: legacyRow };

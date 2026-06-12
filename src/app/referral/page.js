@@ -88,12 +88,17 @@ export default function ReferralsPage() {
   const [stats, setStats] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [totalValid, setTotalValid] = useState(0);
+  const [totalInvites, setTotalInvites] = useState(0);
   const [config, setConfig] = useState(null);
   const [loadingCode, setLoadingCode] = useState(false);
   const [loadingStats, setLoadingStats] = useState(false);
   const [loadingBoard, setLoadingBoard] = useState(false);
   const [copied, setCopied] = useState(null);
   const [error, setError] = useState(null);
+  const [customName, setCustomName] = useState('');
+  const [savingName, setSavingName] = useState(false);
+  const [nameError, setNameError] = useState(null);
+  const [nameSaved, setNameSaved] = useState(false);
 
   const [calcReferrals, setCalcReferrals] = useState('10');
   const [calcAvgDeposit, setCalcAvgDeposit] = useState('5');
@@ -125,6 +130,7 @@ export default function ReferralsPage() {
       if (r.ok) {
         setLeaderboard(j.entries || []);
         setTotalValid(Number(j.totalValidReferrals || 0));
+        setTotalInvites(Number(j.totalInvites || 0));
       } else {
         setLeaderboard([]);
       }
@@ -200,8 +206,46 @@ export default function ReferralsPage() {
       void ensureCode();
     } else {
       setCode(null);
+      setCustomName('');
     }
   }, [connected, address, ensureCode]);
+
+  useEffect(() => {
+    if (code) setCustomName(code);
+  }, [code]);
+
+  const saveCustomName = useCallback(async () => {
+    if (!address || !customName.trim()) return;
+    setSavingName(true);
+    setNameError(null);
+    setNameSaved(false);
+    try {
+      const r = await fetch('/api/referrals/code', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: address,
+          chain: referralChain,
+          name: customName.trim(),
+        }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setNameError(j.error || 'Could not update referral name.');
+        return;
+      }
+      if (j.code) {
+        setCode(j.code);
+        setCustomName(j.code);
+        setNameSaved(true);
+        setTimeout(() => setNameSaved(false), 2500);
+      }
+    } catch {
+      setNameError('Network error while saving referral name.');
+    } finally {
+      setSavingName(false);
+    }
+  }, [address, customName, referralChain]);
 
   const broadcastMessage = useMemo(
     () => getReferralBroadcastMessage(referralLinkShort),
@@ -423,10 +467,87 @@ export default function ReferralsPage() {
         />
         <SummaryTile
           icon={<FaShareAlt className="text-blue-magic" />}
-          label="Global valid"
-          value={totalValid.toLocaleString()}
-          hint="Across all referrers"
+          label="People invited"
+          value={totalInvites.toLocaleString()}
+          hint={`${totalValid.toLocaleString()} validated · public leaderboard`}
         />
+      </section>
+
+      <section id="referral-leaderboard" className="mb-10 scroll-mt-24">
+        <SectionHeading
+          icon={<FaTrophy className="text-amber-300" />}
+          title="Public referral leaderboard"
+          subtitle="Anyone can view this — ranked by people invited. Validated = first deposit completed."
+          action={
+            <span className="text-xs text-white/45 tabular-nums">
+              {loadingBoard ? 'Updating…' : `${leaderboard.length} referrers`}
+            </span>
+          }
+        />
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-[#1A0015]/80">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-sm">
+              <thead className="bg-white/[0.03] text-left text-[11px] uppercase tracking-widest text-white/40">
+                <tr>
+                  <th className="px-4 py-3 w-16">Rank</th>
+                  <th className="px-4 py-3">Referrer</th>
+                  <th className="px-4 py-3 text-right">Invited</th>
+                  <th className="px-4 py-3 text-right">Validated</th>
+                  <th className="px-4 py-3 text-right">APTC earned</th>
+                  <th className="px-4 py-3">Latest</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.length === 0 && (
+                  <tr>
+                    <td className="px-4 py-8 text-white/45 text-center" colSpan={6}>
+                      {loadingBoard
+                        ? 'Loading leaderboard…'
+                        : 'No referrals yet. Share your link — you appear here once someone signs up with it.'}
+                    </td>
+                  </tr>
+                )}
+                {leaderboard.map((row) => {
+                  const isYou =
+                    address &&
+                    (chain === 'solana'
+                      ? row.wallet === address
+                      : row.wallet?.toLowerCase() === address?.toLowerCase());
+                  const displayCode = row.code || short(row.wallet);
+                  return (
+                    <tr
+                      key={row.wallet}
+                      className={`border-t border-white/5 ${isYou ? 'bg-purple-500/5 text-white' : 'text-white/80'}`}
+                    >
+                      <td className="px-4 py-3 font-bold">
+                        <RankBadge rank={row.rank} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-white">{displayCode}</p>
+                        <p className="font-mono text-[11px] text-white/40">{short(row.wallet)}</p>
+                        {isYou && (
+                          <span className="mt-1 inline-block rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                            You
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-blue-magic">
+                        {Number(row.totalReferrals ?? row.referrals ?? 0).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-emerald-300">
+                        {Number(row.validReferrals ?? row.referrals ?? 0).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-amber-300">
+                        {fmtApt(row.earnedApt)} APTC
+                      </td>
+                      <td className="px-4 py-3 text-xs text-white/55">{fmtDate(row.last_referral_at)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <section className="grid md:grid-cols-3 gap-4 mb-10">
@@ -484,6 +605,49 @@ export default function ReferralsPage() {
               onCopyLink={() => handleCopy('short')}
               onCopyMessage={() => handleCopy('message')}
             />
+
+            <div className="mt-4 rounded-xl border border-white/10 bg-black/30 p-4 sm:p-5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                Custom referral name
+              </p>
+              <p className="mt-1 text-xs text-white/55 leading-relaxed">
+                Pick a memorable name for your link (e.g. <span className="font-mono text-white/70">MYNAME</span> →{' '}
+                <span className="font-mono text-white/70">aptcasino.fun/r/MYNAME</span>). You can change it once every
+                24 hours.
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="flex min-w-0 flex-1 items-center rounded-lg border border-white/15 bg-black/40 px-3 py-2">
+                  <span className="shrink-0 text-xs text-white/40">/r/</span>
+                  <input
+                    type="text"
+                    value={customName}
+                    onChange={(e) => {
+                      setCustomName(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''));
+                      setNameError(null);
+                      setNameSaved(false);
+                    }}
+                    maxLength={20}
+                    placeholder="YOUR-NAME"
+                    className="min-w-0 flex-1 bg-transparent font-mono text-sm text-white outline-none placeholder:text-white/25"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void saveCustomName()}
+                  disabled={savingName || !customName.trim() || customName.trim().toUpperCase() === code}
+                  className="inline-flex shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-red-magic to-blue-magic px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-40"
+                >
+                  {savingName ? 'Saving…' : nameSaved ? 'Saved!' : 'Save name'}
+                </button>
+              </div>
+              {nameError ? (
+                <p className="mt-2 text-xs text-rose-300">{nameError}</p>
+              ) : (
+                <p className="mt-2 text-[11px] text-white/35">
+                  3–20 characters · letters, numbers, hyphen, underscore
+                </p>
+              )}
+            </div>
 
             {shareChannels.length > 0 && (
               <div className="mt-6 pt-6 border-t border-white/10 space-y-5">
@@ -623,73 +787,6 @@ export default function ReferralsPage() {
         </ul>
       </PageCard>
 
-      <section>
-        <SectionHeading
-          icon={<FaTrophy className="text-amber-300" />}
-          title="Top referrers"
-          subtitle={`${leaderboard.length} ranked wallets`}
-        />
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-[#1A0015]/80">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
-              <thead className="bg-white/[0.03] text-left text-[11px] uppercase tracking-widest text-white/40">
-                <tr>
-                  <th className="px-4 py-3 w-16">Rank</th>
-                  <th className="px-4 py-3">Wallet</th>
-                  <th className="px-4 py-3 text-right">Valid referrals</th>
-                  <th className="px-4 py-3 text-right">APTC earned</th>
-                  <th className="px-4 py-3">First referral</th>
-                  <th className="px-4 py-3">Latest</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaderboard.length === 0 && (
-                  <tr>
-                    <td className="px-4 py-8 text-white/45 text-center" colSpan={6}>
-                      {loadingBoard
-                        ? 'Loading leaderboard…'
-                        : 'No validated referrals yet. Share your link and have a friend make their first deposit.'}
-                    </td>
-                  </tr>
-                )}
-                {leaderboard.map((row) => {
-                  const isYou =
-                    address &&
-                    (chain === 'solana'
-                      ? row.wallet === address
-                      : row.wallet?.toLowerCase() === address?.toLowerCase());
-                  return (
-                    <tr
-                      key={row.wallet}
-                      className={`border-t border-white/5 ${isYou ? 'bg-purple-500/5 text-white' : 'text-white/80'}`}
-                    >
-                      <td className="px-4 py-3 font-bold">
-                        <RankBadge rank={row.rank} />
-                      </td>
-                      <td className="px-4 py-3 font-mono text-sm">
-                        {short(row.wallet)}
-                        {isYou && (
-                          <span className="ml-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                            You
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-emerald-300">
-                        {Number(row.referrals).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold text-amber-300">
-                        {fmtApt(row.earnedApt)} APTC
-                      </td>
-                      <td className="px-4 py-3 text-xs text-white/55">{fmtDate(row.first_referral_at)}</td>
-                      <td className="px-4 py-3 text-xs text-white/55">{fmtDate(row.last_referral_at)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
     </PageShell>
   );
 }

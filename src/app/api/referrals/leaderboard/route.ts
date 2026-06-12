@@ -5,8 +5,8 @@ import { octasToApt } from '@/lib/server/aptTreasury';
 export const dynamic = 'force-dynamic';
 
 /**
- * Public leaderboard — VALID referrals only (referees who made their first deposit).
- * Each row exposes both the count and the cumulative APT earned from the fee split.
+ * Public referral leaderboard — no wallet required.
+ * Ranks by total people invited; also exposes validated (first-deposit) counts.
  */
 export async function GET(req: NextRequest) {
   const supabase = getSupabaseAdmin();
@@ -23,32 +23,51 @@ export async function GET(req: NextRequest) {
       ? Math.floor(limitParam)
       : 50;
 
-  const [boardRes, totalRes] = await Promise.all([
+  const [boardRes, totalInvitesRes, totalValidRes, codesRes] = await Promise.all([
     supabase
+      .from('referral_leaderboard')
+      .select(
+        'wallet, total_referrals, referrals, earned_octas, rank, first_referral_at, last_referral_at',
+      )
+      .order('rank', { ascending: true })
+      .limit(limit),
+    supabase.from('referrals').select('referee_wallet', { count: 'exact', head: true }),
+    supabase.from('referrals').select('referee_wallet', { count: 'exact', head: true }).eq('is_valid', true),
+    supabase.from('referral_codes').select('wallet, code'),
+  ]);
+
+  let rows = boardRes.data ?? [];
+  if (boardRes.error) {
+    const fallback = await supabase
       .from('referral_leaderboard')
       .select('wallet, referrals, earned_octas, rank, first_referral_at, last_referral_at')
       .order('rank', { ascending: true })
-      .limit(limit),
-    supabase
-      .from('referrals')
-      .select('referee_wallet', { count: 'exact', head: true })
-      .eq('is_valid', true),
-  ]);
-
-  if (boardRes.error) {
-    return NextResponse.json(
-      { error: 'Failed to load leaderboard', detail: boardRes.error.message },
-      { status: 500 },
-    );
+      .limit(limit);
+    if (fallback.error) {
+      return NextResponse.json(
+        { error: 'Failed to load leaderboard', detail: fallback.error.message },
+        { status: 500 },
+      );
+    }
+    rows = (fallback.data ?? []).map((row) => ({
+      ...row,
+      total_referrals: row.referrals,
+    }));
   }
+
+  const codeByWallet = new Map((codesRes.data ?? []).map((row) => [row.wallet, row.code]));
 
   return NextResponse.json(
     {
-      totalValidReferrals: Number(totalRes.count ?? 0),
+      totalInvites: Number(totalInvitesRes.count ?? 0),
+      totalValidReferrals: Number(totalValidRes.count ?? 0),
       entries:
-        boardRes.data?.map((row) => ({
+        rows.map((row) => ({
           wallet: row.wallet,
-          referrals: row.referrals,
+          code: codeByWallet.get(row.wallet) ?? null,
+          totalReferrals: row.total_referrals ?? row.referrals ?? 0,
+          validReferrals: row.referrals ?? 0,
+          referrals: row.referrals ?? 0,
           earnedOctas: String(row.earned_octas ?? 0),
           earnedApt: octasToApt(Number(row.earned_octas ?? 0)),
           rank: row.rank,
