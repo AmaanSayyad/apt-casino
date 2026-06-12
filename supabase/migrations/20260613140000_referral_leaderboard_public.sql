@@ -1,6 +1,9 @@
 -- Public referral leaderboard: include all invites (not only validated first deposits).
+-- Must DROP first: CREATE OR REPLACE cannot insert/rename view columns in Postgres.
 
-create or replace view public.referral_leaderboard as
+drop view if exists public.referral_leaderboard;
+
+create view public.referral_leaderboard as
 select
   r.referrer_wallet as wallet,
   count(*)::int as total_referrals,
