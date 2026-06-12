@@ -1,5 +1,6 @@
 "use client";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useGameLeaderboard } from '@/hooks/useGameLeaderboard';
 import { usePlayCurrency } from '@/hooks/usePlayCurrency';
 import Link from 'next/link';
 import {
@@ -115,44 +116,8 @@ function StatBlock({ label, value, sub, accent }) {
 
 const PlinkoLeaderboard = () => {
   const { symbol } = usePlayCurrency();
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { rows, loading, error, lastUpdated, refresh: load } = useGameLeaderboard('plinko');
   const [expanded, setExpanded] = useState({});
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const abortRef = useRef(null);
-
-  const load = useCallback(async () => {
-    try {
-      abortRef.current?.abort();
-      const ac = new AbortController();
-      abortRef.current = ac;
-      setLoading(true);
-      const res = await fetch('/api/leaderboard?game=plinko&metric=pnl&period=all&top=5', {
-        signal: ac.signal,
-        cache: 'no-store',
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setRows(Array.isArray(json?.leaderboard) ? json.leaderboard : []);
-      setLastUpdated(Date.now());
-      setError(null);
-    } catch (err) {
-      if (err?.name === 'AbortError') return;
-      setError(err?.message || 'Failed to load leaderboard');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-    const id = setInterval(load, 60_000);
-    return () => {
-      clearInterval(id);
-      abortRef.current?.abort();
-    };
-  }, [load]);
 
   const handleExpandClick = (id) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
