@@ -7,7 +7,6 @@ import {
   FaTrophy,
   FaMedal,
   FaCrown,
-  FaUserFriends,
   FaDice,
   FaFire,
   FaPercent,
@@ -138,13 +137,7 @@ export default function LeaderboardPage() {
         </header>
 
         {/* Summary tiles */}
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Tile
-            icon={<FaUserFriends className="text-blue-magic" />}
-            label="Players ranked"
-            value={loading && !data ? '…' : (data?.uniquePlayers ?? 0).toLocaleString()}
-            hint={periodLabel(period)}
-          />
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Tile
             icon={<FaDice className="text-pink-300" />}
             label="Bets placed"

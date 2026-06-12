@@ -9,26 +9,9 @@ import { LITEPAPER_PATH } from "@/lib/siteMetadata";
 
 export default function HeroSection() {
   const [isDev, setIsDev] = useState(false);
-  const [totalPlayers, setTotalPlayers] = useState(null);
-  const [playersUnavailable, setPlayersUnavailable] = useState(false);
 
   useEffect(() => {
     setIsDev(process.env.NODE_ENV === 'development');
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/players/count')
-      .then((r) => r.json())
-      .then((d) => {
-        if (cancelled) return;
-        setTotalPlayers(typeof d.totalPlayers === 'number' ? d.totalPlayers : 0);
-        if (d.supabaseConfigured === false) setPlayersUnavailable(true);
-      })
-      .catch(() => !cancelled && setPlayersUnavailable(true));
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   return (
@@ -74,16 +57,7 @@ export default function HeroSection() {
           </a>
         </div>
 
-        <div className="mt-8 grid w-full grid-cols-2 gap-3 rounded-xl border border-purple-600/20 bg-black/20 p-4 backdrop-blur-sm sm:mt-12 sm:gap-4 sm:p-6 md:grid-cols-4 md:gap-6">
-          <div className="text-center">
-            <p className="text-gray-400 text-sm">Total Players</p>
-            <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
-              {totalPlayers == null ? '—' : totalPlayers.toLocaleString()}
-            </p>
-            {playersUnavailable && (
-              <p className="text-[10px] text-amber-300/70 mt-1">SUPABASE_SERVICE_ROLE_KEY not set</p>
-            )}
-          </div>
+        <div className="mt-8 grid w-full grid-cols-2 gap-3 rounded-xl border border-purple-600/20 bg-black/20 p-4 backdrop-blur-sm sm:mt-12 sm:gap-4 sm:p-6 md:grid-cols-3 md:gap-6">
           <div className="text-center">
             <p className="text-gray-400 text-sm">Active Games</p>
             <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">

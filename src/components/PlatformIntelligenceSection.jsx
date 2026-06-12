@@ -6,7 +6,6 @@ import {
   FaChartLine,
   FaTrophy,
   FaWallet,
-  FaUsers,
 } from 'react-icons/fa';
 
 function useCountUp(target, duration = 1400, started = false) {
@@ -77,7 +76,6 @@ export default function PlatformIntelligenceSection() {
     { key: 'totalRoundsPlayed', label: 'Total Rounds Played', icon: FaChartLine, value: pub?.totalRoundsPlayed ?? 0 },
     { key: 'playerRoundsWon', label: 'Player Rounds Won', icon: FaTrophy, value: pub?.playerRoundsWon ?? 0 },
     { key: 'depositsProcessed', label: 'Deposits Processed', icon: FaWallet, value: pub?.depositsProcessed ?? 0 },
-    { key: 'uniqueTraders', label: 'Unique Traders', icon: FaUsers, value: pub?.uniqueTraders ?? 0 },
   ];
 
   return (
@@ -104,7 +102,7 @@ export default function PlatformIntelligenceSection() {
               <span className="text-white/80 text-sm font-semibold tracking-wide">All-time</span>
               <div className="flex-1 h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {allTime.map((s) => (
                 <StatCard key={s.key} label={s.label} value={s.value} icon={s.icon} started={started} />
               ))}
@@ -112,7 +110,7 @@ export default function PlatformIntelligenceSection() {
 
             {pub && pub.supabaseConfigured === false && (
               <p className="mt-6 text-center text-xs text-amber-300/70">
-                Set SUPABASE_SERVICE_ROLE_KEY to enable Deposits Processed and Unique Traders.
+                Set SUPABASE_SERVICE_ROLE_KEY to enable Deposits Processed.
               </p>
             )}
           </div>

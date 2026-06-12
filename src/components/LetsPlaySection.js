@@ -2,10 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import ChainConnectModal from './wallet/ChainConnectModal';
 import { ACTIVE_GAMES_COUNT } from '@/lib/gameRegistry';
-import { FaUsers, FaGamepad, FaShieldAlt } from 'react-icons/fa';
+import { FaGamepad, FaShieldAlt } from 'react-icons/fa';
 import { getPlayChainsForUi } from '@/lib/chains/registry';
 import { CHAIN_UI } from '@/lib/chains/chainUi';
 
@@ -29,34 +29,8 @@ function StatTile({ icon, label, value, sub, accent }) {
 }
 
 export default function LetsPlaySection() {
-  const [totalPlayers, setTotalPlayers] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const liveChains = getPlayChainsForUi();
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch('/api/players/count')
-      .then((r) => r.json())
-      .then((d) => {
-        if (!cancelled) {
-          setTotalPlayers(typeof d?.totalPlayers === 'number' ? d.totalPlayers : 0);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const playerDisplay = loading ? (
-    <span className="inline-block h-8 w-16 animate-pulse rounded bg-white/10" />
-  ) : (
-    totalPlayers.toLocaleString()
-  );
 
   return (
     <section
@@ -115,14 +89,7 @@ export default function LetsPlaySection() {
               </div>
 
               {/* Stats */}
-              <div className="mt-8 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
-                <StatTile
-                  icon={<FaUsers className="text-red-magic" />}
-                  label="Players"
-                  value={playerDisplay}
-                  sub={loading ? ' ' : 'Registered wallets'}
-                  accent="from-rose-500/80 to-rose-500/0"
-                />
+              <div className="mt-8 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
                 <StatTile
                   icon={<FaGamepad className="text-blue-magic" />}
                   label="Live games"
