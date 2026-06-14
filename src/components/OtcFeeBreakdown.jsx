@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  BAGS_TOKEN_TAX,
+  APTC_DEX_POOL_FEE,
   DEX_VALUE_LOSS_SOURCES,
   SOLANA_TX_FEE_SOL,
   WALLET_SWAP_FEES,
@@ -12,7 +12,7 @@ import {
 const REFERENCE_EXCLUDED_WALLET_IDS = new Set(['glow', 'metamask', 'conservative']);
 
 export const OTC_ADVANTAGES = [
-  'Skip the 2% Bags trade tax on every DEX buy (1% protocol + 1% creator on APTC).',
+  'Skip Raydium pool fees and wallet swap markup on every DEX buy.',
   'Skip wallet swap markup (e.g. Phantom 0.85% on select pairs).',
   'One SOL transfer instead of many small swaps — lower network fees when you DCA often.',
   'No price impact from splitting size across repeated market buys.',
@@ -21,7 +21,7 @@ export const OTC_ADVANTAGES = [
 
 function buildReferences() {
   return [
-    ...BAGS_TOKEN_TAX.sources,
+    ...APTC_DEX_POOL_FEE.sources,
     ...DEX_VALUE_LOSS_SOURCES.filter((s) => s.url).map((s) => ({
       label: s.learnMoreLabel || s.label,
       url: s.url,
@@ -51,10 +51,10 @@ export default function OtcFeeBreakdown({ compact = false }) {
       </section>
 
       <section>
-        <h3 className="text-white/90 font-display font-semibold mb-2">APTC on-chain trade tax (DEX)</h3>
+        <h3 className="text-white/90 font-display font-semibold mb-2">APTC DEX pool fee</h3>
         <p className="leading-relaxed">
-          Bags default config: <strong className="text-white/85">{BAGS_TOKEN_TAX.totalLabel}</strong> per swap —{' '}
-          {BAGS_TOKEN_TAX.protocolLabel}, {BAGS_TOKEN_TAX.creatorLabel}. {BAGS_TOKEN_TAX.postMigrationNote}
+          {APTC_DEX_POOL_FEE.venue}: <strong className="text-white/85">{APTC_DEX_POOL_FEE.totalLabel}</strong> per
+          swap on APTC/SOL — {APTC_DEX_POOL_FEE.detail}
         </p>
       </section>
 

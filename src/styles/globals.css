@@ -520,3 +520,13 @@ body {
     opacity: 0.55;
   }
 }
+
+.advisory-card-img--blur {
+  filter: blur(10px);
+}
+
+.advisory-section-glow {
+  background:
+    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(6, 182, 212, 0.08), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 80% 30%, rgba(139, 92, 246, 0.1), transparent 50%);
+}

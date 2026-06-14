@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     estimate,
     feeExplanation: {
       tokenTradeTax:
-        '2% on DEX buy/sell (Bags default) — 1% Bags protocol, 1% APT Casino creator. See docs.bags.fm.',
+        '0.5% Raydium CPMM pool fee on APTC/SOL swaps — paid to LPs. See raydium.io.',
       swapPlatformFee:
         'Wallet-specific: Phantom 0.85% on select pairs; Solflare/Glow/Backpack/Jupiter manual often 0% platform fee — network + price impact still apply.',
     },

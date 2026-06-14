@@ -36,10 +36,10 @@ export default function LitepaperAllocationBlock({ section, sectionLabel, sectio
         <div className="lp-gradient-border rounded-2xl">
           <div className="lp-gradient-inner rounded-2xl bg-[#0a0008] px-4 py-8 sm:px-8 sm:py-10">
             <p className="mb-2 text-center text-[10px] font-black uppercase tracking-[0.3em] text-fuchsia-300/60">
-              100M APTC protocol bucket · 10% of 1B supply
+              1B APTC · full supply allocation
             </p>
             <p className="mb-6 text-center text-xs text-white/45">
-              Chart = 100% deploy of that bucket (35 / 25 / 20 / 12 / 8)
+              Nine labeled wallets · chart = 100% of max supply
             </p>
             <AllocationDonut variant="litepaper" />
           </div>

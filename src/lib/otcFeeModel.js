@@ -1,8 +1,25 @@
 /**
  * OTC vs DEX fee model — sourced wallet/platform rates for calculator UI.
- * Token tax follows Bags default config (2% total: 1% protocol + 1% creator).
- * @see https://docs.bags.fm/how-to-guides/customize-token-fees
+ * Pool fee follows Raydium CPMM launch config (0.5% LP fee tier).
+ * @see https://docs.raydium.io/raydium/
  */
+
+/** Raydium CPMM pool fee — APTC/SOL launch tier */
+export const APTC_DEX_POOL_FEE = {
+  totalBps: 50,
+  totalLabel: '0.5%',
+  venue: 'Raydium CPMM',
+  detail: '0.5% LP fee on APTC/SOL swaps — paid to liquidity providers, taken on the trade.',
+  sources: [
+    {
+      label: 'Raydium — Liquidity pools',
+      url: 'https://raydium.io/liquidity-pools/',
+    },
+  ],
+};
+
+/** @deprecated Use APTC_DEX_POOL_FEE */
+export const BAGS_TOKEN_TAX = APTC_DEX_POOL_FEE;
 
 /** @typedef {'phantom'|'solflare'|'glow'|'backpack'|'jupiter'|'metamask'|'conservative'} WalletFeeId */
 
@@ -36,7 +53,7 @@ export const WALLET_SWAP_FEES = [
     name: 'Solflare',
     swapFeeBps: 0,
     swapFeeLabel: '0% (wallet)',
-    notes: 'In-wallet swaps route via Jupiter; no separate Solflare platform fee listed — you still pay Solana network fees and Bags token tax.',
+    notes: 'In-wallet swaps route via Jupiter; no separate Solflare platform fee listed — you still pay Solana network fees and Raydium pool fees.',
     sources: [
       { label: 'Solflare — FAQ', url: 'https://www.solflare.com/faq/' },
       { label: 'Jupiter — Swap fees', url: 'https://docs.jup.ag/user-docs/trade/swap/fees' },
@@ -101,24 +118,6 @@ export const WALLET_SWAP_FEES = [
   },
 ];
 
-/** Bags default config — pre-migration 2% total trade fee. */
-export const BAGS_TOKEN_TAX = {
-  totalBps: 200,
-  totalLabel: '2%',
-  protocolBps: 100,
-  protocolLabel: '1% Bags (protocol)',
-  creatorBps: 100,
-  creatorLabel: '1% APT Casino (creator)',
-  postMigrationNote:
-    'After migration, default Bags config is still 2% total but splits 0.75% protocol, 0.75% creator, 0.5% compounding.',
-  sources: [
-    {
-      label: 'Bags — Customize token fees (Default mode)',
-      url: 'https://docs.bags.fm/how-to-guides/customize-token-fees',
-    },
-  ],
-};
-
 /** Typical Solana base fee per signed transaction (planning constant). */
 export const SOLANA_TX_FEE_SOL = 0.000005;
 
@@ -148,8 +147,8 @@ export const DEX_VALUE_LOSS_SOURCES = [
   },
   {
     id: 'tax',
-    label: 'Token trade tax (Bags)',
-    detail: '2% on APTC DEX buys — 1% Bags protocol, 1% creator. Taken on the trade.',
+    label: 'Raydium pool fee (APTC/SOL)',
+    detail: '0.5% on APTC DEX swaps via Raydium CPMM — paid to LPs. Taken on the trade.',
   },
   {
     id: 'priceImpact',
@@ -227,7 +226,7 @@ export function estimateDexAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd, swa
   };
 }
 
-/** Full APTC if no DEX swap markup and no Bags trade tax (OTC allotment model). */
+/** Full APTC if no DEX swap markup and no Raydium pool fee (OTC allotment model). */
 export function estimateOtcAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd) {
   if (!solAmount || !solPriceUsd || !aptcPriceUsd) return { aptc: 0, networkFeeUsd: 0 };
   const grossUsd = solAmount * solPriceUsd;
@@ -320,7 +319,7 @@ export function getWalletById(id) {
 }
 
 /**
- * Per DEX purchase: full value loss in SOL — swap fee, market loss (impact/slippage/LP), Bags tax.
+ * Per DEX purchase: full value loss in SOL — swap fee, market loss (impact/slippage/LP), Raydium pool fee.
  * @param {number} solIn
  * @param {number} swapFeeBps
  * @param {number} tokenTaxBps
@@ -385,7 +384,7 @@ export function calculateDexFeesPerBuySol(solIn, swapFeeBps, tokenTaxBps, opts =
   };
 }
 
-/** OTC: one SOL transfer; no swap markup or Bags trade tax on the buy. */
+/** OTC: one SOL transfer; no swap markup or Raydium pool fee on the buy. */
 export function calculateOtcPerBuySol(solIn) {
   const networkFeeSol = SOLANA_TX_FEE_SOL;
   return {

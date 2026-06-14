@@ -11,11 +11,11 @@ export const ROADMAP_PHASES_SEQUENCE = `sequenceDiagram
   participant H as Long term
 
   Note over L: 4 games · Sol + Aptos
-  Note over L: Live · GGR · referrals · promotions
-  L->>N: Bags TGE · 10% APTC
-  Note over N: Staking · LP · buybacks
-  N->>M: Sui · EVM · audit
-  Note over M: Governance · security
+  Note over L: Live · GGR · referrals
+  L->>N: Raydium TGE · 9 wallets
+  Note over N: DexScreener · Jupiter · CG/CMC
+  N->>M: Staking · buybacks · farms
+  Note over M: Sui · EVM · audit
   M->>H: Game SDK
   Note over H: Multichain marketplace`;
 
@@ -25,7 +25,7 @@ export const ROADMAP_VALUE_SEQUENCE = `sequenceDiagram
   actor P as Players
   participant X as Protocol
   participant G as Games
-  participant M as Markets
+  participant M as Raydium + Jupiter
   participant H as Holders
 
   Note over P,H: Live today
@@ -37,7 +37,7 @@ export const ROADMAP_VALUE_SEQUENCE = `sequenceDiagram
   X->>M: GGR buys APTC
   M-->>H: Burn stake treasury
   P->>X: Referrals OTC Volume Cup
-  X-->>H: Community bucket unlocks
+  X-->>H: Nine wallet emissions
 
   Note over P,H: Scale
   X->>G: Sui EVM SDK
@@ -48,14 +48,14 @@ export const ROADMAP_DIAGRAM_CARDS = [
   {
     id: 'phases',
     title: 'Delivery phases',
-    caption: 'Four eras from live product to open GambleFi hub.',
+    caption: 'From Raydium TGE to the open GambleFi hub.',
     chart: ROADMAP_PHASES_SEQUENCE,
     layout: 'default',
   },
   {
     id: 'sequence',
     title: 'Value delivery sequence',
-    caption: 'How play, GGR, markets, and APTC holders connect over time.',
+    caption: 'How play, GGR, Raydium/Jupiter, and APTC holders connect.',
     chart: ROADMAP_VALUE_SEQUENCE,
     layout: 'default',
   },

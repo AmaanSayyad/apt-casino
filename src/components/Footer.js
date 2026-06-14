@@ -6,6 +6,7 @@ import Link from 'next/link';
 import GradientBorderButton from './GradientBorderButton';
 import { PITCH_DECK_URL } from '@/lib/pitchDeck';
 import { LITEPAPER_PATH } from '@/lib/siteMetadata';
+import { GRANT_RECIPIENT_LINE, HACKATHON_WINNER_LABEL } from '@/lib/config/socialCredentials';
 import { FaLock, FaShieldAlt } from 'react-icons/fa';
 
 export default function Footer() {
@@ -75,33 +76,8 @@ export default function Footer() {
             <Image src="/PowerPlay.png" alt="APT-Casino logo" width={172} height={15} />
           </Link>
           <p className="mt-2 max-w-md text-xs leading-relaxed text-white/65">
-            Multichain GambleFi on Solana and Aptos with provably fair play and creator rewards. Grantee{' '}
-            <a
-              href="https://x.com/aptos"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline decoration-white/30 underline-offset-2 hover:text-white"
-            >
-              Aptos
-            </a>{' '}
-            x{' '}
-            <a
-              href="https://x.com/solana"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline decoration-white/30 underline-offset-2 hover:text-white"
-            >
-              Solana
-            </a>{' '}
-            x{' '}
-            <a
-              href="https://x.com/movement_xyz"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline decoration-white/30 underline-offset-2 hover:text-white"
-            >
-              Movementlabs
-            </a>
+            Multichain GambleFi on Solana and Aptos with provably fair play and creator rewards.{' '}
+            {HACKATHON_WINNER_LABEL}. {GRANT_RECIPIENT_LINE}.
           </p>
 
           <div className="mt-3 flex items-center gap-2">

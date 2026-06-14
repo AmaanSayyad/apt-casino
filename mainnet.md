@@ -1,8 +1,34 @@
 # Mainnet deployment guide
 
-Last updated: 2026-05-27
+Last updated: 2026-06-08
 
 Checklist for launching APT Casino on production infrastructure. Solana is the primary live chain; Aptos modules can run in parallel when `NEXT_PUBLIC_CASINO_MODULE_ADDRESS` is set and Aptos is marked `live` in the chain registry.
+
+## APTC token (live)
+
+- [x] SPL mint created — `AptCYjLJmZuWC6vWYfeZf7catWrhX9XCbiZir1PopNZU`
+- [x] Mint, freeze, update authorities revoked
+- [x] Nine-wallet distribution (see [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md))
+- [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in Vercel production
+- [ ] Raydium CPMM pool live (120M APTC + 37 SOL)
+- [ ] ~16.67% LP token burn
+- [ ] DexScreener Enhanced Token Info submitted
+- [ ] Jupiter routing visible on pair
+- [ ] CoinGecko & CoinMarketCap applications submitted
+- [ ] Enable staking when vault wired: `APTC_STAKING_ENABLED=true`
+
+```mermaid
+sequenceDiagram
+    participant Env as Vercel env
+    participant Site as aptcasino.fun
+    participant DS as DexScreener
+    participant R as Raydium
+
+    Env->>Site: NEXT_PUBLIC_APTC_SOLANA_MINT
+    Site->>DS: Price / chart embed
+    R->>DS: APTC/SOL pair indexed
+    Site->>Site: Tokenomics + roadmap live
+```
 
 ## Launch pipeline
 

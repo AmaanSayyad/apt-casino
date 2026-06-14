@@ -222,6 +222,23 @@ All though started as a idea but now we are thinking to carry forward as a busin
 
 **Be the biggest gamefi/ gambling / games hub centre of the gaming industry.**
 
+## $APTC token (live)
+
+APTC is the native GambleFi token — **live on Solana** via Raydium CPMM. Mint, freeze, and update authorities are all revoked. Full tokenomics: [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md).
+
+```mermaid
+flowchart LR
+    PLAY[Casino play] --> GGR[GGR]
+    GGR --> BUY[Raydium / Jupiter buyback]
+    BUY --> BURN[Burn 50%]
+    BUY --> STAKE[Stakers 35%]
+    BUY --> TRES[Treasury 15%]
+    REF[Referrals] --> APTC[APTC rewards]
+    STK[/stake pools] --> APTC
+```
+
+Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in production for DexScreener embeds and `/stake` (see `.env.example`).
+
 ### Games
 - **Roulette**: Classic roulette with multiple bet types (numbers, colors, odds/evens, etc.)
 - **Plinko**: Dropping balls to multipliers
@@ -392,6 +409,7 @@ Upload the `.next` folder and `public` folder to your hosting provider.
 
 | File | Purpose |
 |------|---------|
+| [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) | **$APTC** — Raydium launch, 9-wallet allocation, GGR flywheel |
 | [mainnet.md](./mainnet.md) | Mainnet launch checklist (multichain) |
 | [deployment.md](./deployment.md) | Aptos module addresses & entry function reference |
 | [liquidity.md](./liquidity.md) | Treasury, house balance, and fee flow |

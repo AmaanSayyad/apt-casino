@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import {
-  BAGS_TOKEN_TAX,
+  APTC_DEX_POOL_FEE,
   DEX_VALUE_LOSS_SOURCES,
   WALLET_SWAP_FEES,
   compareDexVsOtcSol,
@@ -25,13 +25,13 @@ function fmtUsd(n) {
 }
 
 /**
- * Per-buy fee + market loss calculator (swap, Bags tax, price impact / slippage).
+ * Per-buy fee + market loss calculator (swap, Raydium pool fee, price impact / slippage).
  */
 export default function OtcSavingsCalculator({
   solPerBuy,
   solPriceUsd,
   poolLiquidityUsd,
-  tokenTaxBps = BAGS_TOKEN_TAX.totalBps,
+  tokenTaxBps = APTC_DEX_POOL_FEE.totalBps,
   showEmbeddedBreakdown = true,
 }) {
   const [walletId, setWalletId] = useState('phantom');
@@ -143,7 +143,7 @@ export default function OtcSavingsCalculator({
                 muted
               />
               <Row
-                label={`Bags / APTC trade tax (${BAGS_TOKEN_TAX.totalLabel})`}
+                label={`Raydium pool fee (${APTC_DEX_POOL_FEE.totalLabel})`}
                 value={`−${fmtSol(dex.tokenTaxSol)} SOL`}
                 muted
               />
@@ -189,8 +189,8 @@ export default function OtcSavingsCalculator({
               bold
             />
             <p className="text-xs text-emerald-200/70 pt-1">
-              Avoid ~<strong>{dex.totalLossPct}%</strong> DEX loss on this size — no swap tax, Bags buy
-              tax, or pool price impact.
+              Avoid ~<strong>{dex.totalLossPct}%</strong> DEX loss on this size — no swap fees, Raydium pool
+              fees, or price impact.
             </p>
           </div>
 

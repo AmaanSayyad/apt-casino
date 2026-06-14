@@ -1,10 +1,12 @@
 import {
+  APTC_LAUNCH_METRICS,
   APTC_LAUNCH_PHASES,
-  APTC_PROTOCOL_HOLDING,
   APTC_TOKENOMICS,
   APTC_UTILITY,
+  APTC_WALLETS,
   GGR_FLYWHEEL_STEPS,
-  getProtocolAllocationSummary,
+  getAllocationSummary,
+  truncateAddress,
 } from '@/lib/config/tokenomics';
 
 export { PITCH_DECK_EMBED, PITCH_DECK_URL } from '@/lib/pitchDeck';
@@ -16,7 +18,7 @@ export {
 } from '@/lib/siteMetadata';
 
 export const LITEPAPER_VERSION = 'v1.0.0';
-export const LITEPAPER_UPDATED = '2026-05-19';
+export const LITEPAPER_UPDATED = '2026-06-08';
 export const PROJECT_GITHUB = 'https://github.com/AmaanSayyad/apt-casino';
 
 /**
@@ -81,7 +83,7 @@ export const LITEPAPER_SECTIONS = [
       'APT-Casino was born after a firsthand experience with legacy online casinos: misleading bonus terms, hidden wager limits, and custodial balances that trap users.',
       'The founder deposited into a major Web2 platform, received a 200% bonus, then discovered bets were capped at $1 and withdrawals required tens of thousands in play-through — classic opaque house rules.',
       'That frustration became a product mandate: no hidden wager traps, no rigged outcomes, and no custodial lock-in. Players own their assets and can verify fairness on-chain.',
-      'The platform evolved from an Aptos hackathon project into a multichain product with live play on Solana and Aptos, APTC economics, live streaming, and community programs (referrals, volume cups, OTC lottery).',
+      'The platform evolved from an Aptos hackathon project into a multichain product — 15× global hackathon winner with grants from Aptos Foundation and Movement Labs. Live play on Solana and Aptos, APTC economics, live streaming, and community programs (referrals, volume cups, OTC lottery).',
     ],
   },
   {
@@ -220,21 +222,22 @@ export const LITEPAPER_SECTIONS = [
     title: '8. APTC Token',
     body: [
       `Native ecosystem token: ${APTC_TOKENOMICS.name} (${APTC_TOKENOMICS.symbol}) on ${APTC_TOKENOMICS.chain}.`,
-      `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals).`,
-      `Public launch on ${APTC_TOKENOMICS.launchVenue}. ${APTC_TOKENOMICS.launch}`,
-      `Acquisition path: ~${APTC_PROTOCOL_HOLDING.launchBuyPct}% (${APTC_PROTOCOL_HOLDING.launchBuyTokens} APTC) purchased at launch on Bags, then incremental open-market buys on Meteora, Bags, and other venues until the protocol holds ${APTC_PROTOCOL_HOLDING.pctOfMaxSupply}% of supply (${APTC_PROTOCOL_HOLDING.tokens} APTC).`,
+      `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint, freeze, and update authorities all revoked at creation — fixed metadata, fixed supply.`,
+      `Public launch on ${APTC_TOKENOMICS.launchVenue}: ${APTC_LAUNCH_METRICS.aptcInLpShort} APTC + ${APTC_LAUNCH_METRICS.solInLp} SOL, ${APTC_LAUNCH_METRICS.feeTierPct}% fee tier. Approx launch MC ~$${(APTC_LAUNCH_METRICS.approxMarketCapUsd / 1000).toFixed(1)}k · liquidity ~$${(APTC_LAUNCH_METRICS.approxLiquidityUsd / 1000).toFixed(0)}k.`,
+      `Nine labeled wallets distribute the full 1B supply — no single-wallet hoard. Mint: ${APTC_TOKENOMICS.mint}.`,
       utilityText,
-      'APTC is not required to place bets in native SOL/APT — it is the rewards, staking, and value-accrual layer on top of core casino play.',
+      'APTC is not required to place bets in native SOL/APT — it is the rewards, staking, referral, and value-accrual layer on top of core casino play.',
     ],
   },
   {
     id: 'aptc-allocation',
     title: '9. APTC Allocation',
     body: [
-      `${getProtocolAllocationSummary()}`,
-      'The donut below is how we deploy the protocol’s 10% bucket (100M APTC) — slices sum to 100% of that bucket, not % of total 1B supply.',
-      'Community & rewards 35% · Liquidity & market making 25% · Treasury & operations 20% · Staking emissions 12% · Partnerships & grants 8%.',
+      `${getAllocationSummary()}`,
+      '12% initial liquidity · 25% treasury · 12% staking · 15% community · 10% referrals · 10% partnerships · 8% founder reserve · 5% marketing · 3% competitions.',
+      `LP burn at TGE: ~${APTC_LAUNCH_METRICS.lpBurnPct}% of LP tokens permanently locked (~${APTC_LAUNCH_METRICS.lockedAptc} APTC + ~${APTC_LAUNCH_METRICS.lockedSol} SOL in pool).`,
       ...APTC_LAUNCH_PHASES.map((p) => `${p.title}: ${p.detail}`),
+      ...APTC_WALLETS.map((w) => `${w.label} (${w.amountShort}): ${truncateAddress(w.address, 6)} — ${w.purpose}`),
     ],
     chart: 'allocation-donut',
   },
@@ -246,11 +249,11 @@ export const LITEPAPER_SECTIONS = [
       'Default economics (env): 30% of GGR allocated to APTC buyback (GGR_BUYBACK_BPS_OF_GGR=3000).',
       'Buyback split: 50% burn · 35% stakers · 15% treasury (GGR_BURN/STAKER/TREASURY_BPS_OF_BUYBACK).',
       'Average house edge assumption for estimates: 2.5% (GGR_AVG_HOUSE_EDGE_BPS=250). Actual edge varies per game (~1–4%).',
-      'Dashboard surfaces estimated GGR and buyback from play events — live execution requires APTC mint + DEX liquidity configured.',
+      'Dashboard surfaces estimated GGR and buyback from play events — live buybacks execute on Raydium & Jupiter when treasury ops run.',
     ],
     mermaid: `flowchart LR
     PLAY[Player Bets] --> EDGE[House Edge GGR]
-    EDGE --> BUY[APTC Market Buy]
+    EDGE --> BUY[Raydium / Jupiter Buy]
     BUY --> BURN[50% Burn]
     BUY --> STAKE[35% Staker Rewards]
     BUY --> TRES[15% Treasury]`,
@@ -324,8 +327,8 @@ export const LITEPAPER_SECTIONS = [
     title: '16. Roadmap',
     body: [
       'Shipped / live: core casino games, Solana + Aptos play, gasless Aptos UX, referrals, Stake UI, GGR dashboard, live streaming shell, ecosystem partners section.',
-      `Near term: APTC public launch on ${APTC_TOKENOMICS.launchVenue}, protocol accumulation to ${APTC_PROTOCOL_HOLDING.pctOfMaxSupply}% (${APTC_PROTOCOL_HOLDING.tokensShort} APTC), Meteora/Bags liquidity, staking writes enabled at TGE.`,
-      'Mid term: Sui + EVM chain adapters live, AI-generated NFT profiles, developer SDK for third-party provably-fair games on the hub.',
+      `Near term: APTC TGE on Raydium CPMM (${APTC_LAUNCH_METRICS.aptcInLpShort} APTC + ${APTC_LAUNCH_METRICS.solInLp} SOL), DexScreener enhanced token info, Jupiter swap routing, CoinGecko & CoinMarketCap listings, staking writes enabled, ~${APTC_LAUNCH_METRICS.lpBurnPct}% LP burn.`,
+      'Mid term: Raydium farm incentives, deeper CEX/DEX liquidity, Sui + EVM chain adapters live, AI-generated NFT profiles, developer SDK for third-party provably-fair games on the hub.',
       'Long term: largest multichain GambleFi hub — transparent game marketplace, creator revenue share, and community governance over APTC parameters.',
       'The homepage “What’s coming” section lists 30 curated milestones (Platform, Governance, Community, Security, Tournaments, Partnership) via /api/roadmap — editable in Supabase roadmap_items or src/lib/config/publicRoadmap.js.',
     ],

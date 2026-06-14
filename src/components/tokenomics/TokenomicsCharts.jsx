@@ -1,7 +1,7 @@
 'use client';
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { APTC_ALLOCATION, APTC_PROTOCOL_HOLDING, BUYBACK_SPLIT_COLORS } from '@/lib/config/tokenomics';
+import { APTC_ALLOCATION, APTC_TOKENOMICS, BUYBACK_SPLIT_COLORS } from '@/lib/config/tokenomics';
 
 const CHART_TOOLTIP = {
   contentStyle: {
@@ -69,10 +69,7 @@ export function AllocationDonut({ variant = 'default' }) {
             <Tooltip {...CHART_TOOLTIP} formatter={(value) => [`${value}%`, 'Allocation']} />
           </PieChart>
         </ResponsiveContainer>
-        <DonutCenter
-          title={`${APTC_PROTOCOL_HOLDING.tokensShort} APTC`}
-          subtitle="100%"
-        />
+        <DonutCenter title="Max supply" subtitle={`${APTC_TOKENOMICS.symbol} · 1B`} />
       </div>
 
       <ul
@@ -93,9 +90,14 @@ export function AllocationDonut({ variant = 'default' }) {
               }`}
               style={{ backgroundColor: row.fill }}
             />
-            <span className="flex-1 truncate text-white/80">{row.label}</span>
+            <span className="flex-1 min-w-0 text-white/80">
+              <span className="block truncate">{row.label}</span>
+              {row.tokensShort && (
+                <span className="text-[10px] text-white/40 font-mono">{row.tokensShort}</span>
+              )}
+            </span>
             <span
-              className={`font-mono tabular-nums text-white ${
+              className={`font-mono tabular-nums text-white shrink-0 ${
                 isLitepaper ? 'text-base font-semibold' : 'text-sm font-medium'
               }`}
             >
@@ -166,7 +168,7 @@ export function BuybackSplitDonut({ config }) {
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: row.fill }} />
             <span className="text-white/75 flex-1">{row.name}</span>
             <span className="font-mono font-semibold tabular-nums" style={{ color: row.fill }}>
-              {row.value}%
+              {formatPct(row.value)}%
             </span>
           </li>
         ))}
@@ -301,4 +303,9 @@ function fmtUsd(n) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toFixed(2);
+}
+
+function formatPct(n) {
+  if (!Number.isFinite(n)) return '0';
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }

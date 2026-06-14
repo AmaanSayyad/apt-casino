@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { DEFAULT_SITE_URL, SITE_NAME } from '@/lib/siteMetadata';
+import { GRANT_RECIPIENT_LINE, HACKATHON_WINNER_SHORT } from '@/lib/config/socialCredentials';
 import { isValidReferralCode } from '@/lib/server/referrals';
 
 export const runtime = 'nodejs';
@@ -136,8 +137,8 @@ export default async function Image({ params }) {
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-            <div style={{ display: 'flex' }}>Grantee: Solana x Aptos x Movementlabs</div>
-            <div style={{ display: 'flex', fontSize: 16, color: 'rgba(245,198,216,0.72)' }}>15x Web3 Hackathon Winner</div>
+            <div style={{ display: 'flex' }}>{GRANT_RECIPIENT_LINE}</div>
+            <div style={{ display: 'flex', fontSize: 16, color: 'rgba(245,198,216,0.72)' }}>{HACKATHON_WINNER_SHORT}</div>
           </div>
           <div style={{ display: 'flex', textAlign: 'right', maxWidth: 520 }}>
             Autonomous Provably Transparent Casino with $APTC Rewards

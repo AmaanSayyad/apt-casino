@@ -1,16 +1,16 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
+import { PLATFORM_CREDENTIALS } from '@/lib/config/socialCredentials';
 
 const ANNOUNCEMENT_ITEMS = [
-  'APT-Casino is backed by Aptos and supported as an Aptos Foundation grantee.',
-  'APT-Casino has won 10 global Web3 hackathons and is gaining traction among leading ecosystems and the on-chain gaming industry.',
-  'We have brought on two senior advisors from tier-1 crypto VCs and funds that back category-leading blockchain companies.',
+  { text: '$APTC is now live on Solana', primary: true },
+  ...PLATFORM_CREDENTIALS,
 ];
 
 /**
- * Full-width infinite text marquee (APT-Casino gradient / purple bar).
- * Duplicated track for seamless translateX(-50%) loop.
+ * Full-width infinite text marquee below the navbar.
  */
 export default function HeroAnnouncementsMarquee() {
   const loopSegments = useMemo(() => [...ANNOUNCEMENT_ITEMS, ...ANNOUNCEMENT_ITEMS], []);
@@ -26,18 +26,33 @@ export default function HeroAnnouncementsMarquee() {
         <div className="hero-alert-marquee-fade hero-alert-marquee-fade--right" aria-hidden />
         <div
           className="hero-alert-marquee-track"
-          style={{ '--hero-alert-marquee-duration': '52s' }}
+          style={{ '--hero-alert-marquee-duration': '38s' }}
         >
-          {loopSegments.map((text, idx) => (
+          {loopSegments.map((item, idx) => (
             <span
-              key={`${text}-${idx}`}
-              className="hero-alert-marquee-item inline-flex shrink-0 items-center gap-4 font-display text-sm font-medium leading-snug tracking-wide text-white/90 sm:text-[15px]"
+              key={`${item.text}-${idx}`}
+              className={`hero-alert-marquee-item inline-flex shrink-0 items-center gap-3 font-display text-sm font-medium leading-snug tracking-wide sm:text-[15px] ${
+                item.primary ? 'text-emerald-200' : 'text-white/85'
+              }`}
             >
-              <span
-                className="h-2 w-2 shrink-0 rounded-full bg-gradient-to-r from-red-magic to-blue-magic shadow-[0_0_10px_rgba(236,72,153,0.7)]"
-                aria-hidden
-              />
-              <span className="whitespace-nowrap">{text}</span>
+              {item.primary ? (
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
+                  Live
+                </span>
+              ) : (
+                <span
+                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r from-red-magic to-blue-magic shadow-[0_0_8px_rgba(236,72,153,0.6)]"
+                  aria-hidden
+                />
+              )}
+              {item.primary ? (
+                <Link href="/#tokenomics" className="whitespace-nowrap hover:text-white transition-colors">
+                  {item.text}
+                </Link>
+              ) : (
+                <span className="whitespace-nowrap">{item.text}</span>
+              )}
             </span>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { PITCH_DECK_EMBED, PITCH_DECK_URL } from '@/lib/pitchDeck';
+import { ADVISORY_BOARD, ADVISOR_ACCENT_STYLES } from '@/lib/config/socialProofSlides';
 
 export default function LitepaperMedia() {
   return (
@@ -39,20 +40,50 @@ export default function LitepaperMedia() {
           <div className="border-b border-white/10 px-4 py-3">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/45">Advisory</p>
           </div>
-          <div className="relative flex-1 min-h-[200px] overflow-hidden">
-            <Image
-              src="/lucas-advisor.jpg"
-              alt="Advisory board"
-              fill
-              className="lp-advisor-blur object-cover"
-              sizes="(max-width: 1024px) 100vw, 40vw"
-            />
-            <span className="absolute bottom-3 right-3 rounded-full border border-emerald-400/40 bg-emerald-500/25 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-100 backdrop-blur-sm">
-              Confirmed
-            </span>
+          <div className="grid flex-1 grid-cols-1 gap-2 p-3">
+            {ADVISORY_BOARD.map((advisor) => {
+              const accent = ADVISOR_ACCENT_STYLES[advisor.accent] ?? ADVISOR_ACCENT_STYLES.cyan;
+              const inner = (
+                <>
+                  <Image
+                    src={advisor.src}
+                    alt={advisor.alt}
+                    fill
+                    className={`object-contain p-1 ${advisor.blurred ? 'advisory-card-img--blur scale-105' : ''}`}
+                    sizes="280px"
+                  />
+                  {advisor.blurred && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-[10px] font-bold uppercase tracking-widest text-white/60">
+                      Confirmed
+                    </div>
+                  )}
+                </>
+              );
+
+              const className = `relative min-h-[100px] overflow-hidden rounded-xl border bg-[#0a0008] ${accent.border} ${
+                advisor.xUrl ? 'cursor-pointer transition-colors hover:border-white/25' : ''
+              }`;
+
+              return advisor.xUrl ? (
+                <a
+                  key={advisor.id}
+                  href={advisor.xUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${advisor.name} on X`}
+                  className={className}
+                >
+                  {inner}
+                </a>
+              ) : (
+                <div key={advisor.id} className={className}>
+                  {inner}
+                </div>
+              );
+            })}
           </div>
           <p className="px-4 py-3 text-xs leading-6 text-white/50">
-            Ecosystem advisors and partners — see homepage for full logo grid.
+            Aptos, Movement & BNB Chain advisors backing $APTC rollout.
           </p>
         </div>
       </div>

@@ -98,7 +98,7 @@ const BENEFITS = [
   {
     icon: FaChartLine,
     title: 'Skip DEX drag',
-    body: 'Avoid Bags trade tax, wallet swap markup, and pool price impact on repeated buys.',
+    body: 'Avoid Raydium pool fees, wallet swap markup, and price impact on repeated buys.',
     tint: 'cyan',
   },
   {
@@ -449,11 +449,11 @@ export default function OtcLotteryPage() {
                         <span className="text-white/80">{fmtUsd(estimate.breakdown.swapFeeUsd)}</span>
                       </p>
                       <p className="text-white/55">
-                        Bags / APTC trade tax ~{(estimate.breakdown.tokenTradeTaxBps / 100).toFixed(0)}% →{' '}
+                        Raydium pool fee ~{(estimate.breakdown.tokenTradeTaxBps / 100).toFixed(2)}% →{' '}
                         <span className="text-white/80">{fmtUsd(estimate.breakdown.tokenTaxUsd)}</span>
                       </p>
                       <p className="text-emerald-300/90 text-xs pt-1">
-                        OTC path: SOL to treasury; APTC delivered if approved — no swap or Bags buy tax on your entry.
+                        OTC path: SOL to treasury; APTC delivered if approved — no swap or pool fees on your entry.
                       </p>
                     </div>
                   ) : null}

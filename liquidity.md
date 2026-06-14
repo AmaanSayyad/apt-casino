@@ -1,6 +1,6 @@
 # Liquidity & treasury
 
-Last updated: 2026-05-27
+Last updated: 2026-06-08
 
 How player funds, house edge, and payouts flow in the current APT Casino stack.
 
@@ -177,6 +177,29 @@ timeline
 - Wallet ban list (`BANNED_WALLET_ADDRESSES` + Supabase ban migration)
 - Solana program pause instruction
 - Platform fee wallets separate from player payout treasury where possible
+
+## APTC on Raydium (token liquidity)
+
+APTC/SOL trades on **Raydium Standard AMM (CPMM)** — separate from player SOL/APT treasury balances.
+
+```mermaid
+flowchart TB
+    subgraph Launch["APTC launch liquidity"]
+        LPW[Liquidity wallet 120M] --> POOL[Raydium CPMM APTC/SOL]
+        SOL[37 SOL] --> POOL
+        POOL --> BURN[~16.67% LP burned]
+    end
+
+    subgraph Flywheel["GGR flywheel"]
+        GGR[Gross gaming revenue] --> BB[Buyback budget]
+        BB --> RD[Raydium / Jupiter]
+        RD --> SINK[Burn · Stakers · Treasury]
+    end
+
+    PLAY[Player bets] --> GGR
+```
+
+See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for wallet addresses and allocation.
 
 ## Related docs
 

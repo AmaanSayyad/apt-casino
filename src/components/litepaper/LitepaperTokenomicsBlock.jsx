@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
+  APTC_LAUNCH_METRICS,
   APTC_LAUNCH_PHASES,
-  APTC_PROTOCOL_HOLDING,
   APTC_TOKENOMICS,
   APTC_UTILITY,
-  getProtocolAllocationSummary,
+  APTC_WALLETS,
+  getAllocationSummary,
+  solscanAccountUrl,
+  truncateAddress,
 } from '@/lib/config/tokenomics';
 import LitepaperBuybackRails from './LitepaperBuybackRails';
 
@@ -36,11 +39,12 @@ export default function LitepaperTokenomicsBlock() {
 
   const cfg = buyback?.config;
   const est = buyback?.estimates;
+  const m = APTC_LAUNCH_METRICS;
 
   return (
     <section id="tokenomics-visual" className="mb-12 scroll-mt-24">
       <div className="mb-6 text-center">
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-fuchsia-300/70">APTC</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-fuchsia-300/70">$APTC</p>
         <h2 className="font-display mt-1 text-2xl font-bold text-white sm:text-3xl">
           <span className="bg-gradient-to-r from-red-magic to-blue-magic bg-clip-text text-transparent">
             Tokenomics
@@ -48,13 +52,13 @@ export default function LitepaperTokenomicsBlock() {
           at a glance
         </h2>
         <p className="mx-auto mt-2 max-w-2xl text-sm text-white/55">
-          {APTC_TOKENOMICS.maxSupply} max supply · {APTC_TOKENOMICS.chain} · launch on{' '}
-          {APTC_TOKENOMICS.launchVenue}
+          {APTC_TOKENOMICS.maxSupply} max supply · {APTC_TOKENOMICS.chain} · Raydium CPMM · mint, freeze &
+          update revoked
         </p>
-        <p className="mx-auto mt-2 max-w-2xl text-xs text-white/45">{getProtocolAllocationSummary()}</p>
+        <p className="mx-auto mt-2 max-w-2xl text-xs text-white/45">{getAllocationSummary()}</p>
       </div>
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-3">
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {APTC_LAUNCH_PHASES.map((p) => (
           <div key={p.step} className="lp-glass rounded-xl p-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-fuchsia-300/60">
@@ -66,23 +70,68 @@ export default function LitepaperTokenomicsBlock() {
         ))}
       </div>
 
+      <div className="mb-5 grid gap-3 sm:grid-cols-3">
+        <div className="lp-glass rounded-xl p-4 text-center">
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Launch MC</p>
+          <p className="mt-1 text-xl font-bold text-white">~${(m.approxMarketCapUsd / 1000).toFixed(1)}k</p>
+        </div>
+        <div className="lp-glass rounded-xl p-4 text-center">
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Liquidity</p>
+          <p className="mt-1 text-xl font-bold text-white">~${(m.approxLiquidityUsd / 1000).toFixed(0)}k</p>
+        </div>
+        <div className="lp-glass rounded-xl p-4 text-center">
+          <p className="text-[10px] uppercase tracking-widest text-white/40">LP pair</p>
+          <p className="mt-1 text-xl font-bold text-white">{m.aptcInLpShort} + {m.solInLp} SOL</p>
+        </div>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="lp-glass rounded-2xl p-5 sm:p-6">
           <p className="mb-1 text-xs font-black uppercase tracking-widest text-white/45">
-            Protocol allocation ({APTC_PROTOCOL_HOLDING.pctOfMaxSupply}%)
+            Full supply allocation
           </p>
-          <p className="mb-4 text-xs text-white/40">100% of {APTC_PROTOCOL_HOLDING.tokensShort} APTC bucket</p>
-          <AllocationDonut />
+          <p className="mb-4 text-xs text-white/40">100% of 1B APTC · nine labeled wallets</p>
+          <AllocationDonut variant="litepaper" />
         </div>
         <div className="lp-glass rounded-2xl p-5 sm:p-6">
           <p className="mb-4 text-xs font-black uppercase tracking-widest text-white/45">
             GGR → buyback pipeline
           </p>
-          <GgrRevenueFunnel
-            estimates={est}
-            buybackPctOfGgr={cfg?.buybackPctOfGgr ?? 30}
-          />
+          <GgrRevenueFunnel estimates={est} buybackPctOfGgr={cfg?.buybackPctOfGgr ?? 30} />
         </div>
+      </div>
+
+      <div className="mt-5 lp-glass rounded-2xl p-5 sm:p-6 overflow-x-auto">
+        <p className="mb-4 text-xs font-black uppercase tracking-widest text-white/45">
+          Wallet transparency
+        </p>
+        <table className="w-full min-w-[520px] text-left text-xs">
+          <thead>
+            <tr className="text-[10px] uppercase tracking-widest text-white/35 border-b border-white/10">
+              <th className="pb-2 pr-3">Wallet</th>
+              <th className="pb-2 pr-3">Amount</th>
+              <th className="pb-2 pr-3">Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            {APTC_WALLETS.map((w) => (
+              <tr key={w.id} className="border-b border-white/5">
+                <td className="py-2 pr-3 text-white/85 font-medium">{w.label}</td>
+                <td className="py-2 pr-3 font-mono text-cyan-200/80">{w.amountShort}</td>
+                <td className="py-2">
+                  <a
+                    href={solscanAccountUrl(w.address)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-fuchsia-300/70 hover:text-fuchsia-200"
+                  >
+                    {truncateAddress(w.address, 5)} ↗
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       <div className="mt-5">

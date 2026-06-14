@@ -23,13 +23,33 @@ import { getLitepaperUrl } from '@/lib/siteMetadata';
 export const PUBLIC_ROADMAP_ITEMS = [
   {
     id: 'a1000001-0001-4001-8001-000000000001',
-    title: 'APTC public launch on Bags',
+    title: 'APTC TGE on Raydium CPMM',
     excerpt:
-      'Fair SPL launch on Bags with transparent liquidity — initial 2% protocol buy (~20M APTC) at TGE, no VC unlock overhang.',
+      '120M APTC + 37 SOL on Raydium Standard AMM · 0.5% fee tier · ~$5k liquidity · ~$20.8k launch MC. Mint revoked. Nine wallets. Sniper-ready.',
     category: 'Platform',
     status: 'in_progress',
     link: getLitepaperUrl('aptc-token'),
     sortOrder: 10,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000031',
+    title: 'Raydium LP burn (~16.67%)',
+    excerpt:
+      'Permanently burn ~16.67% of LP tokens at TGE — ~20M APTC + ~6.17 SOL locked in pool. Liquidity stays. Supply signal locked.',
+    category: 'Platform',
+    status: 'in_progress',
+    link: getLitepaperUrl('aptc-allocation'),
+    sortOrder: 11,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000032',
+    title: 'DexScreener Enhanced Token Info',
+    excerpt:
+      'Official APTC branding on DexScreener — logo, socials, description, and links live on every APTC/SOL chart traders watch.',
+    category: 'Partnership',
+    status: 'in_progress',
+    link: 'https://dexscreener.com',
+    sortOrder: 12,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000002',
@@ -39,7 +59,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     category: 'Platform',
     status: 'in_progress',
     link: null,
-    sortOrder: 12,
+    sortOrder: 15,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000003',
@@ -49,43 +69,53 @@ export const PUBLIC_ROADMAP_ITEMS = [
     category: 'Platform',
     status: 'in_progress',
     link: '/game',
-    sortOrder: 15,
-  },
-  {
-    id: 'a1000001-0001-4001-8001-000000000004',
-    title: 'Live streaming GA (Livepeer)',
-    excerpt:
-      'Creator streams on /live with auto-approve go-live, admin moderation, wallet-signed chat, and featured stream discovery on the homepage.',
-    category: 'Platform',
-    status: 'in_progress',
-    link: '/live',
     sortOrder: 18,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000005',
     title: 'GGR buyback transparency dashboard',
     excerpt:
-      'Public 30-day GGR estimates, buyback split (burn / stakers / treasury / market), and env-driven economics — no black-box treasury moves.',
+      'Public 30-day GGR estimates, buyback split (burn / stakers / treasury), and env-driven economics — no black-box treasury moves.',
     category: 'Platform',
     status: 'in_progress',
     link: '/dashboard',
     sortOrder: 20,
   },
   {
-    id: 'a1000001-0001-4001-8001-000000000006',
-    title: 'Accumulate protocol holding to 10% (100M APTC)',
+    id: 'a1000001-0001-4001-8001-000000000033',
+    title: 'Jupiter swap routing for APTC',
     excerpt:
-      'Post-TGE market purchases on Bags, Meteora, and open DEX until treasury holds 10% of max supply — funds community, LP, staking, and ops buckets.',
-    category: 'Governance',
-    status: 'in_progress',
-    link: getLitepaperUrl('aptc-allocation'),
-    sortOrder: 25,
+      'APTC/SOL routed through Jupiter aggregator — Phantom, Backpack, and every major Solana wallet can ape in one click.',
+    category: 'Partnership',
+    status: 'planned',
+    link: 'https://jup.ag',
+    sortOrder: 22,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000034',
+    title: 'CoinGecko listing application',
+    excerpt:
+      'Fast-track CoinGecko for APTC — price feeds, market cap tracking, and the credibility signal every bot and aggregator scrapes.',
+    category: 'Partnership',
+    status: 'planned',
+    link: 'https://www.coingecko.com',
+    sortOrder: 24,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000035',
+    title: 'CoinMarketCap listing application',
+    excerpt:
+      'CoinMarketCap submission for APTC — global rank visibility, watchlists, and institutional-grade price discovery.',
+    category: 'Partnership',
+    status: 'planned',
+    link: 'https://coinmarketcap.com',
+    sortOrder: 26,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000007',
     title: 'APTC staking deposits live at TGE',
     excerpt:
-      'Fixed-term stake pools on /stake with on-chain vault, APY display, and yield from 12% emissions bucket plus GGR staker share.',
+      'Fixed-term stake pools on /stake — 30/60/90/180-day locks, 120M emissions wallet, APY from emissions plus GGR staker share.',
     category: 'Platform',
     status: 'planned',
     link: '/stake',
@@ -93,19 +123,19 @@ export const PUBLIC_ROADMAP_ITEMS = [
   },
   {
     id: 'a1000001-0001-4001-8001-000000000008',
-    title: 'Meteora & Bags liquidity depth',
+    title: 'Raydium liquidity depth & farm incentives',
     excerpt:
-      'Deepen APTC/SOL pools and MM support so players and OTC users can size without moving thin books at launch.',
+      'Deepen APTC/SOL on Raydium CPMM — LP incentives, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
     category: 'Partnership',
     status: 'planned',
-    link: null,
+    link: 'https://raydium.io',
     sortOrder: 35,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000009',
     title: 'Automated GGR → APTC buyback pipeline',
     excerpt:
-      'Scheduled open-market buys from gross gaming revenue with configurable burn, staker, treasury, and market splits.',
+      'Scheduled open-market buys on Raydium & Jupiter from gross gaming revenue — burn, staker, treasury splits published live.',
     category: 'Platform',
     status: 'planned',
     link: getLitepaperUrl('ggr-flywheel'),
@@ -125,7 +155,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000011',
     title: 'Volume Cup Season 2',
     excerpt:
-      'Seasonal high-volume leaderboard with APTC prize pool from the community bucket — provably logged play events, no fabricated stats.',
+      'Seasonal high-volume leaderboard with APTC prize pool from the 30M competitions wallet — provably logged play events, no fabricated stats.',
     category: 'Tournaments',
     status: 'planned',
     link: '/competition',
@@ -135,7 +165,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000012',
     title: 'OTC lottery tiered tranches',
     excerpt:
-      'SOL → discounted APTC with lock periods in multiple size tiers for power users who would otherwise stress launch liquidity.',
+      'SOL → discounted APTC with lock periods — skip Raydium slippage and repeated swap fees for power users sizing in.',
     category: 'Community',
     status: 'planned',
     link: '/otc-lottery',
@@ -145,11 +175,21 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000013',
     title: 'Referral leaderboard & win-share cards',
     excerpt:
-      '14-day cliff APTC referral rewards with public leaderboard, milestone unlocks, and shareable ROI cards on withdrawals.',
+      '100M APTC referral wallet — 14-day cliff rewards, public leaderboard, milestone unlocks, and shareable ROI cards.',
     category: 'Community',
     status: 'planned',
     link: '/referral',
     sortOrder: 60,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000004',
+    title: 'Live streaming GA (Livepeer)',
+    excerpt:
+      'Creator streams on /live with auto-approve go-live, admin moderation, wallet-signed chat, and featured stream discovery on the homepage.',
+    category: 'Platform',
+    status: 'planned',
+    link: '/live',
+    sortOrder: 65,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000014',
@@ -159,7 +199,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     category: 'Security',
     status: 'planned',
     link: getLitepaperUrl('security'),
-    sortOrder: 65,
+    sortOrder: 70,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000015',
@@ -169,7 +209,17 @@ export const PUBLIC_ROADMAP_ITEMS = [
     category: 'Platform',
     status: 'planned',
     link: '/game/plinko',
-    sortOrder: 70,
+    sortOrder: 75,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000036',
+    title: 'Nine-wallet transparency dashboard',
+    excerpt:
+      'Live tracker for all labeled APTC wallets — treasury, staking, referrals, marketing, competitions — with Solscan links and movement alerts.',
+    category: 'Governance',
+    status: 'planned',
+    link: getLitepaperUrl('aptc-allocation'),
+    sortOrder: 78,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000017',
@@ -185,7 +235,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000018',
     title: 'Quarterly treasury transparency report',
     excerpt:
-      'Published breakdown of GGR, buybacks, burns, staking emissions, and partnership grants — aligned with the 100M APTC allocation chart.',
+      'Published breakdown of GGR, buybacks, burns, staking emissions, and partnership grants — aligned with the 1B APTC allocation chart.',
     category: 'Governance',
     status: 'planned',
     link: getLitepaperUrl('aptc-allocation'),
@@ -205,7 +255,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000020',
     title: 'Telegram & Discord alert bots',
     excerpt:
-      'Stream go-live, Volume Cup standings, and large buyback/burn notifications for holders who do not live on the site.',
+      'Stream go-live, Volume Cup standings, Raydium LP events, and large buyback/burn notifications for holders.',
     category: 'Community',
     status: 'planned',
     link: null,
@@ -305,7 +355,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000030',
     title: 'Ecosystem wallet & data partners',
     excerpt:
-      'Deeper integrations with DexScreener, major wallets, and analytics — co-marketing with Aptos, Solana, and Bags ecosystems.',
+      'Deeper integrations with DexScreener, Raydium, Jupiter, CoinGecko, and major wallets — co-marketing with Aptos & Solana ecosystems.',
     category: 'Partnership',
     status: 'planned',
     link: null,

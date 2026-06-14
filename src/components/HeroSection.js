@@ -20,6 +20,22 @@ export default function HeroSection() {
       className="site-page-top site-hero site-page-pad-x relative flex w-full flex-col sm:px-10 md:px-20 lg:px-36"
     >
       <div className="font-display z-10 mx-auto flex w-full max-w-7xl flex-col items-center gap-4 sm:gap-6 text-center text-white">
+        <Link
+          href="#tokenomics"
+          className="group inline-flex flex-wrap items-center justify-center gap-2.5 rounded-full border border-emerald-500/35 bg-emerald-500/[0.1] px-4 py-2 sm:px-5 sm:py-2.5 shadow-[0_0_24px_-6px_rgba(52,211,153,0.45)] transition-all hover:border-emerald-400/50 hover:bg-emerald-500/[0.16]"
+        >
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          </span>
+          <span className="text-sm font-bold text-emerald-100 sm:text-base">
+            $APTC is now live on Solana
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300/70 group-hover:text-emerald-200">
+            Raydium · Trade now →
+          </span>
+        </Link>
+
         <h1 className="text-[1.75rem] font-extrabold leading-[1.12] sm:text-5xl md:text-6xl sm:leading-tight">
           100% On-Chain{" "}
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
