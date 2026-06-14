@@ -1064,6 +1064,8 @@ export default function GameRoulette() {
   const [isMuted, setIsMuted] = useState(false);
   const [bettingHistory, setBettingHistory] = useState([]);
   const [error, setError] = useState(null);
+  /** Completed round summary — shown when the next round starts (Place Bet). */
+  const lastRoundSummaryRef = useRef(null);
 
   // Aptos wallet
   const { account, connected, signAndSubmitTransaction, wallet } = useWallet();
@@ -1534,6 +1536,22 @@ export default function GameRoulette() {
     playSound(spinSoundRef);
     setGameBetPreference('roulette', playChain, bet);
 
+    const prevRound = lastRoundSummaryRef.current;
+    if (prevRound) {
+      const profit =
+        prevRound.netResult > 0 ? prevRound.netResult - prevRound.totalBetAmount : 0;
+      const prevMsg =
+        prevRound.netResult > 0
+          ? `Previous round: ${prevRound.winningNumber} — you won ${formatNativeAmount(profit, playChain)} ${symbol}!`
+          : `Previous round: ${prevRound.winningNumber} — you lost ${formatNativeAmount(prevRound.totalBetAmount, playChain)} ${symbol}.`;
+      setNotificationMessage(prevMsg);
+      setNotificationSeverity(prevRound.netResult > 0 ? 'success' : 'info');
+      setNotificationIndex(notificationSteps.RESULT_READY);
+      setShowNotification(true);
+      showSnackbar(prevMsg, prevRound.netResult > 0 ? 'success' : 'info');
+      lastRoundSummaryRef.current = null;
+    }
+
     try {
       setError(null);
       console.log('Placing bet with Redux balance:', {
@@ -1927,6 +1945,12 @@ export default function GameRoulette() {
         });
 
         setBettingHistory(prev => [newBet, ...prev].slice(0, 50)); // Keep last 50 bets
+
+        lastRoundSummaryRef.current = {
+          winningNumber,
+          netResult,
+          totalBetAmount,
+        };
 
         // Log game to blockchain
         if (playAddress && totalBetAmount > 0) {
@@ -2413,15 +2437,10 @@ export default function GameRoulette() {
   };
 
   const handleGoAgain = () => {
-    console.log("Resetting game for next round...");
-
-    // Reset core game state
+    // Keep chip layout — only reset round outcome so the same bets can be replayed.
     setRollResult(-1);
-    setWinnings(-1); // Reset to -1 to indicate no result yet
+    setWinnings(-1);
     setSubmitDisabled(false);
-
-    // Clear all bets from the board (chip amount stays — saved preference)
-    clearBet();
   };
 
   return (
@@ -2928,7 +2947,10 @@ export default function GameRoulette() {
               <Box sx={{ mt: 3 }}>
                 {rollResult >= 0 ? (
                   <Box>
-                    <Button onClick={handleGoAgain}>Go Again</Button>
+                    <Button onClick={handleGoAgain}>Play Again</Button>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, textAlign: 'center' }}>
+                      Your bets stay on the table
+                    </Typography>
                     <Box sx={{ mt: 1, textAlign: 'center' }}>
                       <Typography variant="h5">
                         Result: <span style={{
@@ -2952,7 +2974,7 @@ export default function GameRoulette() {
                     </Button>
                     {submitDisabled && rollResult < 0 && (
                       <Typography color="white" sx={{ opacity: 0.8 }}>
-                        Die being rolled, please wait...
+                        Dice rolling, please wait...
                       </Typography>
                     )}
                     {total > 0 && !submitDisabled && (
