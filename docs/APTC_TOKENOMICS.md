@@ -11,7 +11,8 @@ Native SPL token for AptCasino.fun — live on Solana via Raydium CPMM fair laun
 | **Name** | AptCasino.fun |
 | **Symbol** | APTC |
 | **Chain** | Solana (SPL) |
-| **Mint** | `C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL` |
+| **Mint** | `ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg` |
+| **Raydium pair** | `C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL` |
 | **Max supply** | 1,000,000,000 (6 decimals) |
 | **Mint authority** | Revoked |
 | **Freeze authority** | Revoked |
@@ -78,5 +79,5 @@ See `/api/ggr/buyback` and litepaper § GGR.
 - **Website:** https://aptcasino.fun/
 - **Stake:** https://aptcasino.fun/stake
 - **Litepaper:** https://aptcasino.fun/litepaper
-- **DexScreener:** https://dexscreener.com/solana/C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL
-- **Solscan:** https://solscan.io/token/C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL
+- **DexScreener:** https://dexscreener.com/solana/c9ej1qvpj9tyckgwzsukl9rduz65vzx2wfg7rfhaqsal
+- **Solscan:** https://solscan.io/token/ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg

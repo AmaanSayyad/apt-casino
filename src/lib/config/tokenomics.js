@@ -9,7 +9,7 @@ export const APTC_TOKENOMICS = {
   chain: 'Solana (SPL)',
   maxSupply: '1,000,000,000',
   decimals: 6,
-  mint: 'C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL',
+  mint: 'ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg',
   launchVenue: 'Raydium CPMM',
   launch:
     'Raydium CPMM fair launch · 1B APTC + 40 SOL · 0.5% fee · mint, freeze & update revoked.',
@@ -34,8 +34,8 @@ export const APTC_LAUNCH_METRICS = {
   lpBurnPct: null,
   lockedAptc: null,
   lockedSol: null,
-  raydiumPoolAddress: '',
-  dexscreenerPairUrl: 'https://dexscreener.com/solana/C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL',
+  raydiumPoolAddress: 'C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL',
+  dexscreenerPairUrl: 'https://dexscreener.com/solana/c9ej1qvpj9tyckgwzsukl9rduz65vzx2wfg7rfhaqsal',
 };
 
 /** Supply at TGE — 100% seeded into Raydium CPMM liquidity */
