@@ -6,6 +6,23 @@ import { getSolanaStakingVaultConfig } from '@/lib/solana/config';
 
 export const dynamic = 'force-dynamic';
 
+async function verifyStakeWithRetries(
+  txHash: string,
+  userAddress: string,
+  amount: number,
+  vaultAddress: string,
+): Promise<boolean> {
+  const attempts = 10;
+  for (let i = 0; i < attempts; i++) {
+    const ok = await verifySolanaStakeToVaultTx(txHash, userAddress, amount, vaultAddress);
+    if (ok) return true;
+    if (i < attempts - 1) {
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+  return false;
+}
+
 /**
  * Records a staking position after verifying an on-chain APTC transfer to the staking vault.
  */
@@ -71,7 +88,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Staking vault is not configured on the server.' }, { status: 500 });
   }
 
-  const verified = await verifySolanaStakeToVaultTx(txHash, userAddress, amount, vaultAddress);
+  const verified = await verifyStakeWithRetries(txHash, userAddress, amount, vaultAddress);
   if (!verified) {
     return NextResponse.json(
       {

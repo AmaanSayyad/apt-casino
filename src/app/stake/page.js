@@ -36,9 +36,13 @@ function fmtUsd(n) {
 
 function fmtPriceUsd(n) {
   if (n === null || n === undefined || !Number.isFinite(n)) return '—';
-  if (n > 0 && n < 0.0001) return `$${n.toExponential(2)}`;
-  if (n < 1) return `$${n.toFixed(6)}`;
-  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+  if (n >= 1) {
+    return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`;
+  }
+  if (n >= 0.01) return `$${n.toFixed(4)}`;
+  if (n >= 0.0001) return `$${n.toFixed(6)}`;
+  const fixed = n.toFixed(8).replace(/\.?0+$/, '');
+  return `$${fixed}`;
 }
 
 function fmtNum(n) {
@@ -222,6 +226,11 @@ export default function StakePage() {
         return;
       }
 
+      if (STAKING_VAULT && address === STAKING_VAULT) {
+        setError('Connect a personal wallet with APTC — the staking vault wallet cannot stake to itself.');
+        return;
+      }
+
       const raw = amountByPool[pool.pool_key] || '';
       const amount = Number(raw);
       if (!Number.isFinite(amount) || amount <= 0) {
@@ -239,13 +248,13 @@ export default function StakePage() {
 
       setSubmittingPool(pool.pool_key);
       try {
-        const tx = await buildAptcStakeTransaction(amount, address, STAKING_VAULT);
+        const tx = await buildAptcStakeTransaction(amount, address, STAKING_VAULT, connection);
         const txHash = await sendTransaction(tx, connection);
         await waitForSolanaSignatureConfirmed(connection, txHash);
 
         let json;
         let res;
-        for (let attempt = 0; attempt < 4; attempt++) {
+        for (let attempt = 0; attempt < 6; attempt++) {
           res = await fetch('/api/staking/stake', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -258,8 +267,8 @@ export default function StakePage() {
           });
           json = await res.json();
           if (res.ok) break;
-          if (res.status !== 400 || attempt === 3) break;
-          await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+          if (res.status !== 400 || attempt === 5) break;
+          await new Promise((r) => setTimeout(r, 2500 * (attempt + 1)));
         }
         if (!res.ok) throw new Error(json.error || 'Failed to record stake');
 
@@ -440,6 +449,13 @@ export default function StakePage() {
               <span className="font-mono text-cyan-200/90 break-all">{STAKING_VAULT}</span>
             </span>
             <span className="text-white/40">All stakes flow wallet → vault.</span>
+          </div>
+        )}
+
+        {STAKING_VAULT && address === STAKING_VAULT && (
+          <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            You are connected with the <strong>staking vault</strong> wallet. Switch to a personal wallet
+            that holds APTC to stake — this address only receives deposits.
           </div>
         )}
 

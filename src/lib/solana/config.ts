@@ -20,6 +20,14 @@ export function getSolanaRpcEndpoint(): string {
   );
 }
 
+/** JSON-RPC endpoint safe for browser wallet adapters (same-origin proxy). */
+export function getBrowserSolanaRpcEndpoint(): string {
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/api/solana/rpc`;
+  }
+  return getSolanaRpcEndpoint();
+}
+
 export function getSolanaNetwork(): WalletAdapterNetwork {
   const n = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'mainnet-beta';
   if (n === 'devnet') return WalletAdapterNetwork.Devnet;

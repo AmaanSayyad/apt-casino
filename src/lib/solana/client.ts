@@ -7,29 +7,37 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
-import { getSolanaRpcEndpoint, getSolanaTreasuryAddress, getAptcMintAddress, getSolanaStakingVaultConfig } from './config';
+import { getSolanaRpcEndpoint, getSolanaTreasuryAddress, getAptcMintAddress, getSolanaStakingVaultConfig, getBrowserSolanaRpcEndpoint } from './config';
 
 let connection: Connection | null = null;
 
 export function getSolanaConnection(): Connection {
-  const rpc = getSolanaRpcEndpoint();
-  if (!connection) {
+  const rpc =
+    typeof window !== 'undefined' ? getBrowserSolanaRpcEndpoint() : getSolanaRpcEndpoint();
+  if (!connection || connection.rpcEndpoint !== rpc) {
     connection = new Connection(rpc, 'confirmed');
   }
   return connection;
 }
 
-async function latestBlockhash(): Promise<string> {
+async function latestBlockhash(connection?: Connection): Promise<string> {
+  const conn = connection ?? getSolanaConnection();
+  try {
+    const { blockhash } = await conn.getLatestBlockhash('confirmed');
+    return blockhash;
+  } catch {
+    /* fall through to multi-RPC retry */
+  }
+
   const rpcs = [
+    typeof window !== 'undefined' ? getBrowserSolanaRpcEndpoint() : getSolanaRpcEndpoint(),
     getSolanaRpcEndpoint(),
-    'https://solana-rpc.publicnode.com',
-    'https://rpc.ankr.com/solana',
   ].filter((v, i, a) => v && a.indexOf(v) === i);
 
   for (const rpc of rpcs) {
     try {
-      const conn = new Connection(rpc, 'confirmed');
-      const { blockhash } = await conn.getLatestBlockhash();
+      const connTry = new Connection(rpc, 'confirmed');
+      const { blockhash } = await connTry.getLatestBlockhash('confirmed');
       return blockhash;
     } catch {
       /* try next */
@@ -75,11 +83,15 @@ export async function buildAptcStakeTransaction(
   amountAptc: number,
   userAddress: string,
   vaultAddress?: string,
+  connectionOverride?: Connection,
 ): Promise<Transaction> {
   const mintStr = getAptcMintAddress();
   if (!mintStr) throw new Error('APTC mint is not configured.');
   const vault = vaultAddress?.trim() || getSolanaStakingVaultConfig().address;
   if (!vault) throw new Error('Staking vault address is not configured.');
+  if (userAddress.trim() === vault.trim()) {
+    throw new Error('Use a personal wallet to stake — not the staking vault wallet.');
+  }
 
   const {
     getAssociatedTokenAddressSync,
@@ -90,7 +102,7 @@ export async function buildAptcStakeTransaction(
     TOKEN_2022_PROGRAM_ID,
   } = await import('@solana/spl-token');
 
-  const connection = getSolanaConnection();
+  const connection = connectionOverride ?? getSolanaConnection();
   const userPk = new PublicKey(userAddress);
   const vaultPk = new PublicKey(vault);
   const mintPk = new PublicKey(mintStr);
@@ -123,7 +135,7 @@ export async function buildAptcStakeTransaction(
 
   tx.add(createTransferInstruction(fromAta, toAta, userPk, rawAmount, [], tokenProgramId));
 
-  tx.recentBlockhash = await latestBlockhash();
+  tx.recentBlockhash = await latestBlockhash(connection);
   tx.feePayer = userPk;
   return tx;
 }

@@ -97,7 +97,30 @@ function solanaVerificationRpcEndpoints(configRpc: string): string[] {
 }
 
 function messageAccountKeysBase58(parsed: ParsedTransactionWithMeta): string[] {
-    const keys = parsed.transaction.message.accountKeys as unknown[];
+    const meta = parsed.meta;
+    const message = parsed.transaction.message as {
+        accountKeys?: unknown[];
+        getAccountKeys?: (args: {
+            accountKeysFromLookups?: ParsedTransactionWithMeta['meta'] extends infer M
+                ? M extends { loadedAddresses?: infer L }
+                    ? L
+                    : never
+                : never;
+        }) => { keySegments: () => PublicKey[][] };
+    };
+
+    if (typeof message.getAccountKeys === 'function') {
+        try {
+            const keys = message.getAccountKeys({
+                accountKeysFromLookups: meta?.loadedAddresses,
+            });
+            return keys.keySegments().flat().map((k) => k.toBase58());
+        } catch {
+            /* fall through */
+        }
+    }
+
+    const keys = message.accountKeys ?? [];
     return keys.map((k) => {
         if (typeof k === 'string') return k;
         const obj = k as { pubkey?: PublicKey; toBase58?: () => string };
@@ -105,6 +128,36 @@ function messageAccountKeysBase58(parsed: ParsedTransactionWithMeta): string[] {
         if (obj.toBase58) return obj.toBase58();
         return '';
     });
+}
+
+function splMintGainForOwner(
+    meta: NonNullable<ParsedTransactionWithMeta['meta']>,
+    accountKeys: string[],
+    mint: string,
+    ownerAddress: string,
+    ataCandidates: Set<string>,
+): bigint {
+    const preTb = meta.preTokenBalances || [];
+    const postTb = meta.postTokenBalances || [];
+    const ownerStr = ownerAddress;
+
+    const matchesDestination = (b: (typeof postTb)[number]) => {
+        if (b.mint !== mint) return false;
+        const accPk = accountKeys[b.accountIndex];
+        return b.owner === ownerStr || (accPk ? ataCandidates.has(accPk) : false);
+    };
+
+    let totalGained = BigInt(0);
+    for (const postRow of postTb) {
+        if (!matchesDestination(postRow)) continue;
+        const preRow = preTb.find(
+            (p) => p.accountIndex === postRow.accountIndex && p.mint === postRow.mint,
+        );
+        const preAmt = BigInt(preRow?.uiTokenAmount?.amount ?? '0');
+        const postAmt = BigInt(postRow.uiTokenAmount?.amount ?? '0');
+        if (postAmt > preAmt) totalGained += postAmt - preAmt;
+    }
+    return totalGained;
 }
 
 /**
@@ -116,7 +169,7 @@ async function fetchParsedDepositTransaction(
     primaryRpc: string,
 ): Promise<ParsedTransactionWithMeta | null> {
     const endpoints = solanaVerificationRpcEndpoints(primaryRpc);
-    const deadline = Date.now() + 12_000;
+    const deadline = Date.now() + 30_000;
     let delayMs = 350;
 
     while (Date.now() < deadline) {
@@ -290,12 +343,15 @@ export async function verifySolanaDepositTx(
             return ownerOk || ataOk;
         };
 
+        const gained = splMintGainForOwner(meta, accountKeys, tokenMint, treasuryStr, treasuryAtaCandidates);
+        if (gained >= minRaw) return true;
+
+        // Legacy single-account fallback
         const preRow = preTb.find(matchesTreasuryDestination);
         const postRow = postTb.find(matchesTreasuryDestination);
         const preAmt = BigInt(preRow?.uiTokenAmount?.amount ?? '0');
         const postAmt = BigInt(postRow?.uiTokenAmount?.amount ?? '0');
-        const gained = postAmt - preAmt;
-        return gained >= minRaw;
+        return postAmt - preAmt >= minRaw;
     } catch (err) {
         console.error('[verifySolanaDepositTx]', err);
         return false;
@@ -364,21 +420,13 @@ export async function verifySolanaStakeToVaultTx(
             }
         }
 
-        const preTb = meta.preTokenBalances || [];
-        const postTb = meta.postTokenBalances || [];
-        const matchesVaultDestination = (b: (typeof postTb)[number]) => {
-            if (b.mint !== APTC_SPL_MINT) return false;
-            const accPk = accountKeys[b.accountIndex];
-            const ownerOk = b.owner === vaultStr;
-            const ataOk = accPk ? vaultAtaCandidates.has(accPk) : false;
-            return ownerOk || ataOk;
-        };
-
-        const preRow = preTb.find(matchesVaultDestination);
-        const postRow = postTb.find(matchesVaultDestination);
-        const preAmt = BigInt(preRow?.uiTokenAmount?.amount ?? '0');
-        const postAmt = BigInt(postRow?.uiTokenAmount?.amount ?? '0');
-        const gained = postAmt - preAmt;
+        const gained = splMintGainForOwner(
+            meta,
+            accountKeys,
+            APTC_SPL_MINT,
+            vaultStr,
+            vaultAtaCandidates,
+        );
         return gained >= minRaw;
     } catch (err) {
         console.error('[verifySolanaStakeToVaultTx]', err);
