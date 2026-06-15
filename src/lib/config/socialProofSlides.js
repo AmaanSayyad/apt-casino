@@ -4,19 +4,8 @@
 
 export const ADVISORY_BOARD = [
   {
-    id: 'lucas',
-    src: '/lucas-advisor.jpg',
-    alt: 'Confirmed strategic advisor — BNB Chain',
-    name: 'Lucas Liao',
-    role: 'Solutions Architect',
-    org: 'BNB Chain',
-    blurred: true,
-    accent: 'amber',
-    teaser: 'Tier-1 strategic advisor',
-  },
-  {
     id: 'naresh',
-    src: '/Naresh%20Aptos.PNG',
+    src: '/Naresh.PNG',
     alt: 'Naresh Kumar — Global Expansion at Aptos',
     name: 'Naresh Kumar',
     role: 'Global Expansion',
@@ -35,6 +24,17 @@ export const ADVISORY_BOARD = [
     blurred: false,
     accent: 'violet',
     xUrl: 'https://x.com/rahatcodes',
+  },
+  {
+    id: 'lucas',
+    src: '/Lucas.PNG',
+    alt: 'Lucas Liao — Solutions Architect at BNB Chain',
+    name: 'Lucas Liao',
+    role: 'Solutions Architect',
+    org: 'BNB Chain',
+    blurred: false,
+    accent: 'amber',
+    xUrl: 'https://x.com/0xlucasliao',
   },
 ];
 

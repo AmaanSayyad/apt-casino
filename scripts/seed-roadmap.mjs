@@ -45,6 +45,19 @@ const { mapPublicRoadmapToDbRows, PUBLIC_ROADMAP_ITEMS } = await import(
 
 const supabase = createClient(url, key, { auth: { persistSession: false } });
 const rows = mapPublicRoadmapToDbRows();
+const keepIds = new Set(PUBLIC_ROADMAP_ITEMS.map((r) => r.id));
+
+// Remove milestones dropped from the curated public list (e.g. superseded by tier listings).
+const { data: existing } = await supabase.from('roadmap_items').select('id');
+const staleIds = (existing ?? []).map((r) => r.id).filter((id) => !keepIds.has(id));
+if (staleIds.length > 0) {
+  const { error: delErr } = await supabase.from('roadmap_items').delete().in('id', staleIds);
+  if (delErr) {
+    console.warn('Could not delete stale roadmap rows:', delErr.message);
+  } else {
+    console.log(`Removed ${staleIds.length} stale roadmap item(s)`);
+  }
+}
 
 const { error } = await supabase.from('roadmap_items').upsert(rows, { onConflict: 'id' });
 

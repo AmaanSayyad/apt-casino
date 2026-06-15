@@ -104,11 +104,14 @@ Env-driven defaults — see `.env.example` (`GGR_*` vars).
 
 ## Listings roadmap
 
-- **Raydium** — CPMM TGE + LP burn
-- **DexScreener** — Enhanced Token Info
-- **Jupiter** — Aggregated swap routing
-- **CoinGecko** — Listing application
-- **CoinMarketCap** — Listing application
+### Tier 1 — DEX & trader tools
+Raydium · DexScreener · Jupiter · Birdeye · GeckoTerminal
+
+### Tier 2 — Data aggregators
+CoinGecko · CoinMarketCap
+
+### Tier 3 — CEX listings
+MEXC · Gate.io · KuCoin · Bybit · OKX · Binance
 
 ## Related
 

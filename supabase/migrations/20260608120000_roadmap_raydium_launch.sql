@@ -33,3 +33,4 @@ ON CONFLICT (id) DO UPDATE SET
   status = EXCLUDED.status,
   link = EXCLUDED.link,
   sort_order = EXCLUDED.sort_order;
+ 

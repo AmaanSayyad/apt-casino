@@ -327,10 +327,10 @@ export const LITEPAPER_SECTIONS = [
     title: '16. Roadmap',
     body: [
       'Shipped / live: core casino games, Solana + Aptos play, gasless Aptos UX, referrals, Stake UI, GGR dashboard, live streaming shell, ecosystem partners section.',
-      `Near term: APTC TGE on Raydium CPMM (${APTC_LAUNCH_METRICS.aptcInLpShort} APTC + ${APTC_LAUNCH_METRICS.solInLp} SOL), DexScreener enhanced token info, Jupiter swap routing, CoinGecko & CoinMarketCap listings, staking writes enabled, ~${APTC_LAUNCH_METRICS.lpBurnPct}% LP burn.`,
-      'Mid term: Raydium farm incentives, deeper CEX/DEX liquidity, Sui + EVM chain adapters live, AI-generated NFT profiles, developer SDK for third-party provably-fair games on the hub.',
+      `Near term: APTC TGE on Raydium CPMM (${APTC_LAUNCH_METRICS.aptcInLpShort} APTC + ${APTC_LAUNCH_METRICS.solInLp} SOL), Tier 1 listings (Raydium · DexScreener · Jupiter · Birdeye · GeckoTerminal), Tier 2 (CoinGecko · CoinMarketCap), staking live, ~${APTC_LAUNCH_METRICS.lpBurnPct}% LP burn.`,
+      'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), Raydium farm incentives, Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
       'Long term: largest multichain GambleFi hub — transparent game marketplace, creator revenue share, and community governance over APTC parameters.',
-      'The homepage “What’s coming” section lists 30 curated milestones (Platform, Governance, Community, Security, Tournaments, Partnership) via /api/roadmap — editable in Supabase roadmap_items or src/lib/config/publicRoadmap.js.',
+      'The homepage Roadmap section lists 30 curated milestones (Platform, Governance, Community, Security, Tournaments, Partnership) via /api/roadmap — editable in Supabase roadmap_items or src/lib/config/publicRoadmap.js.',
     ],
   },
 ];

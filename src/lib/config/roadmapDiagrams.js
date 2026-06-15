@@ -1,5 +1,5 @@
 /**
- * Mermaid source for the homepage “What’s coming” section.
+ * Mermaid source for the homepage Roadmap section.
  */
 
 /** Delivery phases — Mermaid sequence (same renderer as value flywheel) */
@@ -13,8 +13,8 @@ export const ROADMAP_PHASES_SEQUENCE = `sequenceDiagram
   Note over L: 4 games · Sol + Aptos
   Note over L: Live · GGR · referrals
   L->>N: Raydium TGE · 9 wallets
-  Note over N: DexScreener · Jupiter · CG/CMC
-  N->>M: Staking · buybacks · farms
+  Note over N: Tier 1 DEX · Tier 2 CG/CMC
+  N->>M: Tier 3 CEX · staking · farms
   Note over M: Sui · EVM · audit
   M->>H: Game SDK
   Note over H: Multichain marketplace`;

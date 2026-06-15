@@ -118,7 +118,7 @@ export default function NewsUpdates() {
         <div className="flex flex-wrap items-end justify-between gap-4 mb-3">
           <div className="flex items-center">
             <div className="w-1 h-6 bg-gradient-to-r from-red-magic to-blue-magic rounded-full mr-3" />
-            <h2 className="text-2xl md:text-3xl font-display font-bold text-white">What&apos;s coming</h2>
+            <h2 className="text-2xl md:text-3xl font-display font-bold text-white">Roadmap</h2>
           </div>
           <Link
             href={litepaperPath('roadmap')}

@@ -4,7 +4,7 @@
  * API falls back to this list when the table is empty.
  */
 
-import { getLitepaperUrl } from '@/lib/siteMetadata';
+import { getLitepaperUrl } from '../siteMetadata.js';
 
 /** @typedef {'Platform'|'Governance'|'Partnership'|'Security'|'Community'|'Tournaments'} RoadmapCategory */
 /** @typedef {'planned'|'in_progress'} RoadmapStatus */
@@ -42,14 +42,34 @@ export const PUBLIC_ROADMAP_ITEMS = [
     sortOrder: 11,
   },
   {
-    id: 'a1000001-0001-4001-8001-000000000032',
-    title: 'DexScreener Enhanced Token Info',
+    id: 'a1000001-0001-4001-8001-000000000037',
+    title: 'Tier 1 — DEX & trader listings',
     excerpt:
-      'Official APTC branding on DexScreener — logo, socials, description, and links live on every APTC/SOL chart traders watch.',
+      'Raydium CPMM · DexScreener Enhanced · Jupiter · Birdeye · GeckoTerminal — primary Solana liquidity and chart visibility at TGE.',
     category: 'Partnership',
     status: 'in_progress',
-    link: 'https://dexscreener.com',
-    sortOrder: 12,
+    link: 'https://raydium.io',
+    sortOrder: 21,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000038',
+    title: 'Tier 2 — CoinGecko & CoinMarketCap',
+    excerpt:
+      'Data aggregator listings — global price feeds, market cap rank, watchlists, and bot/aggregator indexing for APTC.',
+    category: 'Partnership',
+    status: 'planned',
+    link: 'https://www.coingecko.com',
+    sortOrder: 23,
+  },
+  {
+    id: 'a1000001-0001-4001-8001-000000000039',
+    title: 'Tier 3 — CEX listings',
+    excerpt:
+      'MEXC · Gate.io · KuCoin · Bybit · OKX · Binance — phased CEX applications with MM coordination as casino GGR and volume scale.',
+    category: 'Partnership',
+    status: 'planned',
+    link: null,
+    sortOrder: 27,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000002',
@@ -80,36 +100,6 @@ export const PUBLIC_ROADMAP_ITEMS = [
     status: 'in_progress',
     link: '/dashboard',
     sortOrder: 20,
-  },
-  {
-    id: 'a1000001-0001-4001-8001-000000000033',
-    title: 'Jupiter swap routing for APTC',
-    excerpt:
-      'APTC/SOL routed through Jupiter aggregator — Phantom, Backpack, and every major Solana wallet can ape in one click.',
-    category: 'Partnership',
-    status: 'planned',
-    link: 'https://jup.ag',
-    sortOrder: 22,
-  },
-  {
-    id: 'a1000001-0001-4001-8001-000000000034',
-    title: 'CoinGecko listing application',
-    excerpt:
-      'Fast-track CoinGecko for APTC — price feeds, market cap tracking, and the credibility signal every bot and aggregator scrapes.',
-    category: 'Partnership',
-    status: 'planned',
-    link: 'https://www.coingecko.com',
-    sortOrder: 24,
-  },
-  {
-    id: 'a1000001-0001-4001-8001-000000000035',
-    title: 'CoinMarketCap listing application',
-    excerpt:
-      'CoinMarketCap submission for APTC — global rank visibility, watchlists, and institutional-grade price discovery.',
-    category: 'Partnership',
-    status: 'planned',
-    link: 'https://coinmarketcap.com',
-    sortOrder: 26,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000007',
