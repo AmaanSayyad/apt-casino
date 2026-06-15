@@ -7,7 +7,7 @@
  * indicative "Pre-launch" state.
  */
 
-export const APTC_SOLANA_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT || '';
+export const APTC_SOLANA_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || '';
 
 /** Raydium CPMM pool — preferred for DexScreener quotes (more accurate than token-wide scan). */
 const APTC_DEX_PAIR =
