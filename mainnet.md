@@ -6,7 +6,7 @@ Checklist for launching APT Casino on production infrastructure. Solana is the p
 
 ## APTC token (live)
 
-- [x] SPL mint created — `AptCc7pmHrcnvouoSK4nKdQhLC7B5qA4r8gZaSTcEnj7`
+- [x] SPL mint created — `C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL`
 - [x] Mint, freeze, update authorities revoked
 - [x] Supply distribution (see [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md))
 - [x] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production

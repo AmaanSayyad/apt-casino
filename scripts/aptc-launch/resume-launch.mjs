@@ -30,7 +30,7 @@ import {
 } from './config.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const MINT = new PublicKey(process.env.APTC_MINT || 'AptCc7pmHrcnvouoSK4nKdQhLC7B5qA4r8gZaSTcEnj7');
+const MINT = new PublicKey(process.env.APTC_MINT || 'C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL');
 
 function loadKeypair(path) {
   const secret = JSON.parse(readFileSync(path, 'utf8'));

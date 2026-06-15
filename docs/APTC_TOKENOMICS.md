@@ -11,7 +11,7 @@ Native SPL token for AptCasino.fun — live on Solana via Raydium CPMM.
 | **Name** | AptCasino.fun |
 | **Symbol** | APTC |
 | **Chain** | Solana (SPL) |
-| **Mint** | `AptCc7pmHrcnvouoSK4nKdQhLC7B5qA4r8gZaSTcEnj7` |
+| **Mint** | `C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL` |
 | **Max supply** | 1,000,000,000 (6 decimals) |
 | **Mint authority** | Revoked |
 | **Freeze authority** | Revoked |

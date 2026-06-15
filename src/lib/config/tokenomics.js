@@ -9,7 +9,7 @@ export const APTC_TOKENOMICS = {
   chain: 'Solana (SPL)',
   maxSupply: '1,000,000,000',
   decimals: 6,
-  mint: 'ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg',
+  mint: 'C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL',
   launchVenue: 'Raydium CPMM',
   launch:
     'Raydium CPMM · 120M APTC + 37 SOL · 0.5% fee · mint, freeze & update revoked.',
@@ -34,9 +34,9 @@ export const APTC_LAUNCH_METRICS = {
   lpBurnPct: 16.67,
   lockedAptc: '20,000,000',
   lockedSol: 6.17,
-  /** Live Raydium CPMM pool (APTC/SOL) — update if pool is migrated */
-  raydiumPoolAddress: 'BmsnkJ5aDU5XDmdHqZhk5ifRoGVUwqKTU715gi7fxE29',
-  dexscreenerPairUrl: 'https://dexscreener.com/solana/bmsnkj5adu5xdmdhqzhk5ifrogvuwqktu715gi7fxe29',
+  /** Raydium CPMM pool (APTC/SOL) — set after pool creation on raydium.io */
+  raydiumPoolAddress: '',
+  dexscreenerPairUrl: 'https://dexscreener.com/solana/C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL',
 };
 
 /**

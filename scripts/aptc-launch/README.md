@@ -54,7 +54,7 @@ npm run aptc:launch:resume
 
 ## Live mint (mainnet)
 
-`AptCc7pmHrcnvouoSK4nKdQhLC7B5qA4r8gZaSTcEnj7` · [Solscan](https://solscan.io/token/AptCc7pmHrcnvouoSK4nKdQhLC7B5qA4r8gZaSTcEnj7)
+`C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL` · [Solscan](https://solscan.io/token/C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL)
 
 ## After launch
 
@@ -68,7 +68,7 @@ npm run aptc:launch:resume
 
 ## After launch
 
-1. Set `NEXT_PUBLIC_APTC_SOLANA_MINT=AptCc7pmHrcnvouoSK4nKdQhLC7B5qA4r8gZaSTcEnj7` in Vercel
+1. Set `NEXT_PUBLIC_APTC_SOLANA_MINT=C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL` in Vercel
 2. Set `NEXT_PUBLIC_APTC_STAKING_VAULT=4Ka1vdinFUqhh3TtHaohj1MiKVUrvJBrgsVp1MfVnXFQ`
 3. Raydium CPMM pool: 120M APTC from liquidity wallet + 37 SOL
 4. DexScreener enhanced info + Jupiter
