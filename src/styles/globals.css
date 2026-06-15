@@ -421,19 +421,18 @@ body {
 }
 
 .apt-dex-embed-slot {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
   background: #0a0008;
 }
 
 .apt-dex-embed-frame {
   position: relative;
   width: 100%;
-  padding-bottom: 125%;
+  height: 480px;
 }
 
-@media (min-width: 1400px) {
+@media (max-width: 768px) {
   .apt-dex-embed-frame {
-    padding-bottom: 65%;
+    height: 380px;
   }
 }
 
@@ -448,12 +447,11 @@ body {
 .apt-dex-embed-placeholder {
   min-height: 320px;
   background: linear-gradient(180deg, #0a0008 0%, #120010 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 @media (max-width: 768px) {
   .apt-dex-embed-placeholder {
-    min-height: 240px;
+    min-height: 280px;
   }
 }
 

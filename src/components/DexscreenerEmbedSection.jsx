@@ -52,9 +52,9 @@ export default function DexscreenerEmbedSection() {
   const mintConfigured = Boolean(stats?.mint);
 
   return (
-    <section className="apt-dex-section border-y border-white/[0.06] bg-[#070005]">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 lg:px-12 pt-16 pb-6">
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-2">
+    <section className="apt-dex-section border-y border-white/[0.06] bg-[#070005] py-16 md:py-20 px-4 md:px-8 lg:px-12">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
             <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 mb-4">
               <span
@@ -101,41 +101,41 @@ export default function DexscreenerEmbedSection() {
             </Link>
           )}
         </div>
-      </div>
 
-      <div className="apt-dex-embed-slot w-full mt-6">
-        {loading ? (
-          <div className="apt-dex-embed-placeholder flex items-center justify-center text-white/40 text-sm">
-            Loading chart…
-          </div>
-        ) : hasLivePair ? (
-          <div id="apt-dexscreener-embed" className="apt-dex-embed-frame">
-            <iframe
-              src={embedUrl}
-              title="Dexscreener chart: APTC/SOL"
-              allow="clipboard-write; fullscreen"
-              loading="lazy"
-            />
-          </div>
-        ) : (
-          <div className="apt-dex-embed-placeholder flex flex-col items-center justify-center gap-4 px-6 text-center">
-            <p className="text-white/70 font-medium">
-              {mintConfigured
-                ? 'No Dexscreener pair found yet for this mint.'
-                : 'APTC is pre-launch on Solana.'}
-            </p>
-            <p className="text-sm text-white/45 max-w-md">
-              Set <code className="text-xs text-cyan-200/90">NEXT_PUBLIC_APTC_SOLANA_MINT</code> in your
-              environment once the SPL token is live — this embed will populate automatically.
-            </p>
-            <Link
-              href="/stake"
-              className="text-sm text-purple-300 hover:text-white transition-colors"
-            >
-              Open Stake page →
-            </Link>
-          </div>
-        )}
+        <div className="apt-dex-embed-slot rounded-2xl border border-white/10 overflow-hidden bg-[#0a0008] shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+          {loading ? (
+            <div className="apt-dex-embed-placeholder flex items-center justify-center text-white/40 text-sm">
+              Loading chart…
+            </div>
+          ) : hasLivePair ? (
+            <div id="apt-dexscreener-embed" className="apt-dex-embed-frame">
+              <iframe
+                src={embedUrl}
+                title="Dexscreener chart: APTC/SOL"
+                allow="clipboard-write; fullscreen"
+                loading="lazy"
+              />
+            </div>
+          ) : (
+            <div className="apt-dex-embed-placeholder flex flex-col items-center justify-center gap-4 px-6 text-center">
+              <p className="text-white/70 font-medium">
+                {mintConfigured
+                  ? 'No Dexscreener pair found yet for this mint.'
+                  : 'APTC is pre-launch on Solana.'}
+              </p>
+              <p className="text-sm text-white/45 max-w-md">
+                Set <code className="text-xs text-cyan-200/90">NEXT_PUBLIC_APTC_SOLANA_MINT</code> in your
+                environment once the SPL token is live — this embed will populate automatically.
+              </p>
+              <Link
+                href="/stake"
+                className="text-sm text-purple-300 hover:text-white transition-colors"
+              >
+                Open Stake page →
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
