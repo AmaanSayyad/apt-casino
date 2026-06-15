@@ -12,6 +12,7 @@ import {
   getAptcTradeLinks,
   getWalletAllocationColor,
   solscanAccountUrl,
+  solscanTokenUrl,
   truncateAddress,
 } from '@/lib/config/tokenomics';
 
@@ -45,7 +46,9 @@ export default function TokenomicsSection() {
   const cfg = buyback?.config;
   const est = buyback?.estimates;
   const m = APTC_LAUNCH_METRICS;
-  const tradeLinks = getAptcTradeLinks();
+  const tradeLinks = getAptcTradeLinks({
+    pairUrl: market?.pairUrl ?? undefined,
+  });
 
   const priceUsd = market?.priceUsd ?? m.approxTokenPriceUsd;
   const mcapUsd = market?.marketCapUsd ?? m.approxMarketCapUsd;
@@ -118,7 +121,7 @@ export default function TokenomicsSection() {
                 />
               </div>
               <a
-                href={solscanAccountUrl(APTC_TOKENOMICS.mint)}
+                href={solscanTokenUrl(APTC_TOKENOMICS.mint)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs font-mono text-white/70 hover:text-white hover:border-white/20 transition-colors"

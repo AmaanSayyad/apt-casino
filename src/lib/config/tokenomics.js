@@ -34,6 +34,9 @@ export const APTC_LAUNCH_METRICS = {
   lpBurnPct: 16.67,
   lockedAptc: '20,000,000',
   lockedSol: 6.17,
+  /** Live Raydium CPMM pool (APTC/SOL) — update if pool is migrated */
+  raydiumPoolAddress: 'BmsnkJ5aDU5XDmdHqZhk5ifRoGVUwqKTU715gi7fxE29',
+  dexscreenerPairUrl: 'https://dexscreener.com/solana/bmsnkj5adu5xdmdhqzhk5ifrogvuwqktu715gi7fxe29',
 };
 
 /**
@@ -223,8 +226,22 @@ export function solscanAccountUrl(address) {
   return `https://solscan.io/account/${address}`;
 }
 
+export function solscanTokenUrl(mint = APTC_TOKENOMICS.mint) {
+  return `https://solscan.io/token/${mint}`;
+}
+
 export function dexscreenerTokenUrl(mint = APTC_TOKENOMICS.mint) {
   return `https://dexscreener.com/solana/${mint}`;
+}
+
+export function dexscreenerPairUrl(pairAddress) {
+  return `https://dexscreener.com/solana/${pairAddress}`;
+}
+
+const SOL_MINT = 'So11111111111111111111111111111111111111112';
+
+export function raydiumSwapUrl(mint = APTC_TOKENOMICS.mint) {
+  return `https://raydium.io/swap/?inputMint=${SOL_MINT}&outputMint=${mint}`;
 }
 
 export function jupiterSwapUrl(mint = APTC_TOKENOMICS.mint) {
@@ -232,13 +249,19 @@ export function jupiterSwapUrl(mint = APTC_TOKENOMICS.mint) {
 }
 
 /** External + on-site trade / research links */
-export function getAptcTradeLinks() {
+export function getAptcTradeLinks(options = {}) {
   const mint = APTC_TOKENOMICS.mint;
+  const pairUrl =
+    options.pairUrl ||
+    (APTC_LAUNCH_METRICS.dexscreenerPairUrl ?? null) ||
+    dexscreenerTokenUrl(mint);
+  const raydiumHref = raydiumSwapUrl(mint);
+
   return [
-    { id: 'raydium', label: 'Raydium', sub: 'CPMM pool', href: 'https://raydium.io/swap/', external: true },
-    { id: 'dexscreener', label: 'DexScreener', sub: 'Live chart', href: dexscreenerTokenUrl(mint), external: true },
+    { id: 'raydium', label: 'Raydium', sub: 'CPMM pool', href: raydiumHref, external: true },
+    { id: 'dexscreener', label: 'DexScreener', sub: 'Live chart', href: pairUrl, external: true },
     { id: 'jupiter', label: 'Jupiter', sub: 'Swap', href: jupiterSwapUrl(mint), external: true },
-    { id: 'solscan', label: 'Solscan', sub: 'Mint', href: solscanAccountUrl(mint), external: true },
+    { id: 'solscan', label: 'Solscan', sub: 'Mint', href: solscanTokenUrl(mint), external: true },
     { id: 'stake', label: 'Stake', sub: 'Earn APY', href: '/stake', external: false },
     { id: 'litepaper', label: 'Litepaper', sub: 'Full docs', href: '/litepaper#aptc-token', external: false },
   ];
