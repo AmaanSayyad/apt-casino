@@ -5,6 +5,11 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import PageShell from '@/components/layout/PageShell';
 import {
+  buildAptcStakeTransaction,
+  waitForSolanaSignatureConfirmed,
+  formatSolanaError,
+} from '@/lib/solana/client';
+import {
   FaChartLine,
   FaCoins,
   FaLock,
@@ -55,7 +60,7 @@ function fmtStakeAmount(n) {
 }
 
 export default function StakePage() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const address = publicKey?.toBase58() || null;
 
@@ -200,8 +205,20 @@ export default function StakePage() {
         setError('Connect your wallet first.');
         return;
       }
+      if (!sendTransaction) {
+        setError('Your wallet cannot send transactions. Try Phantom or Solflare.');
+        return;
+      }
       if (!STAKING_ENABLED) {
         setError('APTC staking unlocks at TGE — please check back soon.');
+        return;
+      }
+      if (!STAKING_VAULT) {
+        setError('Staking vault is not configured.');
+        return;
+      }
+      if (!APTC_MINT) {
+        setError('APTC mint is not configured.');
         return;
       }
 
@@ -222,30 +239,42 @@ export default function StakePage() {
 
       setSubmittingPool(pool.pool_key);
       try {
-        const res = await fetch('/api/staking/stake', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userAddress: address,
-            poolKey: pool.pool_key,
-            amount,
-            // txHash is intentionally omitted pre-Solana-wallet-integration; admin
-            // reconciles by matching wallet + amount + timestamp against the vault.
-          }),
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || 'Failed to stake');
+        const tx = await buildAptcStakeTransaction(amount, address, STAKING_VAULT);
+        const txHash = await sendTransaction(tx, connection);
+        await waitForSolanaSignatureConfirmed(connection, txHash);
+
+        let json;
+        let res;
+        for (let attempt = 0; attempt < 4; attempt++) {
+          res = await fetch('/api/staking/stake', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userAddress: address,
+              poolKey: pool.pool_key,
+              amount,
+              txHash,
+            }),
+          });
+          json = await res.json();
+          if (res.ok) break;
+          if (res.status !== 400 || attempt === 3) break;
+          await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+        }
+        if (!res.ok) throw new Error(json.error || 'Failed to record stake');
 
         setAmountByPool((prev) => ({ ...prev, [pool.pool_key]: '' }));
-        setSuccess(`Staked ${fmtNum(amount)} APTC in the ${pool.lock_days}-day pool.`);
+        setSuccess(
+          `Staked ${fmtNum(amount)} APTC in the ${pool.lock_days}-day pool. Tx: ${txHash.slice(0, 8)}…`,
+        );
         await Promise.all([refreshPositions(), refreshStats(), refreshAptcBalance()]);
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to stake');
+        setError(formatSolanaError(e));
       } finally {
         setSubmittingPool(null);
       }
     },
-    [address, amountByPool, refreshPositions, refreshStats, refreshAptcBalance],
+    [address, amountByPool, connection, refreshPositions, refreshStats, refreshAptcBalance, sendTransaction],
   );
 
   const handleClaim = useCallback(

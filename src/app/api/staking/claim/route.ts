@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
+import { transferBynomoFromStakingVault } from '@/lib/solana/backend-client';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Marks a matured staking position as claimed and records the payout (principal + reward).
- *
- * Actual APTC transfer from the staking vault back to the user wallet is an off-chain
- * admin/treasury operation — this endpoint records the intent and computed payout.
+ * Claims a matured staking position and sends principal + reward from the staking vault.
  */
 export async function POST(req: NextRequest) {
   const supabase = getSupabaseAdmin();
@@ -65,6 +63,20 @@ export async function POST(req: NextRequest) {
   const reward = Math.round(amount * (apyBps / 10_000) * (lockDays / 365) * 1e8) / 1e8;
   const payout = Math.round((amount + reward) * 1e8) / 1e8;
 
+  let payoutTxHash: string | null = null;
+  try {
+    payoutTxHash = await transferBynomoFromStakingVault(userAddress, payout);
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json(
+      {
+        error: 'Failed to send APTC payout from the staking vault.',
+        detail,
+      },
+      { status: 503 },
+    );
+  }
+
   const nowIso = new Date().toISOString();
   const { error: updErr } = await supabase
     .from('staking_positions')
@@ -91,6 +103,7 @@ export async function POST(req: NextRequest) {
     operation: 'claim',
     amount: payout,
     reward_amount: reward,
+    tx_hash: payoutTxHash,
   });
 
   return NextResponse.json({
@@ -98,5 +111,6 @@ export async function POST(req: NextRequest) {
     positionId,
     reward,
     payout,
+    txHash: payoutTxHash,
   });
 }

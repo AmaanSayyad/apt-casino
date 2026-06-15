@@ -658,7 +658,7 @@ export async function transferBynomoStakingVaultToTreasury(amount: number): Prom
         const mintPubkey = new PublicKey(APTC_SPL_MINT);
 
         if (stakingVaultKeypair.publicKey.toBase58() !== vault.address) {
-            throw new Error('SOL_STAKING_VAULT_SECRET_KEY does not match NEXT_PUBLIC_SOL_STAKING_VAULT_ADDRESS.');
+            throw new Error('SOL_STAKING_VAULT_SECRET_KEY does not match NEXT_PUBLIC_APTC_STAKING_VAULT.');
         }
 
         const mintInfo = await getMint(connection, mintPubkey);
@@ -728,7 +728,7 @@ export async function transferBynomoFromStakingVault(
         const mintPublicKey = new PublicKey(APTC_SPL_MINT);
 
         if (stakingVaultKeypair.publicKey.toBase58() !== vault.address) {
-            throw new Error('SOL_STAKING_VAULT_SECRET_KEY does not match NEXT_PUBLIC_SOL_STAKING_VAULT_ADDRESS.');
+            throw new Error('SOL_STAKING_VAULT_SECRET_KEY does not match NEXT_PUBLIC_APTC_STAKING_VAULT.');
         }
 
         const mintInfo = await getMint(connection, mintPublicKey);

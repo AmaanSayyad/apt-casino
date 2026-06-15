@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMinStakeForPool, getPoolDefinition } from '@/lib/staking/pools';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
+import { verifySolanaStakeToVaultTx } from '@/lib/solana/backend-client';
+import { getSolanaStakingVaultConfig } from '@/lib/solana/config';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Records a staking position for the user.
- *
- * Pre-TGE: gated behind APTC_STAKING_ENABLED=true to avoid accidental position rows
- * before the token exists on Solana.
- *
- * Post-TGE: the client is expected to have already sent APTC from the user wallet to
- * the staking vault on Solana and pass txHash for audit. (Signature verification
- * against the Solana RPC can be added here once the mint is finalized.)
+ * Records a staking position after verifying an on-chain APTC transfer to the staking vault.
  */
 export async function POST(req: NextRequest) {
   const supabase = getSupabaseAdmin();
@@ -63,6 +58,40 @@ export async function POST(req: NextRequest) {
   }
   if (!Number.isFinite(amount) || amount <= 0) {
     return NextResponse.json({ error: 'amount must be a positive number' }, { status: 400 });
+  }
+  if (!txHash) {
+    return NextResponse.json(
+      { error: 'txHash is required — confirm the APTC transfer in your wallet first.' },
+      { status: 400 },
+    );
+  }
+
+  const vaultAddress = getSolanaStakingVaultConfig().address;
+  if (!vaultAddress) {
+    return NextResponse.json({ error: 'Staking vault is not configured on the server.' }, { status: 500 });
+  }
+
+  const verified = await verifySolanaStakeToVaultTx(txHash, userAddress, amount, vaultAddress);
+  if (!verified) {
+    return NextResponse.json(
+      {
+        error:
+          'Could not verify APTC transfer to the staking vault. Wait a few seconds and try again, or check the transaction on Solscan.',
+      },
+      { status: 400 },
+    );
+  }
+
+  const { data: existingTx } = await supabase
+    .from('staking_positions')
+    .select('id')
+    .eq('tx_hash', txHash)
+    .maybeSingle();
+  if (existingTx) {
+    return NextResponse.json(
+      { error: 'This transaction was already used for staking.', positionId: existingTx.id },
+      { status: 409 },
+    );
   }
 
   const { data: pool, error: poolErr } = await supabase
