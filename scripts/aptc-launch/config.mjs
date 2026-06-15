@@ -21,7 +21,7 @@ export const APTC_LAUNCH = {
   revokeUpdate: true,
 };
 
-/** Nine-wallet distribution — must total 100% / 1B APTC */
+/** On-chain allocation wallets — must total 100% / 1B APTC */
 export const APTC_WALLET_DISTRIBUTION = [
   { label: 'Liquidity', address: 'CAVLQyCEycrok3Mbv5mdCbE3epGQW3ibQ447fwTLweYx', pct: 12 },
   { label: 'Treasury', address: '77WBQZcjr1eLpYDk6PrwUbSUkLw57fNyX4U7pYqrrbHM', pct: 25 },

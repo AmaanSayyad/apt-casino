@@ -9,10 +9,10 @@ export const APTC_TOKENOMICS = {
   chain: 'Solana (SPL)',
   maxSupply: '1,000,000,000',
   decimals: 6,
-  mint: 'AptCc7pmHrcnvouoSK4nKdQhLC7B5qA4r8gZaSTcEnj7',
+  mint: 'ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg',
   launchVenue: 'Raydium CPMM',
   launch:
-    'Raydium CPMM · 120M APTC + 37 SOL · 0.5% fee · mint, freeze & update revoked · nine labeled wallets.',
+    'Raydium CPMM · 120M APTC + 37 SOL · 0.5% fee · mint, freeze & update revoked.',
   authorities: {
     mintRevoked: true,
     freezeRevoked: true,
@@ -54,7 +54,7 @@ export const APTC_ALLOCATION = [
   { label: 'Competitions & airdrops', pct: 3, tokensShort: '30M', fill: '#14b8a6', color: 'from-teal-500 to-cyan-500' },
 ];
 
-/** Nine transparent launch wallets — labeled on-chain distribution */
+/** Transparent launch wallets — on-chain distribution */
 export const APTC_WALLETS = [
   {
     id: 1,
@@ -159,7 +159,7 @@ export const APTC_LAUNCH_PHASES = [
   {
     step: '1',
     title: 'Token live',
-    detail: '1B supply · authorities revoked · 9 wallets',
+    detail: '1B supply · authorities revoked',
   },
   {
     step: '2',
@@ -214,7 +214,7 @@ export const GGR_FLYWHEEL_STEPS = [
 
 /** One-line summary for cards and subtitles */
 export function getAllocationSummary() {
-  return '1,000,000,000 APTC fixed supply · nine labeled wallets · chart shows % of total supply (100%).';
+  return '1,000,000,000 APTC fixed supply · chart shows % of total supply (100%).';
 }
 
 export function truncateAddress(addr, chars = 4) {

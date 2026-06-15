@@ -96,7 +96,7 @@ export default function TokenomicsSection() {
               </h2>
 
               <p className="mt-4 text-base md:text-lg text-white/60 leading-relaxed">
-                1B fixed supply · nine labeled wallets · Raydium CPMM launch. Casino GGR funds open-market
+                1B fixed supply · Raydium CPMM launch. Casino GGR funds open-market
                 buybacks — not empty emissions.
               </p>
 
@@ -206,7 +206,7 @@ export default function TokenomicsSection() {
         <div className="grid lg:grid-cols-2 gap-6 mb-10">
           <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 h-full">
             <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
-            <p className="text-xs text-white/45 mb-6">1B APTC · nine wallets · 100% accounted</p>
+            <p className="text-xs text-white/45 mb-6">1B APTC · 100% accounted</p>
             <AllocationDonut />
           </div>
 
@@ -239,7 +239,7 @@ export default function TokenomicsSection() {
               <h3 className="text-xl font-semibold text-white">Wallet transparency</h3>
               <p className="text-sm text-white/50 mt-1">Tap any wallet to verify on Solscan.</p>
             </div>
-            <span className="text-xs font-mono text-white/40">{APTC_WALLETS.length} labeled wallets</span>
+            <span className="text-xs font-mono text-white/40">on-chain allocations</span>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">

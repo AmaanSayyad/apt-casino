@@ -39,7 +39,7 @@ export default function LitepaperAllocationBlock({ section, sectionLabel, sectio
               1B APTC · full supply allocation
             </p>
             <p className="mb-6 text-center text-xs text-white/45">
-              Nine labeled wallets · chart = 100% of max supply
+              Chart = 100% of max supply
             </p>
             <AllocationDonut variant="litepaper" />
           </div>

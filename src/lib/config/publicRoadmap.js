@@ -25,7 +25,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000001',
     title: 'APTC TGE on Raydium CPMM',
     excerpt:
-      '120M APTC + 37 SOL on Raydium Standard AMM · 0.5% fee tier · ~$5k liquidity · ~$20.8k launch MC. Mint revoked. Nine wallets. Sniper-ready.',
+      '120M APTC + 37 SOL on Raydium Standard AMM · 0.5% fee tier · ~$5k liquidity · ~$20.8k launch MC. Mint revoked. Sniper-ready.',
     category: 'Platform',
     status: 'in_progress',
     link: getLitepaperUrl('aptc-token'),
@@ -203,9 +203,9 @@ export const PUBLIC_ROADMAP_ITEMS = [
   },
   {
     id: 'a1000001-0001-4001-8001-000000000036',
-    title: 'Nine-wallet transparency dashboard',
+    title: 'Wallet transparency dashboard',
     excerpt:
-      'Live tracker for all labeled APTC wallets — treasury, staking, referrals, marketing, competitions — with Solscan links and movement alerts.',
+      'Live tracker for APTC allocation wallets — treasury, staking, referrals, marketing, competitions — with Solscan links and movement alerts.',
     category: 'Governance',
     status: 'planned',
     link: getLitepaperUrl('aptc-allocation'),

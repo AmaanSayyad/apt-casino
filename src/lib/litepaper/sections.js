@@ -224,7 +224,7 @@ export const LITEPAPER_SECTIONS = [
       `Native ecosystem token: ${APTC_TOKENOMICS.name} (${APTC_TOKENOMICS.symbol}) on ${APTC_TOKENOMICS.chain}.`,
       `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint, freeze, and update authorities all revoked at creation — fixed metadata, fixed supply.`,
       `Public launch on ${APTC_TOKENOMICS.launchVenue}: ${APTC_LAUNCH_METRICS.aptcInLpShort} APTC + ${APTC_LAUNCH_METRICS.solInLp} SOL, ${APTC_LAUNCH_METRICS.feeTierPct}% fee tier. Approx launch MC ~$${(APTC_LAUNCH_METRICS.approxMarketCapUsd / 1000).toFixed(1)}k · liquidity ~$${(APTC_LAUNCH_METRICS.approxLiquidityUsd / 1000).toFixed(0)}k.`,
-      `Nine labeled wallets distribute the full 1B supply — no single-wallet hoard. Mint: ${APTC_TOKENOMICS.mint}.`,
+      `Supply distributed across transparent on-chain allocations — no single-wallet hoard. Mint: ${APTC_TOKENOMICS.mint}.`,
       utilityText,
       'APTC is not required to place bets in native SOL/APT — it is the rewards, staking, referral, and value-accrual layer on top of core casino play.',
     ],

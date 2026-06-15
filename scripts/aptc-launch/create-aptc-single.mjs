@@ -1,25 +1,23 @@
 #!/usr/bin/env node
 /**
- * APTC SPL token launch on Solana mainnet.
- * Requires: APTC_LAUNCH_KEYPAIR, APTC_MINT_KEYPAIR (vanity grind), SOLANA_RPC_URL
- * @see scripts/aptc-launch/README.md
+ * APTC single-wallet launch — full 1B supply minted to payer, all authorities revoked.
+ * Payer receives 100% of supply (for Raydium LP etc.).
  */
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import {
   Connection,
   Keypair,
   PublicKey,
-  SystemProgram,
   Transaction,
   sendAndConfirmTransaction,
 } from '@solana/web3.js';
 import {
   createMint,
   getOrCreateAssociatedTokenAccount,
+  getMint,
   mintTo,
-  transfer,
   setAuthority,
   AuthorityType,
   TOKEN_PROGRAM_ID,
@@ -29,22 +27,24 @@ import {
   createUpdateMetadataAccountV2Instruction,
   PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID,
 } from '@metaplex-foundation/mpl-token-metadata';
-import {
-  APTC_LAUNCH,
-  APTC_WALLET_DISTRIBUTION,
-  amountForWallet,
-  validateDistribution,
-} from './config.mjs';
+import bs58 from 'bs58';
+import { APTC_LAUNCH } from './config.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DRY_RUN = process.argv.includes('--dry-run');
 
 function loadKeypair(path) {
-  if (!path || !existsSync(path)) {
-    throw new Error(`Keypair not found: ${path}`);
-  }
+  if (!path || !existsSync(path)) throw new Error(`Keypair not found: ${path}`);
   const secret = JSON.parse(readFileSync(path, 'utf8'));
   return Keypair.fromSecretKey(Uint8Array.from(secret));
+}
+
+function loadPayerKeypair() {
+  const path = process.env.APTC_LAUNCH_KEYPAIR;
+  if (path && existsSync(path)) return loadKeypair(path);
+  const b58 = process.env.APTC_LAUNCH_SECRET?.trim();
+  if (b58) return Keypair.fromSecretKey(bs58.decode(b58));
+  throw new Error('Set APTC_LAUNCH_KEYPAIR or APTC_LAUNCH_SECRET');
 }
 
 function loadEnv() {
@@ -71,54 +71,48 @@ function metadataPda(mint) {
   )[0];
 }
 
+function writeLaunchResult(mint, payer) {
+  const resultPath = resolve(__dirname, '.keys/launch-result.json');
+  const payload = {
+    mint,
+    payer: payer.publicKey.toBase58(),
+    launchedAt: new Date().toISOString(),
+    network: 'mainnet-beta',
+    supplyHuman: APTC_LAUNCH.supplyHuman,
+    decimals: APTC_LAUNCH.decimals,
+    metadataUri: APTC_LAUNCH.uri,
+  };
+  writeFileSync(resultPath, JSON.stringify(payload, null, 2));
+  console.log('\nSaved launch result:', resultPath);
+}
+
 async function main() {
   loadEnv();
-  validateDistribution();
 
   const rpc =
     process.env.SOLANA_RPC_URL ||
     process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
     'https://api.mainnet-beta.solana.com';
-  const network = process.env.SOLANA_NETWORK || 'mainnet-beta';
-  const payerPath = process.env.APTC_LAUNCH_KEYPAIR;
-  const mintPath = process.env.APTC_MINT_KEYPAIR;
 
-  console.log('\n=== APTC token launch ===');
-  console.log('Network:', network);
-  console.log('RPC:', rpc.replace(/api-key=[^&]+/, 'api-key=***'));
+  const mintPath =
+    process.env.APTC_MINT_KEYPAIR || resolve(__dirname, '.keys/mint-single.json');
+
+  console.log('\n=== APTC single-wallet launch ===');
+  console.log('Network: mainnet-beta');
+  console.log('RPC:', rpc);
   console.log('Dry run:', DRY_RUN);
   console.log('Token:', APTC_LAUNCH.name, `(${APTC_LAUNCH.symbol})`);
-  console.log('Supply:', APTC_LAUNCH.supplyHuman.toLocaleString(), '· decimals', APTC_LAUNCH.decimals);
-  console.log('Metadata URI:', APTC_LAUNCH.uri);
-  console.log('Revoke mint:', APTC_LAUNCH.revokeMint, '| freeze:', APTC_LAUNCH.revokeFreeze, '| update:', APTC_LAUNCH.revokeUpdate);
+  console.log('Supply:', APTC_LAUNCH.supplyHuman.toLocaleString(), '→ payer wallet only');
 
-  if (!payerPath) {
-    console.error('\nMissing APTC_LAUNCH_KEYPAIR — path to payer JSON keypair (pays SOL fees).');
-    process.exit(1);
-  }
-  if (!mintPath) {
-    console.error('\nMissing APTC_MINT_KEYPAIR — grind vanity mint first:');
-    console.error(`  solana-keygen grind --starts-with ${APTC_LAUNCH.vanityPrefix}:1`);
-    process.exit(1);
-  }
-
-  const payer = loadKeypair(payerPath);
+  const payer = loadPayerKeypair();
   const mintKeypair = loadKeypair(mintPath);
   const mintPubkey = mintKeypair.publicKey;
 
-  console.log('\nPayer:', payer.publicKey.toBase58());
+  console.log('\nPayer / recipient:', payer.publicKey.toBase58());
   console.log('Mint (vanity):', mintPubkey.toBase58());
 
-  if (!mintPubkey.toBase58().startsWith(APTC_LAUNCH.vanityPrefix) && !mintPubkey.toBase58().startsWith(APTC_LAUNCH.vanityFallbackPrefix)) {
-    console.warn(
-      `Warning: mint does not start with ${APTC_LAUNCH.vanityPrefix} or ${APTC_LAUNCH.vanityFallbackPrefix}`,
-    );
-  }
-
-  console.log('\nDistribution:');
-  for (const w of APTC_WALLET_DISTRIBUTION) {
-    const amt = amountForWallet(w.pct, APTC_LAUNCH.decimals);
-    console.log(`  ${w.pct}% ${w.label.padEnd(18)} ${w.address}  → ${amt.toString()} raw`);
+  if (!mintPubkey.toBase58().slice(0, 4).toLowerCase().startsWith('aptc')) {
+    console.warn('Warning: mint does not start with aptc (case-insensitive)');
   }
 
   if (DRY_RUN) {
@@ -129,11 +123,11 @@ async function main() {
   const connection = new Connection(rpc, 'confirmed');
   const balance = await connection.getBalance(payer.publicKey);
   console.log('\nPayer balance:', (balance / 1e9).toFixed(4), 'SOL');
-  if (balance < 50_000_000) {
-    throw new Error('Payer needs at least ~0.05 SOL for mint + distribution');
+  if (balance < 30_000_000) {
+    throw new Error('Payer needs at least ~0.03 SOL for mint + metadata + revokes');
   }
 
-  console.log('\n1/5 Creating mint...');
+  console.log('\n1/4 Creating mint...');
   const mint = await createMint(
     connection,
     payer,
@@ -146,7 +140,7 @@ async function main() {
   );
   console.log('   Mint:', mint.toBase58());
 
-  console.log('\n2/5 Creating Metaplex metadata...');
+  console.log('\n2/4 Creating Metaplex metadata...');
   const metadata = metadataPda(mint);
   const metaIx = createCreateMetadataAccountV3Instruction(
     {
@@ -163,13 +157,7 @@ async function main() {
           symbol: APTC_LAUNCH.symbol,
           uri: APTC_LAUNCH.uri,
           sellerFeeBasisPoints: 0,
-          creators: [
-            {
-              address: payer.publicKey,
-              verified: true,
-              share: 100,
-            },
-          ],
+          creators: [{ address: payer.publicKey, verified: true, share: 100 }],
           collection: null,
           uses: null,
         },
@@ -178,34 +166,31 @@ async function main() {
       },
     },
   );
-  const metaTx = new Transaction().add(metaIx);
-  await sendAndConfirmTransaction(connection, metaTx, [payer], { commitment: 'confirmed' });
+  await sendAndConfirmTransaction(connection, new Transaction().add(metaIx), [payer], {
+    commitment: 'confirmed',
+  });
   console.log('   Metadata:', metadata.toBase58());
 
-  console.log('\n3/5 Minting full supply to payer ATA...');
+  console.log('\n3/4 Minting full supply to payer...');
   const payerAta = await getOrCreateAssociatedTokenAccount(connection, payer, mint, payer.publicKey);
-  const totalRaw =
-    BigInt(APTC_LAUNCH.supplyHuman) * 10n ** BigInt(APTC_LAUNCH.decimals);
+  const totalRaw = BigInt(APTC_LAUNCH.supplyHuman) * BigInt(10) ** BigInt(APTC_LAUNCH.decimals);
   await mintTo(connection, payer, mint, payerAta.address, payer, totalRaw);
-  console.log('   Minted:', totalRaw.toString(), 'raw units');
+  console.log('   Minted:', APTC_LAUNCH.supplyHuman.toLocaleString(), 'APTC');
+  console.log('   ATA:', payerAta.address.toBase58());
 
-  console.log('\n4/5 Distributing supply...');
-  for (const w of APTC_WALLET_DISTRIBUTION) {
-    const destOwner = new PublicKey(w.address);
-    const amount = amountForWallet(w.pct, APTC_LAUNCH.decimals);
-    const destAta = await getOrCreateAssociatedTokenAccount(connection, payer, mint, destOwner);
-    await transfer(connection, payer, payerAta.address, destAta.address, payer, amount);
-    console.log(`   ✓ ${w.label}: ${(Number(amount) / 10 ** APTC_LAUNCH.decimals).toLocaleString()} APTC`);
-  }
-
-  console.log('\n5/5 Revoking authorities...');
-  if (APTC_LAUNCH.revokeMint) {
+  console.log('\n4/4 Revoking authorities...');
+  const mintInfo = await getMint(connection, mint, 'confirmed', TOKEN_PROGRAM_ID);
+  if (APTC_LAUNCH.revokeMint && mintInfo.mintAuthority) {
     await setAuthority(connection, payer, mint, payer, AuthorityType.MintTokens, null);
     console.log('   ✓ Mint authority revoked');
+  } else if (APTC_LAUNCH.revokeMint) {
+    console.log('   ✓ Mint authority already revoked');
   }
-  if (APTC_LAUNCH.revokeFreeze) {
+  if (APTC_LAUNCH.revokeFreeze && mintInfo.freezeAuthority) {
     await setAuthority(connection, payer, mint, payer, AuthorityType.FreezeAccount, null);
     console.log('   ✓ Freeze authority revoked');
+  } else if (APTC_LAUNCH.revokeFreeze) {
+    console.log('   ✓ Freeze authority already null at mint creation');
   }
   if (APTC_LAUNCH.revokeUpdate) {
     const updateIx = createUpdateMetadataAccountV2Instruction(
@@ -219,19 +204,21 @@ async function main() {
         },
       },
     );
-    const updateTx = new Transaction().add(updateIx);
-    await sendAndConfirmTransaction(connection, updateTx, [payer], { commitment: 'confirmed' });
-    console.log('   ✓ Update authority revoked · metadata immutable');
+    await sendAndConfirmTransaction(connection, new Transaction().add(updateIx), [payer], {
+      commitment: 'confirmed',
+    });
+    console.log('   ✓ Update authority revoked');
   }
+
+  writeLaunchResult(mint.toBase58(), payer);
 
   console.log('\n=== LAUNCH COMPLETE ===');
   console.log('Mint:', mint.toBase58());
+  console.log('Holder:', payer.publicKey.toBase58());
   console.log('Solscan:', `https://solscan.io/token/${mint.toBase58()}`);
-  console.log('\nVercel env:');
+  console.log('\nAdd to .env / Vercel:');
   console.log(`NEXT_PUBLIC_APTC_SOLANA_MINT=${mint.toBase58()}`);
-  console.log(`NEXT_PUBLIC_APTC_STAKING_VAULT=4Ka1vdinFUqhh3TtHaohj1MiKVUrvJBrgsVp1MfVnXFQ`);
-  console.log(`APTC_STAKING_ENABLED=true`);
-  console.log(`NEXT_PUBLIC_APTC_STAKING_ENABLED=true`);
+  console.log(`SOLANA_RPC_URL=${rpc}`);
 }
 
 main().catch((e) => {

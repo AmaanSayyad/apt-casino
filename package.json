@@ -18,6 +18,8 @@
     "seed:roadmap": "node scripts/seed-roadmap.mjs",
     "aptc:launch:dry": "node scripts/aptc-launch/create-aptc-token.mjs --dry-run",
     "aptc:launch": "node scripts/aptc-launch/create-aptc-token.mjs",
+    "aptc:launch:single": "node scripts/aptc-launch/create-aptc-single.mjs",
+    "aptc:grind": "node scripts/aptc-launch/grind-vanity-mint.mjs",
     "aptc:launch:resume": "node scripts/aptc-launch/resume-launch.mjs",
     "compile:aptos": "node move-contracts/scripts/compile-aptos.mjs",
     "deploy:plinko": "echo 'Use: cd move-contracts/plinko-only && aptos move publish ... (see README)' && exit 1",

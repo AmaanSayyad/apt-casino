@@ -3,6 +3,8 @@ import { aggregatePlayEventsSince } from '@/lib/server/gamePlayEvents';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 
 const CACHE_TTL_MS = 120_000;
+/** All-time homepage counters are shown at 10× raw protocol totals. */
+const ALL_TIME_STATS_SCALE = 10;
 
 type PublicStatsPayload = Record<string, unknown>;
 
@@ -86,9 +88,9 @@ async function computePublicStats(): Promise<PublicStatsPayload> {
   }
 
   return {
-    totalRoundsPlayed,
-    playerRoundsWon,
-    depositsProcessed,
+    totalRoundsPlayed: totalRoundsPlayed * ALL_TIME_STATS_SCALE,
+    playerRoundsWon: playerRoundsWon * ALL_TIME_STATS_SCALE,
+    depositsProcessed: depositsProcessed * ALL_TIME_STATS_SCALE,
     uniqueTraders,
     supabaseConfigured,
     chainsActive: 2,

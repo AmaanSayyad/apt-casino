@@ -1,6 +1,6 @@
 # APTC Solana token launch
 
-Creates SPL mint, Metaplex metadata, mints 1B APTC (6 decimals), distributes to nine wallets, revokes authorities.
+Creates SPL mint, Metaplex metadata, mints 1B APTC (6 decimals), distributes supply, revokes authorities.
 
 ## Prerequisites
 
@@ -62,7 +62,7 @@ npm run aptc:launch:resume
 |------|------|
 | Mint + metadata | 0.02–0.05 |
 | Mint 1B supply | 0.00001 |
-| 9 wallet transfers | 0.01–0.02 |
+| Distribution transfers | 0.01–0.02 |
 | Authority revokes | 0.003 |
 | **Total** | **~0.05–0.1 SOL** (+ vanity grind is free, only time) |
 

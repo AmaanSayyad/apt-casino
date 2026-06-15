@@ -12,7 +12,7 @@ export const ROADMAP_PHASES_SEQUENCE = `sequenceDiagram
 
   Note over L: 4 games · Sol + Aptos
   Note over L: Live · GGR · referrals
-  L->>N: Raydium TGE · 9 wallets
+  L->>N: Raydium TGE
   Note over N: Tier 1 DEX · Tier 2 CG/CMC
   N->>M: Tier 3 CEX · staking · farms
   Note over M: Sui · EVM · audit
@@ -37,7 +37,7 @@ export const ROADMAP_VALUE_SEQUENCE = `sequenceDiagram
   X->>M: GGR buys APTC
   M-->>H: Burn stake treasury
   P->>X: Referrals OTC Volume Cup
-  X-->>H: Nine wallet emissions
+  X-->>H: Programmatic emissions
 
   Note over P,H: Scale
   X->>G: Sui EVM SDK

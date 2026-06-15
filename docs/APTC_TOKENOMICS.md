@@ -33,14 +33,14 @@ Native SPL token for AptCasino.fun — live on Solana via Raydium CPMM.
 sequenceDiagram
     autonumber
     participant T as Token creation
-    participant W as Nine wallets
+    participant W as Allocations
     participant R as Raydium CPMM
     participant D as DexScreener / Jupiter
     participant L as Listings
 
     T->>T: 1B APTC minted
     Note over T: Mint, freeze, update revoked
-    T->>W: Distribute to labeled wallets
+    T->>W: Distribute supply
     W->>R: 120M APTC + 37 SOL LP
     R->>R: Burn ~16.67% LP tokens
     R->>D: APTC/SOL pair live
