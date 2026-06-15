@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import PageShell from '@/components/layout/PageShell';
 import {
   FaChartLine,
@@ -48,8 +48,8 @@ function fmtDate(input) {
 }
 
 export default function StakePage() {
-  const { connected, account } = useWallet();
-  const address = account?.address ? String(account.address) : null;
+  const { publicKey, connected } = useWallet();
+  const address = publicKey?.toBase58() || null;
 
   const [pools, setPools] = useState([]);
   const [positions, setPositions] = useState([]);
