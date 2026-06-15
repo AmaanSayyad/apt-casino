@@ -8,12 +8,8 @@ import {
   APTC_LAUNCH_STEPS,
   APTC_TOKENOMICS,
   APTC_UTILITY,
-  APTC_WALLETS,
   getAptcTradeLinks,
-  getWalletAllocationColor,
-  solscanAccountUrl,
   solscanTokenUrl,
-  truncateAddress,
 } from '@/lib/config/tokenomics';
 
 const AllocationDonut = dynamic(
@@ -234,23 +230,6 @@ export default function TokenomicsSection() {
           </div>
         </div>
 
-        {/* Wallets */}
-        <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 mb-10">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-6">
-            <div>
-              <h3 className="text-xl font-semibold text-white">Launch wallet</h3>
-              <p className="text-sm text-white/50 mt-1">Full supply minted here · deposited into Raydium CPMM.</p>
-            </div>
-            <span className="text-xs font-mono text-white/40">fair launch</span>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-            {APTC_WALLETS.map((w) => (
-              <WalletCard key={w.id} wallet={w} />
-            ))}
-          </div>
-        </div>
-
         {/* Utility */}
         <div>
           <h3 className="text-lg font-semibold text-white mb-4">Why APTC</h3>
@@ -269,35 +248,6 @@ export default function TokenomicsSection() {
         </p>
       </div>
     </section>
-  );
-}
-
-function WalletCard({ wallet: w }) {
-  return (
-    <a
-      href={solscanAccountUrl(w.address)}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={w.purpose}
-      className="group rounded-xl border border-white/[0.08] bg-[#120010] p-4 hover:border-white/20 hover:bg-white/[0.03] transition-colors"
-    >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="inline-flex items-center gap-2 text-sm font-medium text-white min-w-0">
-          <span
-            className="w-2 h-2 rounded-full shrink-0"
-            style={{ backgroundColor: getWalletAllocationColor(w.id) }}
-          />
-          <span className="truncate">{w.label}</span>
-        </span>
-        <span className="font-mono text-sm text-white/75 shrink-0">{w.amountShort}</span>
-      </div>
-      <p className="text-[11px] text-white/40 mb-2">
-        {w.pct}% · {w.purposeShort}
-      </p>
-      <p className="font-mono text-[10px] text-white/45 group-hover:text-white/70 transition-colors">
-        {truncateAddress(w.address, 5)} ↗
-      </p>
-    </a>
   );
 }
 

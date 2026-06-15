@@ -32,16 +32,6 @@ export const PUBLIC_ROADMAP_ITEMS = [
     sortOrder: 10,
   },
   {
-    id: 'a1000001-0001-4001-8001-000000000031',
-    title: 'Raydium LP burn (~16.67%)',
-    excerpt:
-      'Permanently burn ~16.67% of LP tokens at TGE — ~20M APTC + ~6.17 SOL locked in pool. Liquidity stays. Supply signal locked.',
-    category: 'Platform',
-    status: 'in_progress',
-    link: getLitepaperUrl('aptc-allocation'),
-    sortOrder: 11,
-  },
-  {
     id: 'a1000001-0001-4001-8001-000000000037',
     title: 'Tier 1 — DEX & trader listings',
     excerpt:
@@ -105,7 +95,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000007',
     title: 'APTC staking deposits live at TGE',
     excerpt:
-      'Fixed-term stake pools on /stake — 30/60/90/180-day locks, 120M emissions wallet, APY from emissions plus GGR staker share.',
+      'Fixed-term stake pools on /stake — 30/60/90/180-day locks, on-chain SPL deposits, APY from GGR buyback staker share.',
     category: 'Platform',
     status: 'planned',
     link: '/stake',
@@ -145,7 +135,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000011',
     title: 'Volume Cup Season 2',
     excerpt:
-      'Seasonal high-volume leaderboard with APTC prize pool from the 30M competitions wallet — provably logged play events, no fabricated stats.',
+      'Seasonal high-volume leaderboard with APTC prize pool funded from protocol GGR — provably logged play events, no fabricated stats.',
     category: 'Tournaments',
     status: 'planned',
     link: '/competition',
@@ -165,7 +155,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000013',
     title: 'Referral leaderboard & win-share cards',
     excerpt:
-      '100M APTC referral wallet — 14-day cliff rewards, public leaderboard, milestone unlocks, and shareable ROI cards.',
+      'On-chain referral rewards — 14-day cliff, public leaderboard, milestone unlocks, and shareable ROI cards.',
     category: 'Community',
     status: 'planned',
     link: '/referral',
@@ -202,16 +192,6 @@ export const PUBLIC_ROADMAP_ITEMS = [
     sortOrder: 75,
   },
   {
-    id: 'a1000001-0001-4001-8001-000000000036',
-    title: 'Wallet transparency dashboard',
-    excerpt:
-      'Live tracker for APTC allocation wallets — treasury, staking, referrals, marketing, competitions — with Solscan links and movement alerts.',
-    category: 'Governance',
-    status: 'planned',
-    link: getLitepaperUrl('aptc-allocation'),
-    sortOrder: 78,
-  },
-  {
     id: 'a1000001-0001-4001-8001-000000000017',
     title: 'Responsible gaming controls',
     excerpt:
@@ -225,7 +205,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000018',
     title: 'Quarterly treasury transparency report',
     excerpt:
-      'Published breakdown of GGR, buybacks, burns, staking emissions, and partnership grants — aligned with the 1B APTC allocation chart.',
+      'Published breakdown of GGR, buybacks, burns, staking rewards, and partnership grants — aligned with the 1B fair-launch supply model.',
     category: 'Governance',
     status: 'planned',
     link: getLitepaperUrl('aptc-allocation'),

@@ -37,7 +37,7 @@ export const ROADMAP_VALUE_SEQUENCE = `sequenceDiagram
   X->>M: GGR buys APTC
   M-->>H: Burn stake treasury
   P->>X: Referrals OTC Volume Cup
-  X-->>H: Programmatic emissions
+  X-->>H: GGR buyback rewards
 
   Note over P,H: Scale
   X->>G: Sui EVM SDK
