@@ -68,11 +68,12 @@ export default function TokenomicsSection() {
   });
 
   const hasLiveMarket = market?.priceUsd != null;
-  const priceUsd = hasLiveMarket ? market.priceUsd : null;
-  const mcapUsd = market?.marketCapUsd ?? market?.fdvUsd ?? null;
-  const liqUsd = market?.liquidityUsd ?? null;
+  const priceUsd = hasLiveMarket ? market.priceUsd : m.approxTokenPriceUsd;
+  const mcapUsd = market?.marketCapUsd ?? market?.fdvUsd ?? m.approxMarketCapUsd;
+  const liqUsd = market?.liquidityUsd ?? m.approxLiquidityUsd;
   const vol24h = market?.volume24hUsd ?? null;
   const priceChange24h = market?.priceChange24h ?? null;
+  const marketLabel = hasLiveMarket ? 'Live market · DexScreener' : 'Launch targets';
 
   return (
     <section id="tokenomics" className="py-16 md:py-24 px-4 md:px-8 lg:px-16 bg-[#070005]">
@@ -96,8 +97,8 @@ export default function TokenomicsSection() {
               </h2>
 
               <p className="mt-4 text-base md:text-lg text-white/60 leading-relaxed">
-                1B fixed supply · Raydium CPMM launch. Casino GGR funds open-market
-                buybacks — not empty emissions.
+                1B fixed supply · fair launch on Raydium CPMM (1B APTC + 40 SOL). Casino GGR funds
+                open-market buybacks — not empty emissions.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
@@ -120,7 +121,7 @@ export default function TokenomicsSection() {
             {/* Live ticker */}
             <div className="rounded-2xl border border-white/10 bg-[#120010] p-4 md:p-5 w-full lg:max-w-md shrink-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40 mb-3">
-                {hasLiveMarket ? 'Live market · DexScreener' : 'Market data'}
+                {marketLabel}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <TickerStat
@@ -131,7 +132,7 @@ export default function TokenomicsSection() {
                       ? `${priceChange24h >= 0 ? '+' : ''}${priceChange24h.toFixed(2)}% 24h`
                       : hasLiveMarket
                         ? 'APTC/USD'
-                        : 'Unavailable'
+                        : 'At pool seed'
                   }
                   loading={marketLoading}
                 />
@@ -145,7 +146,8 @@ export default function TokenomicsSection() {
               </div>
               {!marketLoading && !hasLiveMarket && (
                 <p className="mt-3 text-[10px] text-amber-200/70 leading-relaxed">
-                  Live quotes load from DexScreener. If this stays empty, hard-refresh or open the chart link below.
+                  Targets from Raydium pool seed (1B APTC + 40 SOL). Live DexScreener quotes appear once
+                  the pair is indexed.
                 </p>
               )}
               <a
@@ -165,8 +167,8 @@ export default function TokenomicsSection() {
             <div className="flex flex-wrap gap-2">
               <LaunchStat label="Pool" value={`${m.aptcInLpShort} + ${m.solInLp} SOL`} />
               <LaunchStat label="Fee tier" value={`${m.feeTierPct}%`} />
-              <LaunchStat label="LP burned" value={`~${m.lpBurnPct}%`} />
-              <LaunchStat label="Locked" value={`${m.lockedAptc.replace(/,/g, '')} APTC`} />
+              <LaunchStat label="Launch MC" value={`~$${(m.approxMarketCapUsd / 1000).toFixed(1)}k`} />
+              <LaunchStat label="Liquidity" value={`~$${(m.approxLiquidityUsd / 1000).toFixed(1)}k`} />
             </div>
 
             <div>
@@ -206,7 +208,7 @@ export default function TokenomicsSection() {
         <div className="grid lg:grid-cols-2 gap-6 mb-10">
           <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 h-full">
             <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
-            <p className="text-xs text-white/45 mb-6">1B APTC · 100% accounted</p>
+            <p className="text-xs text-white/45 mb-6">1B APTC · 100% Raydium LP</p>
             <AllocationDonut />
           </div>
 
@@ -236,10 +238,10 @@ export default function TokenomicsSection() {
         <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 mb-10">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-6">
             <div>
-              <h3 className="text-xl font-semibold text-white">Wallet transparency</h3>
-              <p className="text-sm text-white/50 mt-1">Tap any wallet to verify on Solscan.</p>
+              <h3 className="text-xl font-semibold text-white">Launch wallet</h3>
+              <p className="text-sm text-white/50 mt-1">Full supply minted here · deposited into Raydium CPMM.</p>
             </div>
-            <span className="text-xs font-mono text-white/40">on-chain allocations</span>
+            <span className="text-xs font-mono text-white/40">fair launch</span>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">

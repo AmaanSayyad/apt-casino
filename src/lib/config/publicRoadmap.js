@@ -25,7 +25,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000001',
     title: 'APTC TGE on Raydium CPMM',
     excerpt:
-      '120M APTC + 37 SOL on Raydium Standard AMM · 0.5% fee tier · ~$5k liquidity · ~$20.8k launch MC. Mint revoked. Sniper-ready.',
+      '1B APTC + 40 SOL on Raydium Standard AMM · 0.5% fee tier · ~$5.4k liquidity · ~$2.7k launch MC. Mint revoked. Fair launch.',
     category: 'Platform',
     status: 'in_progress',
     link: getLitepaperUrl('aptc-token'),

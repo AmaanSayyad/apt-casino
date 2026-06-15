@@ -90,7 +90,7 @@ export default function LitepaperTokenomicsBlock() {
           <p className="mb-1 text-xs font-black uppercase tracking-widest text-white/45">
             Full supply allocation
           </p>
-          <p className="mb-4 text-xs text-white/40">100% of 1B APTC</p>
+          <p className="mb-4 text-xs text-white/40">100% of 1B APTC · Raydium LP</p>
           <AllocationDonut variant="litepaper" />
         </div>
         <div className="lp-glass rounded-2xl p-5 sm:p-6">

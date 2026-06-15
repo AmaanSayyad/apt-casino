@@ -10,7 +10,7 @@ Checklist for launching APT Casino on production infrastructure. Solana is the p
 - [x] Mint, freeze, update authorities revoked
 - [x] Supply distribution (see [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md))
 - [x] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production
-- [ ] Raydium CPMM pool live (120M APTC + 37 SOL)
+- [ ] Raydium CPMM pool live (1B APTC + 40 SOL fair launch)
 - [ ] ~16.67% LP token burn
 - [ ] DexScreener Enhanced Token Info submitted
 - [ ] Jupiter routing visible on pair

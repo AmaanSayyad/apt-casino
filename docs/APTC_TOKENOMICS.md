@@ -1,8 +1,8 @@
 # APTC tokenomics
 
-Last updated: 2026-06-08
+Last updated: 2026-06-15
 
-Native SPL token for AptCasino.fun — live on Solana via Raydium CPMM.
+Native SPL token for AptCasino.fun — live on Solana via Raydium CPMM fair launch.
 
 ## Token
 
@@ -17,32 +17,31 @@ Native SPL token for AptCasino.fun — live on Solana via Raydium CPMM.
 | **Freeze authority** | Revoked |
 | **Update authority** | Revoked |
 
-## Launch (Raydium CPMM)
+## Launch (Raydium CPMM fair launch)
 
 | Parameter | Value |
 |-----------|--------|
 | **Pair** | APTC/SOL |
 | **Venue** | Raydium Standard AMM (CPMM) |
-| **LP seed** | 120M APTC + 37 SOL |
+| **LP seed** | 1B APTC + 40 SOL |
 | **Fee tier** | 0.5% |
-| **Approx liquidity** | ~$5,000 |
-| **Approx launch MC** | ~$20,800 |
-| **LP burn** | ~16.67% (~20M APTC + ~6.17 SOL locked) |
+| **Approx liquidity** | ~$5,408 |
+| **Approx launch MC** | ~$2,704 |
+| **Initial price** | ~$0.000002704 |
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant T as Token creation
-    participant W as Allocations
+    participant W as Launch wallet
     participant R as Raydium CPMM
     participant D as DexScreener / Jupiter
     participant L as Listings
 
     T->>T: 1B APTC minted
     Note over T: Mint, freeze, update revoked
-    T->>W: Distribute supply
-    W->>R: 120M APTC + 37 SOL LP
-    R->>R: Burn ~16.67% LP tokens
+    T->>W: Full supply to launch wallet
+    W->>R: 1B APTC + 40 SOL LP
     R->>D: APTC/SOL pair live
     D->>L: CG / CMC applications
 ```
@@ -51,70 +50,33 @@ sequenceDiagram
 
 | Bucket | % | Amount |
 |--------|---|--------|
-| Initial liquidity | 12% | 120M |
-| Treasury & operations | 25% | 250M |
-| Staking rewards | 12% | 120M |
-| Community & ambassadors | 15% | 150M |
-| Referral rewards | 10% | 100M |
-| Partnerships & ecosystem | 10% | 100M |
-| Founder reserve | 8% | 80M |
-| Marketing & launch | 5% | 50M |
-| Competitions & airdrops | 3% | 30M |
+| Raydium LP | 100% | 1B |
 
 ```mermaid
-pie title APTC supply allocation (1B)
-    "Initial liquidity 12%" : 12
-    "Treasury 25%" : 25
-    "Staking 12%" : 12
-    "Community 15%" : 15
-    "Referrals 10%" : 10
-    "Partnerships 10%" : 10
-    "Founder 8%" : 8
-    "Marketing 5%" : 5
-    "Competitions 3%" : 3
+pie title APTC supply at TGE (1B)
+    "Raydium LP 100%" : 100
 ```
 
-## Wallet transparency
+## Launch wallet
 
 | Wallet | Amount | Address |
 |--------|--------|---------|
-| Liquidity | 120M | `CAVLQyCEycrok3Mbv5mdCbE3epGQW3ibQ447fwTLweYx` |
-| Treasury | 250M | `77WBQZcjr1eLpYDk6PrwUbSUkLw57fNyX4U7pYqrrbHM` |
-| Staking | 120M | `4Ka1vdinFUqhh3TtHaohj1MiKVUrvJBrgsVp1MfVnXFQ` |
-| Community | 150M | `6o2MnFJkPsAcrd3aQwMLPvS7S3jLqoHufPVFpjnEemdU` |
-| Referrals | 100M | `EuGB4qtHrCanacDktatYqiBGLcESBtomrE9o9vsf2PMC` |
-| Partnerships | 100M | `hCs3cwHHjTJbCKDgFQdcDRGLZm9foDaKbJAmjme8uN8` |
-| Founder reserve | 80M | `H19S7VBJweiiKhE3oFivrd43j7CAkJkWKHC2dHxDkBB` |
-| Marketing | 50M | `2HuE97iCqtwJ1QaZofezzHNbgGbuoGbZA39JXgwpGWLn` |
-| Competitions | 30M | `Cyrc6UZz1P4RqmMrmSSuYCSrzfu8w6TnYEAxGStdgHvq` |
+| Launch & LP | 1B | `CAVLQyCEycrok3Mbv5mdCbE3epGQW3ibQ447fwTLweYx` |
 
-## GGR buyback flywheel
+## GGR flywheel
 
-```mermaid
-flowchart LR
-    PLAY[Player bets] --> GGR[House edge GGR]
-    GGR --> BB[30% GGR buyback budget]
-    BB --> MKT[Raydium / Jupiter market buy]
-    MKT --> BURN[50% burn]
-    MKT --> STAKE[35% stakers]
-    MKT --> TRES[15% treasury]
-```
+30% of gross gaming revenue funds open-market APTC buybacks on Raydium and Jupiter. Split (configurable via env):
 
-Env-driven defaults — see `.env.example` (`GGR_*` vars).
+- Burn
+- Staker rewards
+- Treasury runway
 
-## Listings roadmap
+See `/api/ggr/buyback` and litepaper § GGR.
 
-### Tier 1 — DEX & trader tools
-Raydium · DexScreener · Jupiter · Birdeye · GeckoTerminal
+## Links
 
-### Tier 2 — Data aggregators
-CoinGecko · CoinMarketCap
-
-### Tier 3 — CEX listings
-MEXC · Gate.io · KuCoin · Bybit · OKX · Binance
-
-## Related
-
-- Site tokenomics: [aptcasino.fun/#tokenomics](https://aptcasino.fun/#tokenomics)
-- Litepaper: [aptcasino.fun/litepaper](https://aptcasino.fun/litepaper)
-- Config source: `src/lib/config/tokenomics.js`
+- **Website:** https://aptcasino.fun/
+- **Stake:** https://aptcasino.fun/stake
+- **Litepaper:** https://aptcasino.fun/litepaper
+- **DexScreener:** https://dexscreener.com/solana/C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL
+- **Solscan:** https://solscan.io/token/C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL
