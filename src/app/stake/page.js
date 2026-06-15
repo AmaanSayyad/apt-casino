@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import PageShell from '@/components/layout/PageShell';
 import {
   FaChartLine,
@@ -47,9 +48,18 @@ function fmtDate(input) {
   return d.toLocaleString();
 }
 
+function fmtStakeAmount(n) {
+  if (!Number.isFinite(n) || n <= 0) return '';
+  const rounded = Math.floor(n * 1e6) / 1e6;
+  return String(rounded);
+}
+
 export default function StakePage() {
   const { publicKey, connected } = useWallet();
+  const { connection } = useConnection();
   const address = publicKey?.toBase58() || null;
+
+  const [aptcBalance, setAptcBalance] = useState(null);
 
   const [pools, setPools] = useState([]);
   const [positions, setPositions] = useState([]);
@@ -97,11 +107,30 @@ export default function StakePage() {
     }
   }, [address]);
 
+  const refreshAptcBalance = useCallback(async () => {
+    if (!address || !APTC_MINT || !connection) {
+      setAptcBalance(null);
+      return;
+    }
+    try {
+      const res = await connection.getParsedTokenAccountsByOwner(new PublicKey(address), {
+        mint: new PublicKey(APTC_MINT),
+      });
+      const bal = res.value.reduce(
+        (sum, acc) => sum + Number(acc.account.data.parsed.info.tokenAmount.uiAmount || 0),
+        0,
+      );
+      setAptcBalance(bal);
+    } catch {
+      setAptcBalance(null);
+    }
+  }, [address, connection]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      await Promise.all([refreshStats(), refreshPools(), refreshPositions()]);
+      await Promise.all([refreshStats(), refreshPools(), refreshPositions(), refreshAptcBalance()]);
       if (!cancelled) setLoading(false);
     })();
     const id = setInterval(refreshStats, 60_000);
@@ -109,7 +138,7 @@ export default function StakePage() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [refreshStats, refreshPools, refreshPositions]);
+  }, [refreshStats, refreshPools, refreshPositions, refreshAptcBalance]);
 
   useEffect(() => {
     if (!calcPoolKey && pools.length) setCalcPoolKey(pools[0].pool_key);
@@ -139,6 +168,28 @@ export default function StakePage() {
   const calcRoiPct = calcPrincipal > 0 ? (calcReward / calcPrincipal) * 100 : 0;
   const calcDaily = calcDays > 0 ? calcReward / calcDays : 0;
   const calcMonthly = calcDays > 0 ? calcReward * (30 / calcDays) : 0;
+
+  const setMaxForPool = useCallback(
+    (pool) => {
+      setError(null);
+      if (!connected || !address) {
+        setError('Connect your wallet first.');
+        return;
+      }
+      if (aptcBalance == null || aptcBalance <= 0) {
+        setError('No APTC balance found in your wallet.');
+        return;
+      }
+      let max = aptcBalance;
+      if (pool.max_stake) max = Math.min(max, Number(pool.max_stake));
+      if (max < Number(pool.min_stake || 0)) {
+        setError(`Wallet balance is below the ${fmtNum(pool.min_stake)} APTC minimum for this pool.`);
+        return;
+      }
+      setAmountByPool((prev) => ({ ...prev, [pool.pool_key]: fmtStakeAmount(max) }));
+    },
+    [address, aptcBalance, connected],
+  );
 
   const handleStake = useCallback(
     async (pool) => {
@@ -187,14 +238,14 @@ export default function StakePage() {
 
         setAmountByPool((prev) => ({ ...prev, [pool.pool_key]: '' }));
         setSuccess(`Staked ${fmtNum(amount)} APTC in the ${pool.lock_days}-day pool.`);
-        await Promise.all([refreshPositions(), refreshStats()]);
+        await Promise.all([refreshPositions(), refreshStats(), refreshAptcBalance()]);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to stake');
       } finally {
         setSubmittingPool(null);
       }
     },
-    [address, amountByPool, refreshPositions, refreshStats],
+    [address, amountByPool, refreshPositions, refreshStats, refreshAptcBalance],
   );
 
   const handleClaim = useCallback(
@@ -427,15 +478,29 @@ export default function StakePage() {
                           setAmountByPool((prev) => ({ ...prev, [pool.pool_key]: e.target.value }))
                         }
                         placeholder="Amount"
-                        className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-purple-400/60"
+                        className="min-w-0 flex-1 rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-purple-400/60"
                         disabled={!connected || !STAKING_ENABLED}
                       />
                       <button
+                        type="button"
                         onClick={() => void handleStake(pool)}
                         disabled={disabled}
-                        className="rounded-xl border border-purple-400/30 bg-purple-500/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-purple-200 transition-all duration-200 hover:bg-purple-500/25 hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                        className="shrink-0 rounded-xl border border-purple-400/30 bg-purple-500/15 px-4 py-2 text-xs font-bold uppercase tracking-widest text-purple-200 transition-all duration-200 hover:bg-purple-500/25 hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {submittingPool === pool.pool_key ? 'Staking…' : 'Stake'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMaxForPool(pool)}
+                        disabled={disabled || aptcBalance == null || aptcBalance <= 0}
+                        className="shrink-0 rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2 text-xs font-bold uppercase tracking-widest text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                        title={
+                          aptcBalance != null
+                            ? `Use full wallet balance (${fmtNum(aptcBalance)} APTC)`
+                            : 'Wallet balance unavailable'
+                        }
+                      >
+                        Max
                       </button>
                     </div>
 
