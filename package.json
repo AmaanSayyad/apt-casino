@@ -16,6 +16,9 @@
     "deploy:aptos": "node move-contracts/scripts/deploy-aptos.mjs",
     "bootstrap:aptos": "node move-contracts/scripts/bootstrap-aptos-onchain.mjs",
     "seed:roadmap": "node scripts/seed-roadmap.mjs",
+    "aptc:launch:dry": "node scripts/aptc-launch/create-aptc-token.mjs --dry-run",
+    "aptc:launch": "node scripts/aptc-launch/create-aptc-token.mjs",
+    "aptc:launch:resume": "node scripts/aptc-launch/resume-launch.mjs",
     "compile:aptos": "node move-contracts/scripts/compile-aptos.mjs",
     "deploy:plinko": "echo 'Use: cd move-contracts/plinko-only && aptos move publish ... (see README)' && exit 1",
     "deploy:game-logger": "node scripts/deploy-game-logger.js",
@@ -88,6 +91,7 @@
     "three": "^0.184.0"
   },
   "devDependencies": {
+    "@metaplex-foundation/mpl-token-metadata": "^2.13.0",
     "@types/node": "25.9.1",
     "patch-package": "^8.0.1",
     "tailwind-scrollbar": "^3.0.4",

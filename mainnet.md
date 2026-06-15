@@ -6,16 +6,16 @@ Checklist for launching APT Casino on production infrastructure. Solana is the p
 
 ## APTC token (live)
 
-- [x] SPL mint created — `AptCYjLJmZuWC6vWYfeZf7catWrhX9XCbiZir1PopNZU`
+- [x] SPL mint created — `AptCc7pmHrcnvouoSK4nKdQhLC7B5qA4r8gZaSTcEnj7`
 - [x] Mint, freeze, update authorities revoked
 - [x] Nine-wallet distribution (see [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md))
-- [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in Vercel production
+- [x] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production
 - [ ] Raydium CPMM pool live (120M APTC + 37 SOL)
 - [ ] ~16.67% LP token burn
 - [ ] DexScreener Enhanced Token Info submitted
 - [ ] Jupiter routing visible on pair
 - [ ] CoinGecko & CoinMarketCap applications submitted
-- [ ] Enable staking when vault wired: `APTC_STAKING_ENABLED=true`
+- [x] Enable staking: `APTC_STAKING_ENABLED=true` · vault `4Ka1vdinFUqhh3TtHaohj1MiKVUrvJBrgsVp1MfVnXFQ`
 
 ```mermaid
 sequenceDiagram

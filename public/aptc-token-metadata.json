@@ -1,0 +1,35 @@
+{
+  "name": "AptCasino.fun",
+  "symbol": "APTC",
+  "description": "The First Fully On-Chain Casino, Powered by @PythNetwork x @Chainlink 6-block VRF. Grantee @Aptos x @Solana x @Movement_xyz",
+  "image": "https://aptcasino.fun/APTC_logo_1000x1000.png",
+  "external_url": "https://aptcasino.fun/",
+  "attributes": [],
+  "properties": {
+    "category": "token",
+    "creators": [
+      {
+        "name": "AptCasino.fun",
+        "site": "https://aptcasino.fun/"
+      }
+    ],
+    "files": [
+      {
+        "uri": "https://aptcasino.fun/APTC_logo_1000x1000.png",
+        "type": "image/png"
+      }
+    ],
+    "links": {
+      "website": "https://aptcasino.fun/",
+      "twitter": "https://x.com/AptCasinofun",
+      "telegram": "https://t.me/apt_casino",
+      "telegram_announcements": "https://t.me/aptcasinoannouncements",
+      "discord": "https://discord.gg/fsY4WnTnE9",
+      "litepaper": "https://aptcasino.fun/litepaper",
+      "pitch_deck": "https://www.figma.com/deck/pQc6GTjM3a8sXqbuGHyu1Z",
+      "github": "https://github.com/AmaanSayyad/apt-casino",
+      "stake": "https://aptcasino.fun/stake",
+      "otc_lottery": "https://aptcasino.fun/otc-lottery"
+    }
+  }
+}

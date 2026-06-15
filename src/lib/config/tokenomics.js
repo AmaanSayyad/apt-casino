@@ -9,7 +9,7 @@ export const APTC_TOKENOMICS = {
   chain: 'Solana (SPL)',
   maxSupply: '1,000,000,000',
   decimals: 6,
-  mint: 'AptCYjLJmZuWC6vWYfeZf7catWrhX9XCbiZir1PopNZU',
+  mint: 'AptCc7pmHrcnvouoSK4nKdQhLC7B5qA4r8gZaSTcEnj7',
   launchVenue: 'Raydium CPMM',
   launch:
     'Raydium CPMM · 120M APTC + 37 SOL · 0.5% fee · mint, freeze & update revoked · nine labeled wallets.',
