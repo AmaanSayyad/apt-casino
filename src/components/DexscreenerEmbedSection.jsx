@@ -52,8 +52,8 @@ export default function DexscreenerEmbedSection() {
   const mintConfigured = Boolean(stats?.mint);
 
   return (
-    <section className="apt-dex-section border-y border-white/[0.06] bg-[#070005] py-16 md:py-20 px-4 md:px-8 lg:px-12">
-      <div className="max-w-6xl mx-auto">
+    <section className="apt-dex-section border-y border-white/[0.06] bg-[#070005] py-16 md:py-20 site-page-pad-x">
+      <div className="max-w-[1480px] mx-auto w-full">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
             <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 mb-4">

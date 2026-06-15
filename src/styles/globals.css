@@ -427,12 +427,12 @@ body {
 .apt-dex-embed-frame {
   position: relative;
   width: 100%;
-  height: 480px;
+  height: clamp(420px, 62vh, 720px);
 }
 
 @media (max-width: 768px) {
   .apt-dex-embed-frame {
-    height: 380px;
+    height: clamp(380px, 52vh, 520px);
   }
 }
 
@@ -445,13 +445,13 @@ body {
 }
 
 .apt-dex-embed-placeholder {
-  min-height: 320px;
+  min-height: clamp(380px, 52vh, 520px);
   background: linear-gradient(180deg, #0a0008 0%, #120010 100%);
 }
 
 @media (max-width: 768px) {
   .apt-dex-embed-placeholder {
-    min-height: 280px;
+    min-height: 320px;
   }
 }
 
