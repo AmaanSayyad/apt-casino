@@ -9,6 +9,12 @@
 
 export const APTC_SOLANA_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT || '';
 
+/** Raydium CPMM pool — preferred for DexScreener quotes (more accurate than token-wide scan). */
+const APTC_DEX_PAIR =
+  process.env.NEXT_PUBLIC_APTC_DEXSCREENER_PAIR?.trim() ||
+  process.env.APTC_RAYDIUM_POOL_ADDRESS?.trim() ||
+  'BmsnkJ5aDU5XDmdHqZhk5ifRoGVUwqKTU715gi7fxE29';
+
 export type DexscreenerStats = {
   priceUsd: number | null;
   marketCapUsd: number | null;
@@ -42,8 +48,25 @@ function num(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-export async function fetchAptcDexscreenerStats(): Promise<DexscreenerStats> {
-  const empty: DexscreenerStats = {
+function pairToStats(top: DexscreenerPair, mint: string | null): DexscreenerStats {
+  return {
+    priceUsd: num(top.priceUsd),
+    marketCapUsd: num(top.marketCap),
+    fdvUsd: num(top.fdv),
+    liquidityUsd: num(top.liquidity?.usd),
+    volume24hUsd: num(top.volume?.h24),
+    priceChange24h: num(top.priceChange?.h24),
+    pairUrl: top.url ?? null,
+    pairAddress: top.pairAddress ?? null,
+    dexId: top.dexId ?? null,
+    source: 'dexscreener',
+    mint,
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+function emptyStats(mint: string | null): DexscreenerStats {
+  return {
     priceUsd: null,
     marketCapUsd: null,
     fdvUsd: null,
@@ -54,44 +77,63 @@ export async function fetchAptcDexscreenerStats(): Promise<DexscreenerStats> {
     pairAddress: null,
     dexId: null,
     source: 'dexscreener',
-    mint: APTC_SOLANA_MINT || null,
+    mint,
     fetchedAt: new Date().toISOString(),
   };
+}
 
-  if (!APTC_SOLANA_MINT) return empty;
-
+async function fetchDexscreenerJson(url: string): Promise<unknown | null> {
   try {
-    const res = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${APTC_SOLANA_MINT}`,
-      { cache: 'no-store', signal: AbortSignal.timeout(10_000) },
-    );
-    if (!res.ok) return empty;
-
-    const data = (await res.json()) as { pairs?: DexscreenerPair[] };
-    const pairs = Array.isArray(data?.pairs) ? data.pairs : [];
-    if (pairs.length === 0) return empty;
-
-    // Most-liquid pair wins (avoids stale / illiquid prints).
-    const sorted = [...pairs].sort(
-      (a, b) => Number(b?.liquidity?.usd ?? 0) - Number(a?.liquidity?.usd ?? 0),
-    );
-    const top = sorted[0] || {};
-
-    return {
-      priceUsd: num(top.priceUsd),
-      marketCapUsd: num(top.marketCap),
-      fdvUsd: num(top.fdv),
-      liquidityUsd: num(top.liquidity?.usd),
-      volume24hUsd: num(top.volume?.h24),
-      priceChange24h: num(top.priceChange?.h24),
-      pairUrl: top.url ?? null,
-      pairAddress: top.pairAddress ?? null,
-      dexId: top.dexId ?? null,
-      source: 'dexscreener',
-      mint: APTC_SOLANA_MINT,
-      fetchedAt: new Date().toISOString(),
-    };
+    const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return null;
+    return await res.json();
   } catch {
-    return empty;
+    return null;
   }
+}
+
+async function fetchPairDexscreenerStats(
+  pairAddress: string,
+  mint: string | null,
+): Promise<DexscreenerStats | null> {
+  const data = (await fetchDexscreenerJson(
+    `https://api.dexscreener.com/latest/dex/pairs/solana/${pairAddress}`,
+  )) as { pair?: DexscreenerPair; pairs?: DexscreenerPair[] } | null;
+  if (!data) return null;
+
+  const pair = data.pair ?? (Array.isArray(data.pairs) ? data.pairs[0] : null);
+  if (!pair?.priceUsd) return null;
+  return pairToStats(pair, mint);
+}
+
+async function fetchTokenDexscreenerStats(mint: string): Promise<DexscreenerStats | null> {
+  const data = (await fetchDexscreenerJson(
+    `https://api.dexscreener.com/latest/dex/tokens/${mint}`,
+  )) as { pairs?: DexscreenerPair[] } | null;
+  if (!data) return null;
+
+  const pairs = Array.isArray(data?.pairs) ? data.pairs : [];
+  if (pairs.length === 0) return null;
+
+  const sorted = [...pairs].sort(
+    (a, b) => Number(b?.liquidity?.usd ?? 0) - Number(a?.liquidity?.usd ?? 0),
+  );
+  const top = sorted[0];
+  if (!top?.priceUsd) return null;
+  return pairToStats(top, mint);
+}
+
+export async function fetchAptcDexscreenerStats(): Promise<DexscreenerStats> {
+  const mint = APTC_SOLANA_MINT || null;
+  const empty = emptyStats(mint);
+
+  if (APTC_DEX_PAIR) {
+    const fromPair = await fetchPairDexscreenerStats(APTC_DEX_PAIR, mint);
+    if (fromPair?.priceUsd != null) return fromPair;
+  }
+
+  if (!mint) return empty;
+
+  const fromToken = await fetchTokenDexscreenerStats(mint);
+  return fromToken ?? empty;
 }

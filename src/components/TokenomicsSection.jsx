@@ -31,16 +31,33 @@ export default function TokenomicsSection() {
   const [marketLoading, setMarketLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const loadMarket = () => {
+      fetch('/api/staking/aptc-stats', { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((data) => {
+          if (!cancelled) setMarket(data);
+        })
+        .catch(() => {
+          if (!cancelled) setMarket(null);
+        })
+        .finally(() => {
+          if (!cancelled) setMarketLoading(false);
+        });
+    };
+
     fetch('/api/ggr/buyback')
       .then((r) => r.json())
       .then(setBuyback)
       .catch(() => {});
 
-    fetch('/api/staking/aptc-stats')
-      .then((r) => r.json())
-      .then(setMarket)
-      .catch(() => {})
-      .finally(() => setMarketLoading(false));
+    loadMarket();
+    const id = setInterval(loadMarket, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
 
   const cfg = buyback?.config;
@@ -50,12 +67,12 @@ export default function TokenomicsSection() {
     pairUrl: market?.pairUrl ?? undefined,
   });
 
-  const priceUsd = market?.priceUsd ?? m.approxTokenPriceUsd;
-  const mcapUsd = market?.marketCapUsd ?? m.approxMarketCapUsd;
-  const liqUsd = market?.liquidityUsd ?? m.approxLiquidityUsd;
-  const vol24h = market?.volume24hUsd;
-  const priceChange24h = market?.priceChange24h;
   const hasLiveMarket = market?.priceUsd != null;
+  const priceUsd = hasLiveMarket ? market.priceUsd : null;
+  const mcapUsd = market?.marketCapUsd ?? market?.fdvUsd ?? null;
+  const liqUsd = market?.liquidityUsd ?? null;
+  const vol24h = market?.volume24hUsd ?? null;
+  const priceChange24h = market?.priceChange24h ?? null;
 
   return (
     <section id="tokenomics" className="py-16 md:py-24 px-4 md:px-8 lg:px-16 bg-[#070005]">
@@ -103,13 +120,19 @@ export default function TokenomicsSection() {
             {/* Live ticker */}
             <div className="rounded-2xl border border-white/10 bg-[#120010] p-4 md:p-5 w-full lg:max-w-md shrink-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40 mb-3">
-                {hasLiveMarket ? 'Live market' : 'Launch metrics'}
+                {hasLiveMarket ? 'Live market · DexScreener' : 'Market data'}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <TickerStat
                   label="Price"
                   value={fmtPrice(priceUsd)}
-                  sub={priceChange24h != null ? `${priceChange24h >= 0 ? '+' : ''}${priceChange24h.toFixed(2)}% 24h` : 'APTC/USD'}
+                  sub={
+                    priceChange24h != null
+                      ? `${priceChange24h >= 0 ? '+' : ''}${priceChange24h.toFixed(2)}% 24h`
+                      : hasLiveMarket
+                        ? 'APTC/USD'
+                        : 'Unavailable'
+                  }
                   loading={marketLoading}
                 />
                 <TickerStat label="Market cap" value={fmtUsdCompact(mcapUsd)} loading={marketLoading} />
@@ -120,6 +143,11 @@ export default function TokenomicsSection() {
                   loading={marketLoading}
                 />
               </div>
+              {!marketLoading && !hasLiveMarket && (
+                <p className="mt-3 text-[10px] text-amber-200/70 leading-relaxed">
+                  Live quotes load from DexScreener. If this stays empty, hard-refresh or open the chart link below.
+                </p>
+              )}
               <a
                 href={solscanTokenUrl(APTC_TOKENOMICS.mint)}
                 target="_blank"
