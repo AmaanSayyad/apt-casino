@@ -47,7 +47,8 @@ async function getStakingTotals(): Promise<{ activeAptc: number; activePositions
   const { data, error } = await supabase
     .from('staking_positions')
     .select('amount')
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .not('tx_hash', 'is', null);
 
   if (error || !data) return { activeAptc: 0, activePositions: 0 };
 

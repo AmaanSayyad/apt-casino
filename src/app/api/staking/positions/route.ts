@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
       'id, pool_key, lock_days, apy_bps, amount, start_at, unlock_at, status, reward_amount, total_payout, claimed_at, tx_hash',
     )
     .eq('user_address', userAddress)
+    .not('tx_hash', 'is', null)
     .order('created_at', { ascending: false })
     .limit(200);
 
