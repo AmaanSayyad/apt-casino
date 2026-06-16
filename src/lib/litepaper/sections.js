@@ -131,7 +131,7 @@ export const LITEPAPER_SECTIONS = [
       'APT-Casino is a Next.js application with chain-specific API routes under /api/chains/{chainId}/, Supabase for profiles, balances, referrals, and audit logs, and Move contracts on Aptos for core game logic.',
       'Sensitive writes (deposits, withdrawals, referral unlocks, GGR estimates) run server-side with service-role Supabase and validated env economics — never trusted from the client alone.',
       'Live features (streaming, chat) sit beside the gaming core: Livepeer for video, Socket.IO for real-time messages bound to wallet identity.',
-      'APTC lives on Solana (SPL); price and market stats integrate via DexScreener when NEXT_PUBLIC_APTC_SOLANA_MINT is configured.',
+      'APTC lives on Solana (SPL); price and market stats integrate via DexScreener and display automatically when the token launches on Raydium.',
     ],
     mermaid: `flowchart LR
     U[Player Wallet] --> FE[Next.js Client]

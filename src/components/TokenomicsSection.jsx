@@ -10,6 +10,7 @@ import {
   APTC_UTILITY,
   solscanTokenUrl,
 } from '@/lib/config/tokenomics';
+import { isAptcLaunched, getLaunchStatusText } from '@/lib/config/launchStatus';
 
 const AllocationDonut = dynamic(
   () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.AllocationDonut),
@@ -20,29 +21,59 @@ const BuybackSplitDonut = dynamic(
   { ssr: false, loading: () => <ChartSkeleton height={220} /> },
 );
 
-const _MINT = APTC_TOKENOMICS.mint;
-const TRADE_TOOLS = [
-  { id: 'raydium',      label: 'Raydium',       logo: '/logos/Raydium.png',          href: `https://raydium.io/swap/?inputMint=So11111111111111111111111111111111111111112&outputMint=${_MINT}` },
-  { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/swap/SOL-${_MINT}` },
-  { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
-  { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana/${_MINT}` },
-  { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: `https://birdeye.so/token/${_MINT}?chain=solana` },
-  { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/solana/tokens/${_MINT}` },
-  { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/app/en/solana/pair-explorer/${_MINT}` },
-  { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: `https://gmgn.ai/sol/token/${_MINT}` },
-  { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: `https://axiom.trade/t/${_MINT}` },
-  { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: `https://photon-sol.tinyastro.io/en/r/@launch/${_MINT}` },
-  { id: 'pumpfun',      label: 'Pump.fun',       logo: '/logos/pumpfun-logo.png',      href: 'https://pump.fun/' },
-  { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: `https://www.coingecko.com/en/coins/${_MINT}` },
-  { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: 'https://coinmarketcap.com/currencies/aptcasino/' },
-  { id: 'bubblemaps',   label: 'Bubblemaps',     logo: '/logos/bubblemaps.png',        href: `https://app.bubblemaps.io/sol/token/${_MINT}` },
-  { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: `https://solscan.io/token/${_MINT}` },
-];
+const _MINT = 'TBD';
+
+/** Get trade tools with conditional URLs based on launch status */
+function getTradeTools() {
+  const launched = isAptcLaunched();
+  const mint = APTC_TOKENOMICS.mint;
+  
+  if (!launched) {
+    // Pre-launch: generic URLs
+    return [
+      { id: 'raydium',      label: 'Raydium',       logo: '/logos/Raydium.png',          href: `https://raydium.io/` },
+      { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/` },
+      { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
+      { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana` },
+      { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: `https://birdeye.so/` },
+      { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/` },
+      { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/` },
+      { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: `https://gmgn.ai/` },
+      { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: `https://axiom.trade/` },
+      { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: `https://photon-sol.tinyastro.io/` },
+      { id: 'pumpfun',      label: 'Pump.fun',       logo: '/logos/pumpfun-logo.png',      href: 'https://pump.fun/' },
+      { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: `https://www.coingecko.com/` },
+      { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: 'https://coinmarketcap.com/' },
+      { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: `https://solscan.io/` },
+    ];
+  }
+  
+  // Post-launch: token-specific URLs
+  return [
+    { id: 'raydium',      label: 'Raydium',       logo: '/logos/Raydium.png',          href: `https://raydium.io/swap/?inputMint=So11111111111111111111111111111111111111112&outputMint=${mint}` },
+    { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/swap/SOL-${mint}` },
+    { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
+    { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana/${mint}` },
+    { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: `https://birdeye.so/token/${mint}?chain=solana` },
+    { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/solana/pools/${mint}` },
+    { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/app/en/solana/pair-explorer/${mint}` },
+    { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: `https://gmgn.ai/sol/token/${mint}` },
+    { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: `https://axiom.trade/token/${mint}` },
+    { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: `https://photon-sol.tinyastro.io/en/lp/${mint}` },
+    { id: 'pumpfun',      label: 'Pump.fun',       logo: '/logos/pumpfun-logo.png',      href: 'https://pump.fun/' },
+    { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: `https://www.coingecko.com/en/coins/${mint}` },
+    { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: `https://coinmarketcap.com/currencies/${mint}/` },
+    { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: `https://solscan.io/token/${mint}` },
+  ];
+}
 
 export default function TokenomicsSection() {
   const [buyback, setBuyback] = useState(null);
   const [market, setMarket] = useState(null);
   const [marketLoading, setMarketLoading] = useState(true);
+  const launched = isAptcLaunched();
+  const mint = APTC_TOKENOMICS.mint;
+  const TRADE_TOOLS = getTradeTools(); // Call at render time to get current launch status
 
   useEffect(() => {
     let cancelled = false;
@@ -92,9 +123,9 @@ export default function TokenomicsSection() {
         {/* Section heading */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 mb-4">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+            <span className={`w-2 h-2 rounded-full shrink-0 ${launched ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400 animate-pulse'}`} />
             <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/70">
-              $APTC · Live on Solana
+              {launched ? '$APTC · Live on Solana' : '$APTC · Launching Soon'}
             </span>
           </div>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-[1.08]">
@@ -160,15 +191,29 @@ export default function TokenomicsSection() {
                   Targets from Raydium pool seed (1B APTC + 40 SOL). Live quotes appear once indexed.
                 </p>
               )}
-              <a
-                href={solscanTokenUrl(APTC_TOKENOMICS.mint)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs font-mono text-white/70 hover:text-white hover:border-white/20 transition-colors"
-              >
-                <span className="truncate">{APTC_TOKENOMICS.mint}</span>
-                <span className="shrink-0 text-white/45">Solscan ↗</span>
-              </a>
+              <div className={`mt-4 flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs ${
+                launched 
+                  ? 'border-emerald-500/30 bg-emerald-500/10' 
+                  : 'border-amber-500/30 bg-amber-500/10'
+              }`}>
+                {launched ? (
+                  <>
+                    <span className="text-emerald-200/90 font-medium truncate flex-1">
+                      {mint}
+                    </span>
+                    <a
+                      href={solscanTokenUrl(mint)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-emerald-300 hover:text-emerald-100 transition-colors font-medium whitespace-nowrap"
+                    >
+                      Solscan →
+                    </a>
+                  </>
+                ) : (
+                  <span className="text-amber-200/90 font-medium">Token address: Launching soon</span>
+                )}
+              </div>
             </div>
 
             {/* Launch stats + trade & research grid */}

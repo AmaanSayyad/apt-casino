@@ -427,12 +427,19 @@ body {
 .apt-dex-embed-frame {
   position: relative;
   width: 100%;
-  height: clamp(420px, 62vh, 720px);
+  /* Tall enough for chart + pair stats + trades without cramped internal scroll */
+  height: clamp(640px, 78vh, 960px);
+}
+
+@media (min-width: 1280px) {
+  .apt-dex-embed-frame {
+    height: min(82vh, 980px);
+  }
 }
 
 @media (max-width: 768px) {
   .apt-dex-embed-frame {
-    height: clamp(380px, 52vh, 520px);
+    height: clamp(520px, 72vh, 720px);
   }
 }
 
@@ -445,13 +452,13 @@ body {
 }
 
 .apt-dex-embed-placeholder {
-  min-height: clamp(380px, 52vh, 520px);
+  min-height: clamp(640px, 78vh, 960px);
   background: linear-gradient(180deg, #0a0008 0%, #120010 100%);
 }
 
 @media (max-width: 768px) {
   .apt-dex-embed-placeholder {
-    min-height: 320px;
+    min-height: clamp(520px, 72vh, 720px);
   }
 }
 

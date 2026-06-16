@@ -1,69 +1,131 @@
 /**
- * Minimal Solana JSON-RPC helpers for OTC lottery deposit detection.
+ * Solana JSON-RPC helpers for OTC lottery deposit detection.
+ * Uses multi-endpoint polling — public RPCs often lag after wallet confirmation.
  */
 
-const DEFAULT_RPC = 'https://api.mainnet-beta.solana.com';
+import { Connection, PublicKey, type ParsedTransactionWithMeta } from '@solana/web3.js';
+import { getSolanaRpcEndpoint } from '@/lib/solana/config';
 
-export function getSolanaRpcUrl(): string {
-  return process.env.SOLANA_RPC_URL || process.env.NEXT_PUBLIC_SOLANA_RPC_URL || DEFAULT_RPC;
+const LAMPORTS_PER_SOL = 1_000_000_000;
+
+function verificationRpcEndpoints(): string[] {
+  const primary = getSolanaRpcEndpoint().replace(/\/+$/, '');
+  return [
+    ...new Set(
+      [
+        primary,
+        'https://solana-rpc.publicnode.com',
+        'https://rpc.ankr.com/solana',
+        'https://api.mainnet-beta.solana.com',
+      ].filter(Boolean),
+    ),
+  ];
 }
 
-async function rpc<T>(method: string, params: unknown[]): Promise<T> {
-  const res = await fetch(getSolanaRpcUrl(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
-    cache: 'no-store',
-  });
-  const json = await res.json();
-  if (json.error) {
-    throw new Error(json.error.message || 'Solana RPC error');
+function messageAccountKeysBase58(parsed: ParsedTransactionWithMeta): string[] {
+  const meta = parsed.meta;
+  const message = parsed.transaction.message as {
+    accountKeys?: unknown[];
+    getAccountKeys?: (args: {
+      accountKeysFromLookups?: ParsedTransactionWithMeta['meta'] extends infer M
+        ? M extends { loadedAddresses?: infer L }
+          ? L
+          : never
+        : never;
+    }) => { keySegments: () => PublicKey[][] };
+  };
+
+  if (typeof message.getAccountKeys === 'function') {
+    try {
+      const keys = message.getAccountKeys({
+        accountKeysFromLookups: meta?.loadedAddresses,
+      });
+      return keys.keySegments().flat().map((k) => k.toBase58());
+    } catch {
+      /* fall through */
+    }
   }
-  return json.result as T;
+
+  const keys = message.accountKeys ?? [];
+  return keys.map((k) => {
+    if (typeof k === 'string') return k;
+    const obj = k as { pubkey?: PublicKey; toBase58?: () => string };
+    if (obj.pubkey) return obj.pubkey.toBase58();
+    if (obj.toBase58) return obj.toBase58();
+    return '';
+  });
 }
 
 type SigInfo = { signature: string; blockTime: number | null; err: unknown };
 
 export async function getRecentSignaturesForAddress(address: string, limit = 40): Promise<SigInfo[]> {
-  const result = await rpc<SigInfo[] | null>('getSignaturesForAddress', [
-    address,
-    { limit },
-  ]);
-  return result || [];
+  for (const rpc of verificationRpcEndpoints()) {
+    try {
+      const connection = new Connection(rpc, {
+        commitment: 'confirmed',
+        disableRetryOnRateLimit: true,
+      });
+      const result = await connection.getSignaturesForAddress(new PublicKey(address), { limit });
+      return result.map((s) => ({
+        signature: s.signature,
+        blockTime: s.blockTime ?? null,
+        err: s.err,
+      }));
+    } catch {
+      /* try next RPC */
+    }
+  }
+  return [];
 }
 
-type TxResult = {
-  blockTime: number | null;
-  meta: {
-    err: unknown;
-    preBalances: number[];
-    postBalances: number[];
-  } | null;
-  transaction: {
-    message: {
-      accountKeys: string[];
-    };
-  };
-};
+/** Poll multiple RPCs until a confirmed tx is indexed (up to ~30s). */
+export async function fetchTransactionWithRetries(
+  signature: string,
+  maxMs = 30_000,
+): Promise<ParsedTransactionWithMeta | null> {
+  const endpoints = verificationRpcEndpoints();
+  const deadline = Date.now() + maxMs;
+  let delayMs = 400;
 
-export async function getTransaction(signature: string): Promise<TxResult | null> {
-  const result = await rpc<TxResult | null>('getTransaction', [
-    signature,
-    { encoding: 'json', maxSupportedTransactionVersion: 0 },
-  ]);
-  return result;
+  while (Date.now() < deadline) {
+    for (const rpc of endpoints) {
+      try {
+        const connection = new Connection(rpc, {
+          commitment: 'confirmed',
+          disableRetryOnRateLimit: true,
+        });
+        const parsed = await connection.getParsedTransaction(signature, {
+          maxSupportedTransactionVersion: 0,
+          commitment: 'confirmed',
+        });
+        if (parsed?.meta && !parsed.meta.err) {
+          return parsed;
+        }
+      } catch {
+        /* try next endpoint */
+      }
+    }
+    await new Promise((r) => setTimeout(r, delayMs));
+    delayMs = Math.min(delayMs + 150, 2000);
+  }
+
+  return null;
 }
 
-const LAMPORTS_PER_SOL = 1_000_000_000;
+/** @deprecated Use fetchTransactionWithRetries — single-shot often returns null on fresh txs. */
+export async function getTransaction(signature: string): Promise<ParsedTransactionWithMeta | null> {
+  return fetchTransactionWithRetries(signature, 8_000);
+}
 
 /** Find inbound SOL transfer from sender to treasury in a confirmed tx. */
 export function parseSolTransferToTreasury(
-  tx: TxResult,
+  tx: ParsedTransactionWithMeta,
   treasury: string,
   expectedSender?: string,
 ): { sender: string; lamports: number; blockTime: Date } | null {
   if (!tx?.meta || tx.meta.err) return null;
-  const keys = tx.transaction?.message?.accountKeys || [];
+
+  const keys = messageAccountKeysBase58(tx);
   const treasuryIdx = keys.findIndex((k) => k === treasury);
   if (treasuryIdx < 0) return null;
 
@@ -89,9 +151,7 @@ export function parseSolTransferToTreasury(
   }
   if (!sender) return null;
 
-  const blockTime = tx.blockTime
-    ? new Date(tx.blockTime * 1000)
-    : new Date();
+  const blockTime = tx.blockTime ? new Date(tx.blockTime * 1000) : new Date();
 
   return { sender, lamports: treasuryGain, blockTime };
 }

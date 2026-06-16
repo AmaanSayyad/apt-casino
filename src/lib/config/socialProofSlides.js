@@ -4,17 +4,6 @@
 
 export const ADVISORY_BOARD = [
   {
-    id: 'naresh',
-    src: '/Naresh.PNG',
-    alt: 'Naresh Kumar — Global Expansion at Aptos',
-    name: 'Naresh Kumar',
-    role: 'Global Expansion',
-    org: 'Aptos',
-    blurred: false,
-    accent: 'cyan',
-    xUrl: 'https://x.com/NareshKx',
-  },
-  {
     id: 'rahat',
     src: '/Rahat%20Movement.PNG',
     alt: 'Rahat Chowdhury — Head of DevRel at Movement',

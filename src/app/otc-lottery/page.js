@@ -198,7 +198,10 @@ export default function OtcLotteryPage() {
     );
   }, []);
 
-  const detectDepositWithRetries = async (wallet, { maxAttempts = 6, delayMs = 2500 } = {}) => {
+  const detectDepositWithRetries = async (
+    wallet,
+    { maxAttempts = 8, delayMs = 3000, signature } = {},
+  ) => {
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       setDetectStatus(
         attempt === 1
@@ -208,13 +211,17 @@ export default function OtcLotteryPage() {
       const res = await fetch('/api/otc-lottery/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solSenderWallet: wallet, aptcReceiveWallet: wallet }),
+        body: JSON.stringify({
+          solSenderWallet: wallet,
+          aptcReceiveWallet: wallet,
+          ...(signature ? { solTxSignature: signature } : {}),
+        }),
       });
       const json = await res.json();
       if (res.ok && json.entry) {
         return json.entry;
       }
-      if (res.status !== 404) {
+      if (res.status !== 404 && res.status !== 422) {
         throw new Error(json.error || 'Could not detect deposit');
       }
       if (attempt < maxAttempts) {
@@ -256,8 +263,16 @@ export default function OtcLotteryPage() {
           signature,
           solAmount: amount,
         });
-      } catch {
-        entry = await detectDepositWithRetries(wallet, { maxAttempts: 4, delayMs: 2000 });
+      } catch (registerErr) {
+        try {
+          entry = await detectDepositWithRetries(wallet, {
+            maxAttempts: 6,
+            delayMs: 2500,
+            signature,
+          });
+        } catch {
+          throw registerErr;
+        }
       }
       applyRegisteredEntry(entry, `SOL sent successfully. Your lottery entry is registered.`);
       await loadMyEntries(wallet);

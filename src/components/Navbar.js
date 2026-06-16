@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage, setDemoMode, refillDemoBalance } from '@/store/balanceSlice';
 import { demoStartNativeAmount } from '@/lib/play/demoPlay';
@@ -40,7 +41,8 @@ export default function Navbar() {
   const playSymbol = playConfig?.nativeSymbol ?? 'SOL';
 
   // Aptos wallet (must be before usePlayDeposit — it passes signAndSubmitTransaction)
-  const { connected: isConnected, account, signAndSubmitTransaction, wallet } = useWallet();
+  const { connected: isConnected, account, signAndSubmitTransaction, wallet, disconnect: disconnectAptos } = useWallet();
+  const { disconnect: disconnectSolana } = useSolanaWallet();
   const playWallet = usePlayWallet();
   const { deposit: playDeposit, isDepositing: isPlayDepositing } = usePlayDeposit({
     signAndSubmitTransaction,
@@ -63,6 +65,12 @@ export default function Navbar() {
   const handleRefillDemo = () => {
     dispatch(refillDemoBalance());
     toast.success(`Demo balance refilled to ${demoStartNativeAmount()} ${playSymbol}`);
+  };
+
+  const handleMobileDisconnect = async () => {
+    setShowMobileMenu(false);
+    try { await disconnectSolana(); } catch { /* ignore */ }
+    try { await disconnectAptos(); } catch { /* ignore */ }
   };
 
   const toggleDemoMode = () => {
@@ -455,15 +463,17 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* Desktop demo toggle — small pill, xl+ only */}
           <button
             type="button"
             onClick={toggleDemoMode}
-            className={`hidden xl:inline-flex text-xs font-bold uppercase tracking-widest px-3 py-2 rounded-full border transition-colors ${
+            className={`hidden xl:inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest px-3 py-2 rounded-full border transition-colors ${
               demoMode
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                : 'bg-white/5 border-white/10 text-white/50 hover:text-white/80'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                : 'bg-white/5 border-white/10 text-white/40 hover:text-white/70'
             }`}
           >
+            <span className={`inline-flex h-1.5 w-1.5 rounded-full ${demoMode ? 'bg-amber-400' : 'bg-white/25'}`} />
             {demoMode ? 'Demo on' : 'Demo'}
           </button>
 
@@ -527,19 +537,7 @@ export default function Navbar() {
             ))}
           </div>
 
-            <div className="mt-4 space-y-4 border-t border-white/10 pt-4">
-              <button
-                type="button"
-                onClick={toggleDemoMode}
-                className={`w-full rounded-xl border px-3 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors ${
-                  demoMode
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                    : 'border-white/10 bg-white/5 text-white/60 hover:text-white/90'
-                }`}
-              >
-                {demoMode ? 'Demo mode on' : 'Enable demo mode'}
-              </button>
-
+            <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
               <div className="md:hidden">
                 <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-widest text-white/40">Wallet</p>
                 <PlayWalletConnect
@@ -553,6 +551,38 @@ export default function Navbar() {
                   isLoadingBalance={isLoadingBalance}
                 />
               </div>
+              {/* Demo mode toggle — always visible in mobile menu */}
+              <button
+                type="button"
+                onClick={() => { dispatch(setDemoMode(!demoMode)); setShowMobileMenu(false); }}
+                className={`flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${
+                  demoMode
+                    ? 'border-amber-500/35 bg-amber-500/10 text-amber-300 hover:bg-amber-500/18'
+                    : 'border-white/10 bg-white/[0.04] text-white/55 hover:text-white/80 hover:bg-white/[0.07]'
+                }`}
+              >
+                <span className="flex items-center gap-3">
+                  <span className={`inline-flex h-2 w-2 rounded-full shrink-0 ${demoMode ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]' : 'bg-white/20'}`} />
+                  {demoMode ? 'Demo mode on' : 'Try demo mode'}
+                </span>
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${demoMode ? 'text-amber-400/80' : 'text-white/30'}`}>
+                  {demoMode ? 'Tap to exit' : 'Free play'}
+                </span>
+              </button>
+              {/* Disconnect — always visible in mobile menu when connected */}
+              {playWallet.connected && !demoMode && (
+                <button
+                  type="button"
+                  onClick={handleMobileDisconnect}
+                  className="flex w-full items-center gap-3 rounded-xl border border-rose-500/25 bg-rose-500/[0.07] px-4 py-3 text-sm font-semibold text-rose-400 hover:bg-rose-500/15 hover:border-rose-500/40 transition-colors"
+                >
+                  <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Disconnect wallet
+                </button>
+              )}
             </div>
           </div>
         </div>

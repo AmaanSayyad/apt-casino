@@ -3,17 +3,22 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { PLATFORM_CREDENTIALS } from '@/lib/config/socialCredentials';
-
-const ANNOUNCEMENT_ITEMS = [
-  { text: '$APTC is now live on Solana', primary: true },
-  ...PLATFORM_CREDENTIALS,
-];
+import { isAptcLaunched, getLaunchStatusText, getLaunchBadgeVariant } from '@/lib/config/launchStatus';
 
 /**
  * Full-width infinite text marquee below the navbar.
  */
 export default function HeroAnnouncementsMarquee() {
-  const loopSegments = useMemo(() => [...ANNOUNCEMENT_ITEMS, ...ANNOUNCEMENT_ITEMS], []);
+  const launched = isAptcLaunched();
+  const statusText = getLaunchStatusText();
+  const badgeVariant = getLaunchBadgeVariant();
+  
+  const ANNOUNCEMENT_ITEMS = useMemo(() => [
+    { text: statusText, primary: true, variant: badgeVariant },
+    ...PLATFORM_CREDENTIALS,
+  ], [statusText, badgeVariant]);
+  
+  const loopSegments = useMemo(() => [...ANNOUNCEMENT_ITEMS, ...ANNOUNCEMENT_ITEMS], [ANNOUNCEMENT_ITEMS]);
 
   return (
     <div
@@ -32,13 +37,19 @@ export default function HeroAnnouncementsMarquee() {
             <span
               key={`${item.text}-${idx}`}
               className={`hero-alert-marquee-item inline-flex shrink-0 items-center gap-3 font-display text-sm font-medium leading-snug tracking-wide sm:text-[15px] ${
-                item.primary ? 'text-emerald-200' : 'text-white/85'
+                item.primary ? (item.variant === 'live' ? 'text-emerald-200' : 'text-amber-200') : 'text-white/85'
               }`}
             >
               {item.primary ? (
-                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
-                  Live
+                <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] ${
+                  item.variant === 'live'
+                    ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'
+                    : 'border-amber-400/40 bg-amber-500/15 text-amber-100'
+                }`}>
+                  <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${
+                    item.variant === 'live' ? 'bg-emerald-400' : 'bg-amber-400'
+                  }`} aria-hidden />
+                  {item.variant === 'live' ? 'Live' : 'Soon'}
                 </span>
               ) : (
                 <span
@@ -47,7 +58,11 @@ export default function HeroAnnouncementsMarquee() {
                 />
               )}
               {item.primary ? (
-                <Link href="/#tokenomics" className="whitespace-nowrap hover:text-white transition-colors">
+                <Link href="/#tokenomics" className={`whitespace-nowrap transition-colors ${
+                  item.variant === 'live' 
+                    ? 'text-emerald-200 hover:text-emerald-100' 
+                    : 'text-amber-200 hover:text-amber-100'
+                }`}>
                   {item.text}
                 </Link>
               ) : (

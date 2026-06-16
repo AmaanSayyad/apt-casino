@@ -30,7 +30,7 @@ export default function AdvisoryPartnershipsSection() {
             </span>
           </h2>
           <p className="mt-4 text-sm md:text-base text-white/50 leading-relaxed">
-            Aptos, Movement & BNB Chain leaders backing multichain rollout and $APTC.
+            Movement & BNB Chain leaders supporting the APT-Casino ecosystem.
           </p>
         </header>
 

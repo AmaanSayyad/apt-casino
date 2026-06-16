@@ -6,9 +6,9 @@ import { ADVISORY_BOARD, ADVISOR_ACCENT_STYLES } from '@/lib/config/socialProofS
 export default function SocialProofCarousel() {
   return (
     <div className="relative z-10 w-full">
-      <div className="flex flex-col gap-6 md:gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 lg:gap-8">
         {ADVISORY_BOARD.map((advisor, i) => (
-          <AdvisorCard key={advisor.id} advisor={advisor} delay={i * 0.06} />
+          <AdvisorCard key={advisor.id} advisor={advisor} delay={i * 0.08} />
         ))}
       </div>
     </div>

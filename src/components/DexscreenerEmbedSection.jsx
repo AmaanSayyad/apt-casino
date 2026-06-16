@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { isAptcLaunched, getLaunchStyles } from '@/lib/config/launchStatus';
 
 const EMBED_PARAMS =
   'embed=1&loadChartSettings=0&chartLeftToolbar=0&chartDefaultOnMobile=1&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15';
@@ -25,6 +26,8 @@ function formatDexLabel(dexId) {
 export default function DexscreenerEmbedSection() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const launched = isAptcLaunched();
+  const styles = getLaunchStyles();
 
   useEffect(() => {
     let cancelled = false;
@@ -48,7 +51,7 @@ export default function DexscreenerEmbedSection() {
   const pairAddress = stats?.pairAddress ?? null;
   const embedUrl = buildEmbedUrl(pairUrl, pairAddress);
   const dexLabel = formatDexLabel(stats?.dexId);
-  const hasLivePair = Boolean(embedUrl);
+  const hasLivePair = Boolean(embedUrl && launched); // Only show embed if launched AND pair exists
   const mintConfigured = Boolean(stats?.mint);
 
   return (
@@ -56,27 +59,27 @@ export default function DexscreenerEmbedSection() {
       <div className="max-w-[1480px] mx-auto w-full">
         <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
           <div>
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 mb-4">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  hasLivePair
-                    ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.65)]'
-                    : 'bg-amber-400/80 shadow-[0_0_10px_rgba(251,191,36,0.4)]'
-                }`}
-              />
+            <div className={`inline-flex items-center gap-2.5 rounded-full border ${styles.badgeBorder} ${styles.badgeBg} px-4 py-2 mb-4`}>
+              <span className={`w-2 h-2 rounded-full ${styles.dotColor} ${hasLivePair ? styles.dotShadow : ''}`} />
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/55">
-                {hasLivePair ? '$APTC live on Dexscreener' : 'APTC market data'}
+                {hasLivePair ? '$APTC live on Dexscreener' : launched ? '$APTC Live' : '$APTC Launching Soon'}
               </span>
             </div>
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold font-display text-white tracking-tight">
-              APTC / SOL{' '}
-              <span className="text-base md:text-lg font-semibold text-white/30 uppercase tracking-wider ml-1">
-                · Solana · {dexLabel}
-              </span>
+              APTC / SOL
+              {hasLivePair && (
+                <span className="text-base md:text-lg font-semibold text-white/30 uppercase tracking-wider ml-1">
+                  · Solana · {dexLabel}
+                </span>
+              )}
             </h2>
             <p className="mt-3 text-sm md:text-base text-white/50 max-w-2xl">
-              Real-time chart, liquidity, and trade activity for the $APTC pair — the same feed used on
-              Stake page and GGR buyback estimates.
+              {hasLivePair 
+                ? 'Real-time chart, liquidity, and trade activity for the $APTC pair — the same feed used on Stake page and GGR buyback estimates.'
+                : launched
+                ? 'Live chart and trading data will appear here once indexed on DexScreener.'
+                : 'Live chart and trading data will appear here once the token launches on Raydium.'
+              }
             </p>
           </div>
 
@@ -102,7 +105,7 @@ export default function DexscreenerEmbedSection() {
           )}
         </div>
 
-        <div className="apt-dex-embed-slot rounded-2xl border border-white/10 overflow-hidden bg-[#0a0008] shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+        <div className="apt-dex-embed-slot rounded-2xl border border-white/10 overflow-hidden bg-[#0a0008] shadow-[0_24px_80px_rgba(0,0,0,0.45)] min-h-0">
           {loading ? (
             <div className="apt-dex-embed-placeholder flex items-center justify-center text-white/40 text-sm">
               Loading chart…
@@ -118,20 +121,20 @@ export default function DexscreenerEmbedSection() {
             </div>
           ) : (
             <div className="apt-dex-embed-placeholder flex flex-col items-center justify-center gap-4 px-6 text-center">
-              <p className="text-white/70 font-medium">
-                {mintConfigured
-                  ? 'No Dexscreener pair found yet for this mint.'
-                  : 'APTC is pre-launch on Solana.'}
+              <p className="text-white/70 font-medium text-lg">
+                {launched ? '$APTC is Live - Chart loading' : '$APTC Launching Soon on Solana'}
               </p>
               <p className="text-sm text-white/45 max-w-md">
-                Set <code className="text-xs text-cyan-200/90">NEXT_PUBLIC_APTC_SOLANA_MINT</code> in your
-                environment once the SPL token is live — this embed will populate automatically.
+                {launched 
+                  ? 'DexScreener is indexing the pool. Refresh in a few moments to see live data.'
+                  : 'Live chart and trading data will appear here once the token launches on Raydium.'
+                }
               </p>
               <Link
                 href="/stake"
                 className="text-sm text-purple-300 hover:text-white transition-colors"
               >
-                Open Stake page →
+                Learn more about APTC →
               </Link>
             </div>
           )}

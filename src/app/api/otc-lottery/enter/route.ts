@@ -11,7 +11,7 @@ import {
 import { fetchAptcDexscreenerStats } from '@/lib/server/dexscreener';
 import { fetchSolUsdPrice, formatOtcEntry } from '@/lib/server/otcLottery';
 import {
-  getTransaction,
+  fetchTransactionWithRetries,
   lamportsToSol,
   parseSolTransferToTreasury,
 } from '@/lib/server/solanaRpc';
@@ -56,18 +56,26 @@ export async function POST(request: NextRequest) {
   let solAmount = Number(body.solAmount);
   let sentAtRaw = body.solSentAt ? new Date(body.solSentAt) : new Date();
 
-  // Prefer on-chain values when we can verify the deposit
+  // Prefer on-chain values — poll RPCs until the tx is indexed after wallet confirmation
   try {
-    const tx = await getTransaction(solTxSignature);
+    const tx = await fetchTransactionWithRetries(solTxSignature, 35_000);
     if (tx) {
       const parsed = parseSolTransferToTreasury(tx, cfg.treasuryWallet, solSenderWallet);
       if (parsed) {
         solAmount = lamportsToSol(parsed.lamports);
         sentAtRaw = parsed.blockTime;
+      } else {
+        return NextResponse.json(
+          {
+            error:
+              'SOL transfer not verified on-chain yet. Wait a few seconds and tap “Detect my deposit”, or try again.',
+          },
+          { status: 422 },
+        );
       }
     }
   } catch {
-    /* fall back to client-provided values */
+    /* fall back to client-provided values when RPC is temporarily unavailable */
   }
 
   if (!isValidSolanaAddress(solSenderWallet)) {

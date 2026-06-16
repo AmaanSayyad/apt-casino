@@ -19,12 +19,12 @@ export default function Home() {
     <div className="bg-[#070005] overflow-x-hidden w-full">
       <HeroSection />
       <PlatformIntelligenceSection />
-      <TokenomicsSection />
       <FeatureSection />
       <GameCarousel />
       <HowItWorksSection />
       <EcosystemLogosSection />
       <DexscreenerEmbedSection />
+      <TokenomicsSection />
       <AdvisoryPartnershipsSection />
       <UpcomingTournaments />
       <TestimonialsSection />

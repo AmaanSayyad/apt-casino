@@ -19,6 +19,7 @@ import {
   FaInfoCircle,
   FaHourglassHalf,
 } from 'react-icons/fa';
+import { isAptcLaunched } from '@/lib/config/launchStatus';
 
 const STAKING_ENABLED =
   (process.env.NEXT_PUBLIC_APTC_STAKING_ENABLED || 'false').toLowerCase() === 'true';
@@ -334,16 +335,14 @@ export default function StakePage() {
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Stake' }]}
       maxWidth="7xl"
     >
-        {!APTC_MINT && (
+        {!isAptcLaunched() && (
           <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-900/20 px-4 py-3 text-sm text-amber-200">
             <div className="flex items-start gap-2">
               <FaHourglassHalf className="mt-0.5 shrink-0" />
               <div>
-                <p className="font-semibold">APTC is pre-launch on Solana.</p>
+                <p className="font-semibold">$APTC Launching Soon on Solana</p>
                 <p className="text-amber-200/80 mt-1">
-                  Pools, calculator and market widgets render with placeholder values until{' '}
-                  <code className="text-xs">NEXT_PUBLIC_APTC_SOLANA_MINT</code> is configured and{' '}
-                  <code className="text-xs">NEXT_PUBLIC_APTC_STAKING_ENABLED=true</code> at TGE.
+                  Staking pools and market data will go live when the token launches on Raydium. All UI elements below show placeholder values until launch.
                 </p>
               </div>
             </div>
@@ -413,7 +412,7 @@ export default function StakePage() {
         </section>
 
         {/* Personal summary */}
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-8">
           <div className="rounded-xl border border-white/10 bg-[#1A0015]/80 p-4">
             <p className="text-xs uppercase tracking-widest text-white/40">Wallet</p>
             <p className="mt-2 text-sm text-white/80 break-all">
@@ -424,6 +423,18 @@ export default function StakePage() {
                 Connect your wallet from the navbar to stake and view positions.
               </p>
             )}
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#1A0015]/80 p-4">
+            <p className="text-xs uppercase tracking-widest text-white/40">Total Pool Staked</p>
+            <p className="mt-2 text-2xl font-bold text-blue-300">
+              {stats?.staking?.activeAptc ? fmtNum(stats.staking.activeAptc) : '—'} APTC
+            </p>
+            <p className="mt-1 text-[11px] text-white/35">
+              {stats?.staking?.activePositions 
+                ? `${stats.staking.activePositions} active positions`
+                : 'All users combined'
+              }
+            </p>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#1A0015]/80 p-4">
             <p className="text-xs uppercase tracking-widest text-white/40">Your Active Stake</p>

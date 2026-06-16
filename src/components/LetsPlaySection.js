@@ -59,9 +59,8 @@ export default function LetsPlaySection() {
               </p>
               <h2 className="font-display mt-3 text-3xl font-black uppercase leading-tight tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
                 <span className="bg-gradient-to-r from-red-magic via-fuchsia-400 to-blue-magic bg-clip-text text-transparent">
-                  Multichain
+                    APT-Casino
                 </span>
-                <span className="mt-1 block">casino</span>
               </h2>
               <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-white/55 sm:text-base">
                 Connect on Solana or Aptos, pick a provably fair game, and play with transparent fees — no

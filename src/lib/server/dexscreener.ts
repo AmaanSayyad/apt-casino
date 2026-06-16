@@ -13,7 +13,7 @@ export const APTC_SOLANA_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim()
 const APTC_DEX_PAIR =
   process.env.NEXT_PUBLIC_APTC_DEXSCREENER_PAIR?.trim() ||
   process.env.APTC_RAYDIUM_POOL_ADDRESS?.trim() ||
-  'C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL';
+  '';
 
 export type DexscreenerStats = {
   priceUsd: number | null;

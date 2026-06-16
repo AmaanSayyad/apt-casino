@@ -3,13 +3,17 @@
  * Aligns with env-driven GGR buyback (see lib/server/ggrBuyback.ts).
  */
 
+import { getAptcMint, isAptcLaunched, getAptcPairAddress } from './launchStatus';
+
 export const APTC_TOKENOMICS = {
   name: 'AptCasino.fun',
   symbol: 'APTC',
   chain: 'Solana (SPL)',
   maxSupply: '1,000,000,000',
   decimals: 6,
-  mint: 'ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg',
+  get mint() {
+    return getAptcMint();
+  },
   launchVenue: 'Raydium CPMM',
   launch:
     'Raydium CPMM fair launch · 1B APTC + 40 SOL · 0.5% fee · mint, freeze & update revoked.',
@@ -34,8 +38,13 @@ export const APTC_LAUNCH_METRICS = {
   lpBurnPct: null,
   lockedAptc: null,
   lockedSol: null,
-  raydiumPoolAddress: 'C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL',
-  dexscreenerPairUrl: 'https://dexscreener.com/solana/c9ej1qvpj9tyckgwzsukl9rduz65vzx2wfg7rfhaqsal',
+  get raydiumPoolAddress() {
+    return getAptcPairAddress();
+  },
+  get dexscreenerPairUrl() {
+    const pair = getAptcPairAddress();
+    return pair ? `https://dexscreener.com/solana/${pair}` : null;
+  },
 };
 
 /** Supply at TGE — 100% seeded into Raydium CPMM liquidity */
@@ -162,20 +171,24 @@ export function jupiterSwapUrl(mint = APTC_TOKENOMICS.mint) {
 
 /** External + on-site trade / research links */
 export function getAptcTradeLinks(options = {}) {
+  const launched = isAptcLaunched();
   const mint = APTC_TOKENOMICS.mint;
   const pairUrl =
     options.pairUrl ||
     (APTC_LAUNCH_METRICS.dexscreenerPairUrl ?? null) ||
-    dexscreenerTokenUrl(mint);
-  const raydiumHref = raydiumSwapUrl(mint);
+    (launched ? dexscreenerTokenUrl(mint) : null);
+  const raydiumHref = launched ? raydiumSwapUrl(mint) : 'https://raydium.io/';
+  const jupiterHref = launched ? jupiterSwapUrl(mint) : 'https://jup.ag/';
+  const solscanHref = launched ? solscanTokenUrl(mint) : 'https://solscan.io/';
+  const dexscreenerHref = pairUrl || 'https://dexscreener.com/solana';
 
   return [
-    { id: 'raydium', label: 'Raydium', sub: 'CPMM pool', href: raydiumHref, external: true },
-    { id: 'dexscreener', label: 'DexScreener', sub: 'Live chart', href: pairUrl, external: true },
-    { id: 'jupiter', label: 'Jupiter', sub: 'Swap', href: jupiterSwapUrl(mint), external: true },
-    { id: 'solscan', label: 'Solscan', sub: 'Mint', href: solscanTokenUrl(mint), external: true },
-    { id: 'stake', label: 'Stake', sub: 'Earn APY', href: '/stake', external: false },
-    { id: 'litepaper', label: 'Litepaper', sub: 'Full docs', href: '/litepaper#aptc-token', external: false },
+    { id: 'raydium',     label: 'Raydium',     sub: launched ? 'CPMM pool' : 'DEX',        href: raydiumHref,      external: true,  logo: '/logos/Raydium.png' },
+    { id: 'dexscreener', label: 'DexScreener', sub: launched ? 'Live chart' : 'Charts',    href: dexscreenerHref,   external: true,  logo: '/logos/dexscreener.png' },
+    { id: 'jupiter',     label: 'Jupiter',     sub: launched ? 'Swap' : 'Aggregator',      href: jupiterHref,       external: true,  logo: '/logos/jupiter.jpg' },
+    { id: 'solscan',     label: 'Solscan',     sub: launched ? 'Mint' : 'Explorer',        href: solscanHref,       external: true,  logo: 'https://solscan.io/favicon.ico' },
+    { id: 'stake',       label: 'Stake',       sub: 'Earn APY',                            href: '/stake',          external: false, logo: '/APTC_logo_1000x1000.png' },
+    { id: 'litepaper',   label: 'Litepaper',   sub: 'Full docs',                           href: '/litepaper#aptc-token', external: false, logo: '/APTC_logo_1000x1000.png' },
   ];
 }
 

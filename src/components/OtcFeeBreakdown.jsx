@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   APTC_DEX_POOL_FEE,
   DEX_VALUE_LOSS_SOURCES,
@@ -31,10 +30,9 @@ function buildReferences() {
 }
 
 /**
- * @param {{ compact?: boolean }} props — `compact` = collapsible footer under DEX calculator
+ * @param {{ compact?: boolean }} props — `compact` = tighter spacing in embedded layouts
  */
 export default function OtcFeeBreakdown({ compact = false }) {
-  const [open, setOpen] = useState(!compact);
   const references = buildReferences();
 
   const body = (
@@ -133,19 +131,5 @@ export default function OtcFeeBreakdown({ compact = false }) {
     return body;
   }
 
-  return (
-    <div className="border-t border-white/10 pt-4 mt-4">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between text-left text-xs text-cyan-400/90 hover:text-cyan-300"
-      >
-        <span className="font-bold uppercase tracking-widest">
-          {open ? 'Hide' : 'Show'} full fee model & doc links
-        </span>
-        <span className="text-white/40">{open ? '−' : '+'}</span>
-      </button>
-      {open ? <div className="mt-4">{body}</div> : null}
-    </div>
-  );
+  return <div className="pt-1">{body}</div>;
 }

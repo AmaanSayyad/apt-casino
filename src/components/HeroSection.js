@@ -6,9 +6,23 @@ import { ACTIVE_GAMES_COUNT } from "@/lib/gameRegistry";
 import { CHAINS_SHORT } from "@/lib/copy/siteChains";
 import { PITCH_DECK_URL } from "@/lib/pitchDeck";
 import { LITEPAPER_PATH } from "@/lib/siteMetadata";
+import {
+  isAptcLaunched,
+  getLaunchStyles,
+  getLaunchStatusText,
+  getLaunchCtaText,
+  getHeroImagePath,
+  getHeroImageDimensions,
+} from "@/lib/config/launchStatus";
 
 export default function HeroSection() {
   const [isDev, setIsDev] = useState(false);
+  const launched = isAptcLaunched();
+  const styles = getLaunchStyles();
+  const statusText = getLaunchStatusText();
+  const ctaText = getLaunchCtaText();
+  const imagePath = getHeroImagePath();
+  const imageDimensions = getHeroImageDimensions();
 
   useEffect(() => {
     setIsDev(process.env.NODE_ENV === 'development');
@@ -22,17 +36,17 @@ export default function HeroSection() {
       <div className="font-display z-10 mx-auto flex w-full max-w-7xl flex-col items-center gap-4 sm:gap-6 text-center text-white">
         <Link
           href="#tokenomics"
-          className="group inline-flex flex-wrap items-center justify-center gap-2.5 rounded-full border border-emerald-500/35 bg-emerald-500/[0.1] px-4 py-2 sm:px-5 sm:py-2.5 shadow-[0_0_24px_-6px_rgba(52,211,153,0.45)] transition-all hover:border-emerald-400/50 hover:bg-emerald-500/[0.16]"
+          className={`group inline-flex flex-wrap items-center justify-center gap-2.5 rounded-full px-4 py-2 sm:px-5 sm:py-2.5 transition-all border ${styles.badgeBorder} ${styles.badgeBg} ${styles.badgeShadow} ${styles.badgeHoverBorder} ${styles.badgeHoverBg}`}
         >
           <span className="relative flex h-2 w-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 ${styles.dotColor}`} />
+            <span className={`relative inline-flex h-2 w-2 rounded-full ${styles.dotColor}`} />
           </span>
-          <span className="text-sm font-bold text-emerald-100 sm:text-base">
-            $APTC is now live on Solana
+          <span className={`text-sm font-bold sm:text-base ${styles.textColor}`}>
+            {statusText}
           </span>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300/70 group-hover:text-emerald-200">
-            Raydium · Trade now →
+          <span className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${styles.textColorSecondary} ${styles.textColorSecondaryHover}`}>
+            {ctaText}
           </span>
         </Link>
 
@@ -99,13 +113,13 @@ export default function HeroSection() {
         <div className="absolute -inset-1 bg-gradient-to-r from-red-magic/50 to-blue-magic/50 rounded-2xl blur-md"></div>
         <div className="relative">
           <Image
-            src="/images/HeroImage.png"
-            width={863}
-            height={487}
+            src={imagePath}
+            width={imageDimensions.width}
+            height={imageDimensions.height}
             quality={100}
             priority
-            alt="Hero image"
-            className="rounded-xl z-10 relative"
+            alt={launched ? "APTC Casino - Token Launched" : "APT-Casino Gaming Platform"}
+            className={`rounded-xl z-10 relative ${launched ? 'w-full h-auto' : ''}`}
           />
 
           {isDev && (
