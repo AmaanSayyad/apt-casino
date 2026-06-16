@@ -37,8 +37,6 @@ const TRADE_TOOLS = [
   { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: 'https://coinmarketcap.com/currencies/aptcasino/' },
   { id: 'bubblemaps',   label: 'Bubblemaps',     logo: '/logos/bubblemaps.png',        href: `https://app.bubblemaps.io/sol/token/${_MINT}` },
   { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: `https://solscan.io/token/${_MINT}` },
-  { id: 'stake',        label: 'Stake',          logo: '/APTC_logo_1000x1000.png',     href: '/stake' },
-  { id: 'litepaper',    label: 'Litepaper',      logo: '/APTC_logo_1000x1000.png',     href: '/litepaper#aptc-token' },
 ];
 
 export default function TokenomicsSection() {
