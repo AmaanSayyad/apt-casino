@@ -47,25 +47,22 @@ export default function HeroSection() {
           </span>
         </Link>
 
-        <h1 className="text-[2rem] font-extrabold leading-[1.15] sm:text-5xl md:text-6xl sm:leading-tight px-4">
-          100% On-Chain{" "}
+        <h1 className="text-[2.25rem] font-extrabold leading-[1.1] sm:text-5xl md:text-6xl tracking-tight px-4">
+          Provably Fair{" "}
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
-            Randomness
+            Gaming
           </span>
         </h1>
-        <h2 className="max-w-3xl px-4 text-sm leading-relaxed text-[#B3B3B3] sm:text-base md:text-lg">
-          <span className="font-semibold text-white">Provably transparent</span> gaming with{" "}
-          <span className="font-semibold text-white">verifiable on-chain randomness</span> on {CHAINS_SHORT}.{" "}
-          <span className="hidden sm:inline">No rigged outcomes. No custody of your funds. </span>
-          <span className="font-medium text-green-400">Pure, transparent GambleFi.</span>
-        </h2>
+        <p className="max-w-2xl px-4 text-base leading-relaxed text-white/80 sm:text-lg md:text-xl font-medium">
+          Verifiable on-chain randomness on {CHAINS_SHORT}.
+        </p>
 
-        <div className="site-cta-row mt-6 sm:mt-8">
+        <div className="w-full px-4 mt-8 sm:mt-10">
           <LaunchGameButton />
         </div>
       </div>
 
-      <div className="relative mx-auto mt-10 w-full max-w-4xl sm:mt-12 px-4">
+      <div className="relative mx-auto mt-12 w-full max-w-4xl sm:mt-16 px-4">
         <div className="absolute -inset-1 bg-gradient-to-r from-red-magic/50 to-blue-magic/50 rounded-2xl blur-md"></div>
         <div className="relative">
           <Image

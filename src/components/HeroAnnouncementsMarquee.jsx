@@ -22,7 +22,7 @@ export default function HeroAnnouncementsMarquee() {
 
   return (
     <div
-      className="hero-alert-marquee border-y border-purple-500/25 bg-[#070005] bg-gradient-to-r from-[#120008] via-[#070005] to-[#0d000c] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+      className="hero-alert-marquee border-y border-purple-500/25 bg-[#070005] bg-gradient-to-r from-[#120008] via-[#070005] to-[#0d000c] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] hidden md:block"
       role="region"
       aria-label="Platform announcements"
     >
