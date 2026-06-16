@@ -53,8 +53,11 @@ export default function HeroSection() {
             Gaming
           </span>
         </h1>
-        <p className="max-w-2xl px-4 text-base leading-relaxed text-white/80 sm:text-lg md:text-xl font-medium">
+        <p className="max-w-2xl px-4 text-base leading-relaxed text-white/90 sm:text-lg md:text-xl font-medium">
           Verifiable on-chain randomness on {CHAINS_SHORT}.
+        </p>
+        <p className="max-w-2xl px-4 text-sm leading-relaxed text-white/60 sm:text-base">
+          No rigged outcomes. No custody of your funds. Pure mathematics-based fairness.
         </p>
 
         <div className="w-full px-4 mt-8 sm:mt-10">
