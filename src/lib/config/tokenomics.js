@@ -44,8 +44,10 @@ export const APTC_ALLOCATION = [
     label: 'Raydium LP',
     pct: 100,
     tokensShort: '1B',
-    fill: '#06b6d4',
-    color: 'from-cyan-500 to-blue-500',
+    // Allocation accent for the "Supply allocation" donut & legends.
+    // Updated to pink/fuchsia to match the landing page screenshot.
+    fill: '#ec4899',
+    color: 'from-fuchsia-500 to-pink-500',
   },
 ];
 
