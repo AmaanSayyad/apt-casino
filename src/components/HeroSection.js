@@ -48,7 +48,7 @@ export default function HeroSection() {
         </Link>
 
         <h1 className="text-[2.25rem] font-extrabold leading-[1.1] sm:text-5xl md:text-6xl tracking-tight px-4">
-          Provably Fair{" "}
+          100% Provably Fair{" "}
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
             Gaming
           </span>
