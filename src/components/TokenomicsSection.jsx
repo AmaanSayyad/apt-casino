@@ -8,7 +8,6 @@ import {
   APTC_LAUNCH_STEPS,
   APTC_TOKENOMICS,
   APTC_UTILITY,
-  getAptcTradeLinks,
   solscanTokenUrl,
 } from '@/lib/config/tokenomics';
 
@@ -20,6 +19,27 @@ const BuybackSplitDonut = dynamic(
   () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.BuybackSplitDonut),
   { ssr: false, loading: () => <ChartSkeleton height={220} /> },
 );
+
+const _MINT = APTC_TOKENOMICS.mint;
+const TRADE_TOOLS = [
+  { id: 'raydium',      label: 'Raydium',       logo: '/logos/Raydium.png',          href: `https://raydium.io/swap/?inputMint=So11111111111111111111111111111111111111112&outputMint=${_MINT}` },
+  { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/swap/SOL-${_MINT}` },
+  { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
+  { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana/${_MINT}` },
+  { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: `https://birdeye.so/token/${_MINT}?chain=solana` },
+  { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/solana/tokens/${_MINT}` },
+  { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/app/en/solana/pair-explorer/${_MINT}` },
+  { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: `https://gmgn.ai/sol/token/${_MINT}` },
+  { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: `https://axiom.trade/t/${_MINT}` },
+  { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: `https://photon-sol.tinyastro.io/en/r/@launch/${_MINT}` },
+  { id: 'pumpfun',      label: 'Pump.fun',       logo: '/logos/pumpfun-logo.png',      href: 'https://pump.fun/' },
+  { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: `https://www.coingecko.com/en/coins/${_MINT}` },
+  { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: 'https://coinmarketcap.com/currencies/aptcasino/' },
+  { id: 'bubblemaps',   label: 'Bubblemaps',     logo: '/logos/bubblemaps.png',        href: `https://app.bubblemaps.io/sol/token/${_MINT}` },
+  { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: `https://solscan.io/token/${_MINT}` },
+  { id: 'stake',        label: 'Stake',          logo: '/APTC_logo_1000x1000.png',     href: '/stake' },
+  { id: 'litepaper',    label: 'Litepaper',      logo: '/APTC_logo_1000x1000.png',     href: '/litepaper#aptc-token' },
+];
 
 export default function TokenomicsSection() {
   const [buyback, setBuyback] = useState(null);
@@ -59,10 +79,6 @@ export default function TokenomicsSection() {
   const cfg = buyback?.config;
   const est = buyback?.estimates;
   const m = APTC_LAUNCH_METRICS;
-  const tradeLinks = getAptcTradeLinks({
-    pairUrl: market?.pairUrl ?? undefined,
-  });
-
   const hasLiveMarket = market?.priceUsd != null;
   const priceUsd = hasLiveMarket ? market.priceUsd : m.approxTokenPriceUsd;
   const mcapUsd = market?.marketCapUsd ?? market?.fdvUsd ?? m.approxMarketCapUsd;
@@ -73,38 +89,41 @@ export default function TokenomicsSection() {
 
   return (
     <section id="tokenomics" className="py-16 md:py-24 px-4 md:px-8 lg:px-16 bg-[#070005]">
-      <div className="max-w-6xl mx-auto">
-        {/* Hero */}
-        <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-10 mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 mb-5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/70">
-                  $APTC · Live on Solana
-                </span>
-              </div>
+      <div className="max-w-7xl mx-auto">
 
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-[1.08]">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
-                  APTC
-                </span>{' '}
-                Tokenomics
-              </h2>
+        {/* Section heading */}
+        <div className="mb-8">
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 mb-4">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/70">
+              $APTC · Live on Solana
+            </span>
+          </div>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-[1.08]">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
+              APTC
+            </span>{' '}
+            Tokenomics
+          </h2>
+          <p className="mt-3 text-base md:text-lg text-white/55 max-w-2xl leading-relaxed">
+            1B fixed supply · fair launch on Raydium CPMM. Casino GGR funds open-market buybacks — not empty emissions.
+          </p>
+        </div>
 
-              <p className="mt-4 text-base md:text-lg text-white/60 leading-relaxed">
-                1B fixed supply · fair launch on Raydium CPMM (1B APTC + 40 SOL). Casino GGR funds
-                open-market buybacks — not empty emissions.
-              </p>
+        {/* ── Main 2-column grid ── */}
+        <div className="grid lg:grid-cols-[1fr_1.15fr] gap-6 mb-6">
 
-              <div className="mt-5 flex flex-wrap gap-2">
+          {/* LEFT — identity, ticker, stats, trade links */}
+          <div className="flex flex-col gap-5">
+
+            {/* Authority chips + timeline */}
+            <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6">
+              <div className="flex flex-wrap gap-2 mb-4">
                 <AuthorityChip label="Mint revoked" />
                 <AuthorityChip label="Freeze revoked" />
                 <AuthorityChip label="Update revoked" />
               </div>
-
-              {/* Launch timeline */}
-              <div className="mt-6 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-white/45">
+              <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-white/45">
                 {APTC_LAUNCH_STEPS.map((step, i) => (
                   <span key={step} className="inline-flex items-center gap-1.5">
                     {i > 0 && <span className="text-white/20">→</span>}
@@ -115,7 +134,7 @@ export default function TokenomicsSection() {
             </div>
 
             {/* Live ticker */}
-            <div className="rounded-2xl border border-white/10 bg-[#120010] p-4 md:p-5 w-full lg:max-w-md shrink-0">
+            <div className="rounded-2xl border border-white/10 bg-[#120010] p-5 md:p-6 flex-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40 mb-3">
                 {marketLabel}
               </p>
@@ -126,9 +145,7 @@ export default function TokenomicsSection() {
                   sub={
                     priceChange24h != null
                       ? `${priceChange24h >= 0 ? '+' : ''}${priceChange24h.toFixed(2)}% 24h`
-                      : hasLiveMarket
-                        ? 'APTC/USD'
-                        : 'At pool seed'
+                      : hasLiveMarket ? 'APTC/USD' : 'At pool seed'
                   }
                   loading={marketLoading}
                 />
@@ -142,8 +159,7 @@ export default function TokenomicsSection() {
               </div>
               {!marketLoading && !hasLiveMarket && (
                 <p className="mt-3 text-[10px] text-amber-200/70 leading-relaxed">
-                  Targets from Raydium pool seed (1B APTC + 40 SOL). Live DexScreener quotes appear once
-                  the pair is indexed.
+                  Targets from Raydium pool seed (1B APTC + 40 SOL). Live quotes appear once indexed.
                 </p>
               )}
               <a
@@ -156,84 +172,75 @@ export default function TokenomicsSection() {
                 <span className="shrink-0 text-white/45">Solscan ↗</span>
               </a>
             </div>
-          </div>
 
-          {/* Launch stats + trade */}
-          <div className="mt-8 pt-6 border-t border-white/[0.07] space-y-6">
-            <div className="flex flex-wrap gap-2">
-              <LaunchStat label="Pool" value={`${m.aptcInLpShort} + ${m.solInLp} SOL`} />
-              <LaunchStat label="Fee tier" value={`${m.feeTierPct}%`} />
-              <LaunchStat label="Launch MC" value={`~$${(m.approxMarketCapUsd / 1000).toFixed(1)}k`} />
-              <LaunchStat label="Liquidity" value={`~$${(m.approxLiquidityUsd / 1000).toFixed(1)}k`} />
-            </div>
-
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35 mb-3">
-                Trade & research
-              </p>
+            {/* Launch stats + trade & research grid */}
+            <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6 space-y-5">
               <div className="flex flex-wrap gap-2">
-                {tradeLinks.map((link) =>
-                  link.external ? (
-                    <a
-                      key={link.id}
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group inline-flex flex-col rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 hover:border-white/20 hover:bg-white/[0.06] transition-all min-w-[108px]"
-                    >
-                      <span className="text-sm font-semibold text-white">{link.label}</span>
-                      <span className="text-[10px] text-white/40">{link.sub}</span>
-                    </a>
-                  ) : (
-                    <Link
-                      key={link.id}
-                      href={link.href}
-                      className="group inline-flex flex-col rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 hover:border-white/20 hover:bg-white/[0.06] transition-all min-w-[108px]"
-                    >
-                      <span className="text-sm font-semibold text-white">{link.label}</span>
-                      <span className="text-[10px] text-white/40">{link.sub}</span>
-                    </Link>
-                  ),
-                )}
+                <LaunchStat label="Pool" value={`${m.aptcInLpShort} + ${m.solInLp} SOL`} />
+                <LaunchStat label="Fee tier" value={`${m.feeTierPct}%`} />
+                <LaunchStat label="Launch MC" value={`~$${(m.approxMarketCapUsd / 1000).toFixed(1)}k`} />
+                <LaunchStat label="Liquidity" value={`~$${(m.approxLiquidityUsd / 1000).toFixed(1)}k`} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35 mb-3">
+                  Trade & research
+                </p>
+                <div className="grid grid-cols-4 gap-2">
+                  {TRADE_TOOLS.map((t) => {
+                    const isExternal = !t.href.startsWith('/');
+                    const cls = "group flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-2.5 hover:border-white/20 hover:bg-white/[0.06] transition-all";
+                    const inner = (
+                      <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={t.logo} alt={t.label} className="w-7 h-7 rounded-lg object-contain bg-white/5 shrink-0" />
+                        <span className="text-[10px] font-medium text-white/60 group-hover:text-white text-center leading-tight transition-colors truncate w-full text-center">{t.label}</span>
+                      </>
+                    );
+                    return isExternal ? (
+                      <a key={t.id} href={t.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+                    ) : (
+                      <Link key={t.id} href={t.href} className={cls}>{inner}</Link>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Charts */}
-        <div className="grid lg:grid-cols-2 gap-6 mb-10">
-          <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 h-full">
-            <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
-            <p className="text-xs text-white/45 mb-6">1B APTC · 100% Raydium LP</p>
-            <AllocationDonut />
-          </div>
+          {/* RIGHT — charts */}
+          <div className="flex flex-col gap-5">
+            <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
+              <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
+              <p className="text-xs text-white/45 mb-6">1B APTC · 100% Raydium LP</p>
+              <AllocationDonut />
+            </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 h-full">
-            <h3 className="text-xl font-semibold text-white mb-1">GGR → buyback</h3>
-            <p className="text-sm text-white/50 mb-2">
-              Play → GGR → market buy on Raydium & Jupiter → burn · stake · treasury
-            </p>
-            <BuybackSplitDonut config={cfg} />
-            {est?.projectedBuybackUsd30d != null && (
-              <p className="text-xs text-white/50 border-t border-white/10 pt-4 mt-6">
-                30d buyback budget:{' '}
-                <span className="text-white/80 font-mono">${fmtUsd(est.projectedBuybackUsd30d)}</span>
-                {est.projectedBurnAptc30d != null && est.aptcPriceUsd ? (
-                  <>
-                    {' '}
-                    · est. burn{' '}
-                    <span className="text-white/70 font-mono">{fmtNum(est.projectedBurnAptc30d)} APTC</span>
-                  </>
-                ) : null}
+            <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
+              <h3 className="text-xl font-semibold text-white mb-1">GGR → buyback</h3>
+              <p className="text-sm text-white/50 mb-2">
+                Play → GGR → market buy on Raydium & Jupiter → burn · stake · treasury
               </p>
-            )}
+              <BuybackSplitDonut config={cfg} />
+              {est?.projectedBuybackUsd30d != null && (
+                <p className="text-xs text-white/50 border-t border-white/10 pt-4 mt-6">
+                  30d buyback budget:{' '}
+                  <span className="text-white/80 font-mono">${fmtUsd(est.projectedBuybackUsd30d)}</span>
+                  {est.projectedBurnAptc30d != null && est.aptcPriceUsd ? (
+                    <>
+                      {' '}· est. burn{' '}
+                      <span className="text-white/70 font-mono">{fmtNum(est.projectedBurnAptc30d)} APTC</span>
+                    </>
+                  ) : null}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Utility */}
+        {/* ── Why APTC — 4-column row ── */}
         <div>
           <h3 className="text-lg font-semibold text-white mb-4">Why APTC</h3>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {APTC_UTILITY.map((u) => (
               <div key={u.title} className="rounded-xl border border-white/10 bg-[#1A0015] p-5">
                 <h4 className="text-white font-semibold mb-1.5">{u.title}</h4>
