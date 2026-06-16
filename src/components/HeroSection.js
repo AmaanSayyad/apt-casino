@@ -3,8 +3,6 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import LaunchGameButton from "./LaunchGameButton";
 import { CHAINS_SHORT } from "@/lib/copy/siteChains";
-import { PITCH_DECK_URL } from "@/lib/pitchDeck";
-import { LITEPAPER_PATH } from "@/lib/siteMetadata";
 import {
   isAptcLaunched,
   getLaunchStyles,
@@ -68,22 +66,6 @@ export default function HeroSection() {
 
         <div className="site-cta-row mt-2 sm:mt-6">
           <LaunchGameButton />
-
-          <Link
-            href={LITEPAPER_PATH}
-            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white/90 transition-all hover:border-white/20 hover:bg-white/10"
-          >
-            Litepaper
-          </Link>
-
-          <a
-            href={PITCH_DECK_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white/90 transition-all hover:border-white/20 hover:bg-white/10"
-          >
-            Pitch deck
-          </a>
         </div>
       </div>
 
