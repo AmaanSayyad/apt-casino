@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import LaunchGameButton from "./LaunchGameButton";
-import { ACTIVE_GAMES_COUNT } from "@/lib/gameRegistry";
 import { CHAINS_SHORT } from "@/lib/copy/siteChains";
 import { PITCH_DECK_URL } from "@/lib/pitchDeck";
 import { LITEPAPER_PATH } from "@/lib/siteMetadata";
@@ -85,27 +84,6 @@ export default function HeroSection() {
           >
             Pitch deck
           </a>
-        </div>
-
-        <div className="mt-8 grid w-full grid-cols-2 gap-3 rounded-xl border border-purple-600/20 bg-black/20 p-4 backdrop-blur-sm sm:mt-12 sm:gap-4 sm:p-6 md:grid-cols-3 md:gap-6">
-          <div className="text-center">
-            <p className="text-gray-400 text-sm">Active Games</p>
-            <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
-              {ACTIVE_GAMES_COUNT}
-            </p>
-          </div>
-          <div className="text-center hidden sm:block">
-            <p className="text-gray-400 text-sm">Channel Finality</p>
-            <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
-              ~instant
-            </p>
-          </div>
-          <div className="text-center hidden md:block">
-            <p className="text-gray-400 text-sm">Provably Fair</p>
-            <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
-              100%
-            </p>
-          </div>
         </div>
       </div>
 
