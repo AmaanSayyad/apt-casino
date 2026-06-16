@@ -47,29 +47,25 @@ export default function HeroSection() {
           </span>
         </Link>
 
-        <h1 className="text-[1.75rem] font-extrabold leading-[1.12] sm:text-5xl md:text-6xl sm:leading-tight">
+        <h1 className="text-[2rem] font-extrabold leading-[1.15] sm:text-5xl md:text-6xl sm:leading-tight px-4">
           100% On-Chain{" "}
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic to-blue-magic">
             Randomness
           </span>
         </h1>
-        <h2 className="max-w-3xl text-sm leading-relaxed text-[#B3B3B3] sm:mt-2 sm:text-lg md:text-xl">
-          <span className="font-semibold text-white">Autonomous, provably transparent</span> gaming powered by{" "}
-          <span className="font-semibold text-white">Multichain play</span> with{" "}
-          <span className="font-semibold text-white">verifiable on-chain randomness</span> on {CHAINS_SHORT}.
-          Experience decentralized fairness you can verify, not just trust.
+        <h2 className="max-w-3xl px-4 text-sm leading-relaxed text-[#B3B3B3] sm:text-base md:text-lg">
+          <span className="font-semibold text-white">Provably transparent</span> gaming with{" "}
+          <span className="font-semibold text-white">verifiable on-chain randomness</span> on {CHAINS_SHORT}.{" "}
+          <span className="hidden sm:inline">No rigged outcomes. No custody of your funds. </span>
+          <span className="font-medium text-green-400">Pure, transparent GambleFi.</span>
         </h2>
-        <p className="max-w-3xl text-sm leading-relaxed text-[#B3B3B3] sm:text-lg md:text-xl">
-          No rigged outcomes. No hidden limits. No custody of your funds.
-          <span className="font-medium text-green-400"> Just pure, transparent GambleFi</span> where mathematics replaces trust.
-        </p>
 
-        <div className="site-cta-row mt-2 sm:mt-6">
+        <div className="site-cta-row mt-6 sm:mt-8">
           <LaunchGameButton />
         </div>
       </div>
 
-      <div className="relative mx-auto mt-8 w-full max-w-4xl sm:mt-12">
+      <div className="relative mx-auto mt-10 w-full max-w-4xl sm:mt-12 px-4">
         <div className="absolute -inset-1 bg-gradient-to-r from-red-magic/50 to-blue-magic/50 rounded-2xl blur-md"></div>
         <div className="relative">
           <Image
