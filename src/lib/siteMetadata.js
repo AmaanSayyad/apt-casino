@@ -99,6 +99,7 @@ export function buildPageMetadata(opts = {}) {
       opts.ogImagePath.startsWith('/') ? opts.ogImagePath : `/${opts.ogImagePath}`,
       siteUrl,
     ).toString();
+    const mimeType = opts.ogImagePath.match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png';
     openGraph.images = [
       {
         url: ogImage,
@@ -106,7 +107,7 @@ export function buildPageMetadata(opts = {}) {
         width: 1200,
         height: 630,
         alt: SITE_NAME,
-        type: 'image/png',
+        type: mimeType,
       },
     ];
     twitter.images = [{ url: ogImage, alt: SITE_NAME }];
@@ -123,4 +124,4 @@ export function buildPageMetadata(opts = {}) {
   };
 }
 
-export const rootMetadata = buildPageMetadata();
+export const rootMetadata = buildPageMetadata({ ogImagePath: '/Linkshare.jpg' });
