@@ -11,6 +11,7 @@ import {
   queueWithdrawalRequest,
   requiresManualWithdrawalApproval,
 } from '@/lib/server/withdrawalQueue';
+import { assertWithdrawalAllowed } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
 
 function normalizeAptAddress(userAddress: unknown): string {
@@ -47,7 +48,20 @@ export async function POST(request: Request) {
 
     const usdEstimate = await estimateWithdrawalUsd('aptos', Number(amount));
 
-    if (requiresManualWithdrawalApproval(usdEstimate)) {
+    const withdrawalGuard = await assertWithdrawalAllowed({
+      wallet: formattedUserAddress,
+      chain: 'aptos',
+      amountNative: Number(amount),
+      usdEstimate,
+    });
+    if (!withdrawalGuard.ok) {
+      return NextResponse.json({ error: withdrawalGuard.error }, { status: 403 });
+    }
+
+    const needsManual =
+      requiresManualWithdrawalApproval(usdEstimate) || withdrawalGuard.forceManual;
+
+    if (needsManual) {
       const { requestId, thresholdUsd } = await queueWithdrawalRequest({
         chain: 'aptos',
         wallet: formattedUserAddress,
@@ -62,7 +76,7 @@ export async function POST(request: Request) {
         success: true,
         pendingApproval: true,
         requestId,
-        message: pendingWithdrawalMessage(thresholdUsd),
+        message: pendingWithdrawalMessage(thresholdUsd, withdrawalGuard.reason),
         grossApt: Number(amount),
         estimatedUsd: usdEstimate,
         platformFeeApt: octasToApt(feeOctas),

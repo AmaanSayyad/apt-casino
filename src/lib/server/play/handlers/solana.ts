@@ -24,6 +24,13 @@ import {
   queueWithdrawalRequest,
   requiresManualWithdrawalApproval,
 } from '@/lib/server/withdrawalQueue';
+import {
+  consumePendingStakeForCredit,
+  recordPendingStake,
+} from '@/lib/server/play/pendingStakes';
+import {
+  assertWithdrawalAllowed,
+} from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
@@ -69,12 +76,15 @@ export async function solanaBalanceGET(wallet: string) {
 export async function solanaBetPOST(request: Request) {
   try {
     const body = await request.json();
-    const wallet = String(body.wallet || '').trim();
+    const wallet = normalizeWalletForChain(String(body.wallet || '').trim(), CHAIN);
+    if (!wallet) {
+      return NextResponse.json({ error: 'Invalid Solana wallet address' }, { status: 400 });
+    }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-
     const action = body.action === 'credit' ? 'credit' : 'debit';
     const amountNative = parseFloat(body.amountNative ?? body.amountSol);
+    const game = typeof body.game === 'string' ? body.game.trim().slice(0, 32) : null;
 
     if (!wallet || !Number.isFinite(amountNative) || amountNative <= 0) {
       return NextResponse.json({ error: 'wallet and positive amountNative required' }, { status: 400 });
@@ -82,10 +92,29 @@ export async function solanaBetPOST(request: Request) {
 
     const cfg = getPlayChainConfig(CHAIN)!;
     const amountRaw = nativeToRaw(CHAIN, amountNative);
-    const newBalance =
-      action === 'credit'
-        ? await creditHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw })
-        : await debitHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw });
+
+    if (action === 'credit') {
+      await consumePendingStakeForCredit({ wallet, chain: CHAIN, creditRaw: amountRaw });
+      const newBalance = await creditHouseBalance({
+        wallet,
+        chain: CHAIN,
+        currency: cfg.dbCurrency,
+        amountRaw,
+      });
+      return NextResponse.json({
+        success: true,
+        balanceRaw: newBalance.toString(),
+        balanceNative: rawToNative(CHAIN, newBalance),
+      });
+    }
+
+    const newBalance = await debitHouseBalance({
+      wallet,
+      chain: CHAIN,
+      currency: cfg.dbCurrency,
+      amountRaw,
+    });
+    await recordPendingStake({ wallet, chain: CHAIN, betRaw: amountRaw, game });
 
     return NextResponse.json({
       success: true,
@@ -94,7 +123,11 @@ export async function solanaBetPOST(request: Request) {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Bet update failed';
-    return NextResponse.json({ error: msg }, { status: msg.includes('Insufficient') ? 400 : 500 });
+    const status =
+      msg.includes('Insufficient') || msg.includes('stake') || msg.includes('Payout')
+        ? 400
+        : 500;
+    return NextResponse.json({ error: msg }, { status });
   }
 }
 
@@ -330,7 +363,20 @@ export async function solanaWithdrawPOST(request: Request) {
 
     const usdEstimate = await estimateWithdrawalUsd(CHAIN, amountNative);
 
-    if (requiresManualWithdrawalApproval(usdEstimate)) {
+    const withdrawalGuard = await assertWithdrawalAllowed({
+      wallet,
+      chain: CHAIN,
+      amountNative,
+      usdEstimate,
+    });
+    if (!withdrawalGuard.ok) {
+      return NextResponse.json({ error: withdrawalGuard.error }, { status: 403 });
+    }
+
+    const needsManual =
+      requiresManualWithdrawalApproval(usdEstimate) || withdrawalGuard.forceManual;
+
+    if (needsManual) {
       const newBalance = await debitHouseBalance({
         wallet,
         chain: CHAIN,
@@ -352,7 +398,7 @@ export async function solanaWithdrawPOST(request: Request) {
         success: true,
         pendingApproval: true,
         requestId,
-        message: pendingWithdrawalMessage(thresholdUsd),
+        message: pendingWithdrawalMessage(thresholdUsd, withdrawalGuard.reason),
         grossNative: amountNative,
         estimatedUsd: usdEstimate,
         platformFeeNative: rawToNative(CHAIN, feeRaw),

@@ -59,6 +59,10 @@ export async function queueWithdrawalRequest(
   return { requestId: data.id, thresholdUsd };
 }
 
-export function pendingWithdrawalMessage(thresholdUsd: number): string {
+export function pendingWithdrawalMessage(thresholdUsd: number, reason?: string): string {
+  if (reason === 'daily_auto_cap') {
+    const cap = process.env.AUTO_WITHDRAW_DAILY_USD_CAP?.trim() || '50';
+    return `Auto-withdrawals are capped at $${cap} per 24 hours. This request requires manual approval.`;
+  }
   return `Withdrawal exceeds $${thresholdUsd} USD equivalent and requires manual approval.`;
 }
