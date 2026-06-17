@@ -9,12 +9,12 @@ export const HACKATHON_WINNER_LABEL = `${HACKATHON_WIN_COUNT}× global hackathon
 export const HACKATHON_WINNER_SHORT = `${HACKATHON_WIN_COUNT}× Web3 Hackathon Winner`;
 
 /** Footer / OG grant line */
-export const GRANT_RECIPIENT_LINE = 'Grant recipient: Aptos Foundation · Movement Labs · Solana';
+export const GRANT_RECIPIENT_LINE = 'Grant recipient: Movement Labs · Solana';
 
 /** Marquee items (excluding primary $APTC live alert) */
 export const PLATFORM_CREDENTIALS = [
   { text: HACKATHON_WINNER_LABEL },
   { text: 'Movement Labs grantee' },
-  { text: 'Aptos Foundation grantee' },
-  { text: 'Aptos & Movement advisors onboard' },
+  { text: 'Zo House Foundation grantee' },
+  { text: 'Solana & Movement advisors onboard' },
 ];

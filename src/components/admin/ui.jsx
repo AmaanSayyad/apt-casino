@@ -31,7 +31,7 @@ export function inferChainFromAddress(wallet) {
   return 'solana';
 }
 
-/** Truncated wallet label linking to chain explorer (Solana → explorer.solana.com). */
+/** Truncated wallet label linking to chain explorer (Solana → solscan.io). */
 export function WalletExplorerLink({ wallet, chain, className = '' }) {
   if (!wallet) return <span className={className}>—</span>;
   const chainId = String(chain || inferChainFromAddress(wallet)).toLowerCase();

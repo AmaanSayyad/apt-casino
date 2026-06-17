@@ -11,10 +11,9 @@ function solanaClusterQuery(): string {
       : '';
 }
 
-/** Official Solana Explorer (explorer.solana.com). */
+/** Solscan account URL for Solana addresses. */
 export function solanaExplorerAddressUrl(address: string | null | undefined): string | null {
-  if (!address) return null;
-  return `https://explorer.solana.com/address/${address}${solanaClusterQuery()}`;
+  return explorerAddressUrl('solana', address);
 }
 
 export function explorerAddressUrl(chain: ChainId | string, address: string | null | undefined): string | null {
