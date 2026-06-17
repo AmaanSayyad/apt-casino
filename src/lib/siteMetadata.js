@@ -29,7 +29,7 @@ export const siteIcons = {
 export const DEFAULT_TITLE = 'APT Casino';
 
 export const DEFAULT_DESCRIPTION =
-  'Provably fair casino games on Solana ';
+  'AptCasino.fun';
 
 export function getSiteUrl() {
   const fromEnv =
