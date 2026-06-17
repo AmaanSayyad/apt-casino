@@ -29,7 +29,7 @@ export const siteIcons = {
 export const DEFAULT_TITLE = 'APT Casino';
 
 export const DEFAULT_DESCRIPTION =
-  'Provably fair casino games on Solana and Aptos. Deposit, play roulette, mines, plinko & more — earn APTC via referrals.';
+  'Provably fair casino games on Solana ';
 
 export function getSiteUrl() {
   const fromEnv =
@@ -67,10 +67,13 @@ export function litepaperPath(fragment = '') {
   return `${LITEPAPER_PATH}${hash}`;
 }
 
+/** Default preview image shown on every page when sharing on Discord, Telegram, X, etc. */
+export const DEFAULT_OG_IMAGE_PATH = '/Linkshare.jpg';
+
 /**
  * @param {{ title?: string; description?: string; path?: string; ogImagePath?: string }} opts
- * When `ogImagePath` is omitted, rely on segment `opengraph-image` (e.g. `src/app/opengraph-image.jsx`)
- * so crawlers get a single image URL — duplicate `og:image` tags break Telegram previews.
+ * `ogImagePath` defaults to `/Linkshare.jpg` so every page/link previews with the same
+ * social card. Pass an explicit `null` to suppress the image on a specific page.
  */
 export function buildPageMetadata(opts = {}) {
   const siteUrl = getSiteUrl();
@@ -78,6 +81,7 @@ export function buildPageMetadata(opts = {}) {
   const description = opts.description ?? DEFAULT_DESCRIPTION;
   const path = opts.path ?? '/';
   const canonical = new URL(path.startsWith('/') ? path : `/${path}`, siteUrl).toString();
+  const imagePath = opts.ogImagePath !== undefined ? opts.ogImagePath : DEFAULT_OG_IMAGE_PATH;
 
   const openGraph = {
     type: 'website',
@@ -94,18 +98,18 @@ export function buildPageMetadata(opts = {}) {
     description,
   };
 
-  if (opts.ogImagePath) {
+  if (imagePath) {
     const ogImage = new URL(
-      opts.ogImagePath.startsWith('/') ? opts.ogImagePath : `/${opts.ogImagePath}`,
+      imagePath.startsWith('/') ? imagePath : `/${imagePath}`,
       siteUrl,
     ).toString();
-    const mimeType = opts.ogImagePath.match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png';
+    const mimeType = imagePath.match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png';
     openGraph.images = [
       {
         url: ogImage,
         secureUrl: ogImage,
-        width: 1200,
-        height: 630,
+        width: 3200,
+        height: 1800,
         alt: SITE_NAME,
         type: mimeType,
       },
