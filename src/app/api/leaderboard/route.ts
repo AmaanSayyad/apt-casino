@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { normalizeWallet, normalizeWalletForChain } from '@/lib/server/referrals';
 import { getPlayChainConfig, type ChainId } from '@/lib/chains/registry';
 import { loadPlayEventsForLeaderboard } from '@/lib/server/gamePlayEvents';
+import { resolvePlayerAvatarUrl } from '@/lib/xProfile';
 
 export const dynamic = 'force-dynamic';
 
@@ -314,7 +315,10 @@ export async function GET(request: NextRequest) {
       chain: row.chain,
       wallet: row.wallet,
       handle: safeProfileHandle(profile?.handle),
-      avatarUrl: profile?.avatar_url ?? null,
+      avatarUrl: resolvePlayerAvatarUrl({
+        avatarUrl: profile?.avatar_url,
+        twitterHandle: profile?.twitter_handle,
+      }),
       bets: row.bets,
       wins: row.wins,
       winrate: row.winrate,
@@ -354,7 +358,7 @@ export async function GET(request: NextRequest) {
 
 // ----- Profile join (Supabase) ----------------------------------------------------
 
-type ProfileLite = { handle: string | null; avatar_url: string | null };
+type ProfileLite = { handle: string | null; avatar_url: string | null; twitter_handle: string | null };
 
 function safeProfileHandle(handle: unknown): string | null {
   if (typeof handle === 'string') {
@@ -372,11 +376,15 @@ async function fetchProfiles(wallets: string[]): Promise<Map<string, ProfileLite
 
   const { data } = await supabase
     .from('user_profiles')
-    .select('wallet, handle, avatar_url')
+    .select('wallet, handle, avatar_url, twitter_handle')
     .in('wallet', wallets);
 
   for (const row of data ?? []) {
-    map.set(row.wallet, { handle: row.handle, avatar_url: row.avatar_url });
+    map.set(row.wallet, {
+      handle: row.handle,
+      avatar_url: row.avatar_url,
+      twitter_handle: row.twitter_handle,
+    });
   }
   return map;
 }

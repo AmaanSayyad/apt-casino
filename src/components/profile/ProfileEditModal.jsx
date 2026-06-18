@@ -1,14 +1,17 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import PlayerAvatar from '@/components/PlayerAvatar';
+import { normalizeTwitterHandle } from '@/lib/xProfile';
 
 export default function ProfileEditModal({ initial, wallet, chain, onClose, onSaved }) {
   const [handle, setHandle] = useState(initial?.handle || '');
-  const [avatarUrl, setAvatarUrl] = useState(initial?.avatar_url || '');
   const [bio, setBio] = useState(initial?.bio || '');
   const [twitterHandle, setTwitterHandle] = useState(initial?.twitter_handle || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+
+  const xLinked = !!normalizeTwitterHandle(twitterHandle);
 
   const submit = useCallback(async () => {
     setSaving(true);
@@ -21,7 +24,6 @@ export default function ProfileEditModal({ initial, wallet, chain, onClose, onSa
           wallet,
           chain,
           handle: handle || null,
-          avatarUrl: avatarUrl || null,
           bio: bio || null,
           twitterHandle: twitterHandle || null,
         }),
@@ -31,13 +33,17 @@ export default function ProfileEditModal({ initial, wallet, chain, onClose, onSa
         setError(j.error || 'Failed to save profile');
         return;
       }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('aptcasino-profile-updated'));
+      }
       await onSaved();
+      onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Network error');
     } finally {
       setSaving(false);
     }
-  }, [wallet, chain, handle, avatarUrl, bio, twitterHandle, onSaved]);
+  }, [wallet, chain, handle, bio, twitterHandle, onSaved, onClose]);
 
   return (
     <div
@@ -51,25 +57,41 @@ export default function ProfileEditModal({ initial, wallet, chain, onClose, onSa
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="font-display text-xl font-bold text-white">Edit profile</h3>
-        <p className="mt-1 text-xs text-white/45">Visible on leaderboard and your public profile.</p>
+        <p className="mt-1 text-xs text-white/45">
+          Link your X handle — your profile photo is used across the site (navbar, leaderboard, games).
+        </p>
 
         <div className="mt-5 space-y-3">
-          <Field label="Handle (2–24 chars)">
+          <Field label="X handle">
+            <div className="flex items-center gap-3">
+              <PlayerAvatar
+                twitterHandle={twitterHandle}
+                handle={handle}
+                wallet={wallet}
+                size={52}
+                rounded="rounded-xl"
+              />
+              <input
+                value={twitterHandle}
+                onChange={(e) => setTwitterHandle(e.target.value.replace(/^@/, ''))}
+                placeholder="username"
+                className="min-w-0 flex-1 rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-purple-400/60"
+                maxLength={15}
+              />
+            </div>
+            <p className="mt-1.5 text-[11px] text-white/40">
+              {xLinked
+                ? 'Your X profile photo will appear everywhere after you save.'
+                : 'Add your X username to show your profile photo app-wide.'}
+            </p>
+          </Field>
+          <Field label="Display handle (2–24 chars)">
             <input
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
               placeholder="satoshi42"
               className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-purple-400/60"
               maxLength={24}
-            />
-          </Field>
-          <Field label="Avatar URL">
-            <input
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://…"
-              className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-purple-400/60"
-              maxLength={512}
             />
           </Field>
           <Field label={`Bio (${bio.length}/280)`}>
@@ -79,15 +101,6 @@ export default function ProfileEditModal({ initial, wallet, chain, onClose, onSa
               placeholder="Player on Solana · Aptos"
               rows={3}
               className="w-full resize-none rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-purple-400/60"
-            />
-          </Field>
-          <Field label="X handle (no @)">
-            <input
-              value={twitterHandle}
-              onChange={(e) => setTwitterHandle(e.target.value.replace(/^@/, ''))}
-              placeholder="username"
-              className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-purple-400/60"
-              maxLength={15}
             />
           </Field>
         </div>

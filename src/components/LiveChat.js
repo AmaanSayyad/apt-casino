@@ -4,10 +4,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { usePlayWallet } from "@/hooks/usePlayWallet";
+import { sanitizeChatContent } from "@/lib/chatSanitize";
 
 function formatChatLabel(walletAddress) {
-  if (!walletAddress || walletAddress === "guest") return "Guest";
-  const s = String(walletAddress);
+  const s = sanitizeChatContent(String(walletAddress || ""));
+  if (!s || s === "guest") return "Guest";
   if (s.length <= 14) return s;
   if (s.startsWith("0x")) return `${s.slice(0, 6)}…${s.slice(-4)}`;
   return `${s.slice(0, 4)}…${s.slice(-4)}`;
@@ -86,7 +87,7 @@ export default function LiveChat({ open, onClose }) {
 
   async function sendMessage(e) {
     e?.preventDefault?.();
-    const content = text.trim();
+    const content = sanitizeChatContent(text);
     if (!content) return;
     setText("");
     const temp = {
@@ -96,13 +97,25 @@ export default function LiveChat({ open, onClose }) {
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, temp]);
-    const { data, error } = await supabase
-      .from("chat_messages")
-      .insert({ content, wallet_address: walletAddr })
-      .select();
-    if (!error && Array.isArray(data) && data[0]) {
-      const real = data[0];
+    try {
+      const res = await fetch("/api/chat/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content,
+          wallet: walletAddr,
+          chain: connected ? chain : "guest",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.message) {
+        setMessages((prev) => prev.filter((m) => m.id !== temp.id));
+        return;
+      }
+      const real = json.message;
       setMessages((prev) => prev.map((m) => (m.id === temp.id ? real : m)));
+    } catch {
+      setMessages((prev) => prev.filter((m) => m.id !== temp.id));
     }
   }
 
@@ -146,7 +159,7 @@ export default function LiveChat({ open, onClose }) {
               <span className="text-white/50 mr-2">
                 {formatChatLabel(m.wallet_address)}
               </span>
-              <span>{m.content}</span>
+              <span>{sanitizeChatContent(m.content)}</span>
             </div>
           ))}
           <div ref={bottomRef} />

@@ -10,7 +10,7 @@ import FeeTierPreview from '@/components/wallet/FeeTierPreview';
 import { demoStartNativeAmount } from '@/lib/play/demoPlay';
 
 const QUICK_AMOUNTS_SOL = [0.01, 0.1, 0.5, 1, 5, 10];
-const QUICK_AMOUNTS_APT = [10, 25, 50, 100, 250, 500];
+const QUICK_AMOUNTS_APT = [1, 10, 25, 50, 100, 250];
 
 function Spinner() {
   return (
@@ -51,7 +51,12 @@ export default function HouseBalanceModal({
   const [feeQuote, setFeeQuote] = useState(null);
   const ui = CHAIN_UI[playChain] || CHAIN_UI.solana;
   const depositBusy = isDepositing || isPlayDepositing;
-  const minimumDeposit = playChain === 'aptos' ? 10 : 0.01;
+  const minimumDeposit =
+    playChain === 'aptos'
+      ? Number(process.env.NEXT_PUBLIC_APTOS_MIN_DEPOSIT_APT || 1)
+      : 0.01;
+  const minimumWithdraw =
+    playChain === 'aptos' ? Number(process.env.NEXT_PUBLIC_APTOS_MIN_WITHDRAW_APT || 1) : 0.01;
   const quickAmounts = playChain === 'aptos' ? QUICK_AMOUNTS_APT : QUICK_AMOUNTS_SOL;
   const depositGross = parseFloat(depositAmount);
   const depositPreview = useMemo(() => {
@@ -76,7 +81,7 @@ export default function HouseBalanceModal({
     !canWithdraw ||
     !withdrawAmount ||
     !Number.isFinite(withdrawParsed) ||
-    withdrawParsed <= 0 ||
+    withdrawParsed < minimumWithdraw ||
     withdrawParsed > balanceNative ||
     isWithdrawing;
 
@@ -359,6 +364,13 @@ export default function HouseBalanceModal({
                   <FeeTierPreview playSymbol={playSymbol} mode="withdraw" />
                   {canWithdraw ? (
                     <>
+                      <p className="text-[11px] text-white/40 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2">
+                        Minimum withdrawal:{' '}
+                        <span className="font-mono text-white/65">
+                          {minimumWithdraw} {playSymbol}
+                        </span>
+                        .
+                      </p>
                       <div className="flex gap-2">
                         <input
                           type="number"

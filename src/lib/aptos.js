@@ -40,7 +40,7 @@ const NETWORK_ENUM_MAP = {
 };
 
 const aptosConfig = new AptosConfig({
-  network: NETWORK_ENUM_MAP[DEFAULT_NETWORK] || NetworkToNetworkName.TESTNET,
+  network: NETWORK_ENUM_MAP[DEFAULT_NETWORK] || NetworkToNetworkName.MAINNET,
 });
 
 export const aptosClient = new Aptos(aptosConfig);

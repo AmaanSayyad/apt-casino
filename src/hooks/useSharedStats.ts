@@ -77,6 +77,10 @@ export type PublicStatsPayload = Record<string, unknown> & {
   playerRoundsWon?: number;
   depositsProcessed?: number;
   uniqueTraders?: number;
+  winRatePct?: number;
+  roundsByChain?: { solana?: number; aptos?: number };
+  winsByChain?: { solana?: number; aptos?: number };
+  depositsByChain?: { solana?: number; aptos?: number };
   supabaseConfigured?: boolean;
 };
 

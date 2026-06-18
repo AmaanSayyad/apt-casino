@@ -3,6 +3,7 @@ import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk';
 import { normalizeWallet, normalizeWalletForChain } from '@/lib/server/referrals';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { getPlayChainConfig } from '@/lib/chains/registry';
+import { buildDemoGamesPayload, isDemoPlayWallet } from '@/lib/play/demoPlay';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,10 @@ export async function GET(req: NextRequest) {
   const wallet = normalizeWalletForChain(req.nextUrl.searchParams.get('wallet'), chainId);
   if (!wallet) {
     return NextResponse.json({ error: 'wallet is required' }, { status: 400 });
+  }
+
+  if (isDemoPlayWallet(wallet)) {
+    return NextResponse.json(buildDemoGamesPayload());
   }
 
   if (chainId === 'solana') {

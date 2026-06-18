@@ -15,6 +15,11 @@ import { getDailyStreakStatus } from '@/lib/server/dailyStreak';
 import { getFeeTiersPublicPayload } from '@/lib/server/feeTiers';
 import { resolveReferralChain } from '@/lib/server/referrals';
 import { getWalletPromotionSummary } from '@/lib/server/promotions';
+import {
+  buildDemoProfilePayload,
+  isDemoPlayWallet,
+} from '@/lib/play/demoPlay';
+import { resolvePlayerAvatarUrl, xAvatarUrlFromHandle } from '@/lib/xProfile';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +45,10 @@ export async function GET(req: NextRequest) {
   const wallet = normalizeWalletForChain(walletInput, chainId);
   if (!wallet) {
     return NextResponse.json({ error: 'wallet is required' }, { status: 400 });
+  }
+
+  if (isDemoPlayWallet(wallet)) {
+    return NextResponse.json(buildDemoProfilePayload(chainId));
   }
 
   const [
@@ -136,6 +145,10 @@ export async function GET(req: NextRequest) {
     chain: chainId,
     nativeSymbol: chainCfg?.nativeSymbol ?? (chainId === 'solana' ? 'SOL' : 'APT'),
     profile: profileRes.data ?? null,
+    resolvedAvatarUrl: resolvePlayerAvatarUrl({
+      avatarUrl: profileRes.data?.avatar_url,
+      twitterHandle: profileRes.data?.twitter_handle,
+    }),
     onChainBalanceApt: onChainBalanceNative,
     onChainBalanceNative,
     deposits: {
@@ -246,6 +259,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'wallet is required' }, { status: 400 });
   }
 
+  if (isDemoPlayWallet(wallet)) {
+    return NextResponse.json(
+      { error: 'Profile edits are disabled in demo mode. Connect a wallet to save a profile.' },
+      { status: 403 },
+    );
+  }
+
   const patch: Record<string, string | null> = {};
   if ('handle' in body) {
     if (body.handle === null || body.handle === '') {
@@ -293,6 +313,15 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // When X is linked, default avatar to the live X profile photo unless a custom URL was sent.
+  if (patch.twitter_handle && !('avatar_url' in patch)) {
+    const explicitAvatar =
+      'avatarUrl' in body ? (body.avatarUrl === null || body.avatarUrl === '' ? null : body.avatarUrl) : undefined;
+    if (explicitAvatar === undefined) {
+      patch.avatar_url = xAvatarUrlFromHandle(patch.twitter_handle);
+    }
+  }
+
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
   }
@@ -314,7 +343,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ ok: true, profile: data });
+  return NextResponse.json({
+    ok: true,
+    profile: data,
+    resolvedAvatarUrl: resolvePlayerAvatarUrl({
+      avatarUrl: data?.avatar_url,
+      twitterHandle: data?.twitter_handle,
+    }),
+  });
 }
 
 async function fetchOnChainNativeBalance(chainId: ChainId, wallet: string): Promise<number | null> {

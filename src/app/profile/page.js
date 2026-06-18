@@ -8,6 +8,11 @@ import { setBalance } from '@/store/balanceSlice';
 import { displayToRaw } from '@/lib/chains/registry';
 import ProfileDashboard from '@/components/profile/ProfileDashboard';
 import { referralChainForWallet } from '@/lib/referral/walletChain';
+import {
+  buildDemoGamesPayload,
+  buildDemoProfilePayload,
+  buildDemoReferralStatsPayload,
+} from '@/lib/play/demoPlay';
 
 export default function ProfilePage() {
   const { address, connected, chain, chainLabel } = usePlayWallet();
@@ -25,7 +30,7 @@ export default function ProfilePage() {
   const profileChain = referralChainForWallet(address, chain);
 
   const refresh = useCallback(async () => {
-    if (!address) return;
+    if (!address || demoMode) return;
     setLoading(true);
     try {
       const qs = `wallet=${encodeURIComponent(address)}&chain=${encodeURIComponent(profileChain)}`;
@@ -40,10 +45,10 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  }, [address, profileChain]);
+  }, [address, profileChain, demoMode]);
 
   const refreshGames = useCallback(async () => {
-    if (!address) return;
+    if (!address || demoMode) return;
     setLoadingGames(true);
     try {
       const qs = `wallet=${encodeURIComponent(address)}&chain=${encodeURIComponent(profileChain)}`;
@@ -53,15 +58,24 @@ export default function ProfilePage() {
     } finally {
       setLoadingGames(false);
     }
-  }, [address, profileChain]);
+  }, [address, profileChain, demoMode]);
 
   useEffect(() => {
+    if (demoMode) {
+      setProfile(buildDemoProfilePayload(chain, balanceNative));
+      setGames(buildDemoGamesPayload());
+      setReferralStats(buildDemoReferralStatsPayload());
+      setLoading(false);
+      setLoadingGames(false);
+      return;
+    }
     void refresh();
-  }, [refresh]);
+  }, [demoMode, chain, balanceNative, refresh]);
 
   useEffect(() => {
-    if (address) void refreshGames();
-  }, [address, chain, refreshGames]);
+    if (demoMode || !address) return;
+    void refreshGames();
+  }, [address, chain, demoMode, refreshGames]);
 
   return (
     <ProfileDashboard

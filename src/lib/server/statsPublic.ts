@@ -67,31 +67,72 @@ async function computePublicStats(): Promise<PublicStatsPayload> {
 
   let depositsProcessed = 0;
   let uniqueTraders = 0;
+  let roundsByChain: Record<string, number> = { solana: 0, aptos: 0 };
+  let winsByChain: Record<string, number> = { solana: 0, aptos: 0 };
+  let depositsByChain: Record<string, number> = { solana: 0, aptos: 0 };
 
   if (supabase) {
-    const [{ count: dCount, error: dErr }, { count: wCount, error: wErr }, allPlay] =
+    const [{ count: dCount, error: dErr }, { count: wCount, error: wErr }, allPlay, solDep, aptDep] =
       await Promise.all([
         supabase.from('deposits_log').select('*', { count: 'exact', head: true }),
         supabase.from('tracked_wallets').select('*', { count: 'exact', head: true }),
         aggregatePlayEventsSince(null),
+        supabase
+          .from('deposits_log')
+          .select('*', { count: 'exact', head: true })
+          .eq('chain', 'solana'),
+        supabase
+          .from('deposits_log')
+          .select('*', { count: 'exact', head: true })
+          .eq('chain', 'aptos'),
       ]);
     if (dErr) console.warn('[stats/public] deposits_log count', dErr.message);
     if (wErr) console.warn('[stats/public] tracked_wallets count', wErr.message);
     depositsProcessed = dCount ?? 0;
+    depositsByChain = {
+      solana: solDep.count ?? 0,
+      aptos: aptDep.count ?? 0,
+    };
     totalRoundsPlayed = allPlay.totalBets;
     playerRoundsWon = allPlay.playerWins;
+    roundsByChain = {
+      solana: allPlay.totalBetsByChain?.solana ?? 0,
+      aptos: allPlay.totalBetsByChain?.aptos ?? 0,
+    };
+    winsByChain = {
+      solana: allPlay.playerWinsByChain?.solana ?? 0,
+      aptos: allPlay.playerWinsByChain?.aptos ?? 0,
+    };
     uniqueTraders = allPlay.uniqueWallets > 0 ? allPlay.uniqueWallets : (wCount ?? 0);
   } else {
     const onChain = await aptosOnChainRoundStats();
     totalRoundsPlayed = onChain.total;
     playerRoundsWon = onChain.wins;
+    roundsByChain = { solana: 0, aptos: onChain.total };
+    winsByChain = { solana: 0, aptos: onChain.wins };
   }
 
+  const scale = (n: number) => n * ALL_TIME_STATS_SCALE;
+
   return {
-    totalRoundsPlayed: totalRoundsPlayed * ALL_TIME_STATS_SCALE,
-    playerRoundsWon: playerRoundsWon * ALL_TIME_STATS_SCALE,
-    depositsProcessed: depositsProcessed * ALL_TIME_STATS_SCALE,
-    uniqueTraders,
+    totalRoundsPlayed: scale(totalRoundsPlayed),
+    playerRoundsWon: scale(playerRoundsWon),
+    depositsProcessed: scale(depositsProcessed),
+    uniqueTraders: scale(uniqueTraders),
+    winRatePct:
+      totalRoundsPlayed > 0 ? Math.round((playerRoundsWon / totalRoundsPlayed) * 1000) / 10 : 0,
+    roundsByChain: {
+      solana: scale(roundsByChain.solana ?? 0),
+      aptos: scale(roundsByChain.aptos ?? 0),
+    },
+    winsByChain: {
+      solana: scale(winsByChain.solana ?? 0),
+      aptos: scale(winsByChain.aptos ?? 0),
+    },
+    depositsByChain: {
+      solana: scale(depositsByChain.solana ?? 0),
+      aptos: scale(depositsByChain.aptos ?? 0),
+    },
     supabaseConfigured,
     chainsActive: 2,
     chains: ['solana', 'aptos'],

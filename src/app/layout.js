@@ -3,7 +3,6 @@ import "@/styles/globals.css";
 import Providers from "./providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import MainnetWarning from "@/components/MainnetWarning";
 const inter = Inter({ subsets: ["latin"] });
 
 import { Analytics } from "@vercel/analytics/next";
@@ -21,7 +20,6 @@ export default function RootLayout({ children }) {
       >
         <Providers>
           <Navbar />
-          <MainnetWarning />
           <main id="site-main" className="site-main min-w-0 w-full">
             {children}
           </main>

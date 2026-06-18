@@ -18,9 +18,10 @@ export default function Home() {
   return (
     <div className="bg-[#070005] overflow-x-hidden w-full">
       <HeroSection />
-      <PlatformIntelligenceSection />
       <FeatureSection />
       <GameCarousel />
+      <PlatformIntelligenceSection />
+      <ProvablyFairSection />
       <HowItWorksSection />
       <EcosystemLogosSection />
       <DexscreenerEmbedSection />
@@ -29,7 +30,6 @@ export default function Home() {
       <UpcomingTournaments />
       <TestimonialsSection />
       <NewsUpdates />
-      <ProvablyFairSection />
       <LetsPlaySection />
     </div>
   );

@@ -405,8 +405,6 @@ export default function Navbar() {
     };
   }, []);
 
-  // switchToTestnet function removed - now handled by MainnetWarning component
-
   return (
     <nav className="site-header fixed w-full z-20 border-b border-white/5 bg-[#070005]">
       <div className="flex w-full items-center justify-between gap-4 py-4 px-5 sm:px-8 lg:px-10 max-w-[1600px] mx-auto min-h-[4.25rem]">

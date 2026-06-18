@@ -12,6 +12,8 @@ import { demoStartNativeAmount } from '@/lib/play/demoPlay';
 import { getPlayChainConfig } from '@/lib/chains/registry';
 import { CHAIN_UI } from '@/lib/chains/chainUi';
 import { explorerAddressUrl, solanaExplorerAddressUrl } from '@/lib/chains/explorer';
+import { usePlayerProfile } from '@/hooks/usePlayerProfile';
+import PlayerAvatar from '@/components/PlayerAvatar';
 import ChainConnectModal from './ChainConnectModal';
 
 function shorten(addr) {
@@ -45,6 +47,7 @@ export default function PlayWalletConnect({
   const { disconnect: disconnectAptos } = useAptosWallet();
   const config = getPlayChainConfig(play.chain);
   const ui = CHAIN_UI[play.chain];
+  const playerProfile = usePlayerProfile();
   const symbol = balanceSymbol ?? config?.nativeSymbol ?? play.chain;
   const balanceText = isLoadingBalance ? '…' : (balanceFormatted ?? '0.000');
   const isSheet = layout === 'sheet';
@@ -138,6 +141,9 @@ export default function PlayWalletConnect({
       <div className={`flex items-center justify-between gap-2 border-b border-white/10 ${isSheet ? 'px-4 py-3' : 'px-3 py-2'}`}>
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Connected</p>
+          {playerProfile.displayName && playerProfile.displayName !== shorten(play.address) ? (
+            <p className="mt-0.5 truncate text-xs font-semibold text-white">{playerProfile.displayName}</p>
+          ) : null}
           {explorerHref ? (
             <a
               href={explorerHref}
@@ -235,7 +241,17 @@ export default function PlayWalletConnect({
           title={`${symbol} ${balanceText} · ${play.address}`}
         >
           <div className={`relative shrink-0 ${isSheet ? 'h-9 w-9' : isCompact ? 'h-5 w-5' : 'h-5 w-5'}`}>
-            <Image src={ui.logo} alt="" fill className="object-contain" sizes={isSheet ? '36px' : '20px'} />
+            {playerProfile.avatarUrl ? (
+              <PlayerAvatar
+                avatarUrl={playerProfile.avatarUrl}
+                twitterHandle={playerProfile.twitterHandle}
+                handle={playerProfile.handle}
+                wallet={play.address}
+                size={isSheet ? 36 : 20}
+              />
+            ) : (
+              <Image src={ui.logo} alt="" fill className="object-contain" sizes={isSheet ? '36px' : '20px'} />
+            )}
           </div>
           {!isCompact && (
             <>
@@ -245,8 +261,8 @@ export default function PlayWalletConnect({
                 >
                   {symbol} {balanceText}
                 </span>
-                <span className={`block truncate font-mono text-white/55 ${isSheet ? 'text-xs' : 'text-[10px]'}`}>
-                  {shorten(play.address)}
+                <span className={`block truncate text-white/55 ${isSheet ? 'text-xs' : 'text-[10px]'}`}>
+                  {playerProfile.hasX ? playerProfile.displayName : shorten(play.address)}
                 </span>
               </div>
               <svg

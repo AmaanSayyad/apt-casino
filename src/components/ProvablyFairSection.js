@@ -1,134 +1,365 @@
 'use client';
+
 import { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Shield, CheckCircle2, Hash, Sparkles, Calculator, ScanSearch } from 'lucide-react';
+
+const CODE_SAMPLES = {
+  solana: {
+    1: `// Commit before the round resolves
+const round = await createFairnessRound(wallet, 'roulette');
+
+// Player sees commitHash before the outcome
+// commit = SHA256(revealSeed | wallet | game | requestId)
+console.log('Commit:', round.commitHash);`,
+    2: `// Deterministic outcome from committed seed
+function deriveRouletteOutcome(seedBytes) {
+  return Number(seedToU64(seedBytes) % 37n);
+}
+
+const roll = deriveRouletteOutcome(round.seedBytes);`,
+    3: `// Settle bet + publish reveal proof
+const proof = await buildSolanaFairnessProof(
+  round,
+  wallet,
+  'roulette',
+  { winningNumber: roll },
+);
+
+await postPlayBet({ wallet, amountNative, outcome: roll, proof });`,
+    4: `// Verify commit/reveal audit trail
+const ok = await verifySolanaFairnessProof(proof);
+
+// Cross-check play events on Solscan
+// proofReference links to in-app verification`,
+  },
+  aptos: {
+    1: `#[randomness]
+entry fun place_bet(user: &signer, amount: u64) {
+    let random = randomness::u64_range(0, 37);
+    settle_bet(user, amount, random);
+}`,
+    2: `use aptos_framework::randomness;
+
+let roll: u8 = (randomness::u64_range(0, 37) as u8);
+// VRF bound to this transaction — verifiable on-chain`,
+    3: `let (win, payout) = settle(
+    amount,
+    bet_kind,
+    bet_value,
+    roll,
+);
+// All game logic lives in the Move module`,
+    4: `// Verify on Aptos Explorer
+// Tx hash: 0x...
+// • Random number used
+// • Game result & payout
+// • Module events emitted`,
+  },
+};
+
+const CODE_FILES = {
+  solana: { 1: 'fairness.ts', 2: 'fairness.ts', 3: 'settle.ts', 4: 'verify.ts' },
+  aptos: { 1: 'roulette.move', 2: 'randomness.move', 3: 'roulette.move', 4: 'explorer' },
+};
+
+const WHY_IT_MATTERS = [
+  'Results cannot be manipulated after you bet',
+  'Every outcome is independently verifiable',
+  'No trust required — verify with chain data',
+  'Cryptographic algorithms determine results',
+];
+
+const STEP_ICONS = [Hash, Sparkles, Calculator, ScanSearch];
+
+function highlightLine(line, chain) {
+  const accent = chain === 'solana' ? '#6ee7b7' : '#7dd3fc';
+  const keyword = chain === 'solana' ? '#c4b5fd' : '#93c5fd';
+
+  if (/^\s*\/\//.test(line) || /^\s*\/\//.test(line.replace(/^#/, ''))) {
+    return <span className="text-white/35">{line}</span>;
+  }
+
+  const parts = [];
+  let rest = line;
+  let key = 0;
+
+  const patterns = [
+    { re: /\b(async|await|function|const|let|return|entry|fun|use|as|u64|u8)\b/g, color: keyword },
+    { re: /\b(createFairnessRound|deriveRouletteOutcome|buildSolanaFairnessProof|verifySolanaFairnessProof|randomness|settle|place_bet)\b/g, color: accent },
+    { re: /('[^']*'|"[^"]*")/g, color: '#fcd34d' },
+    { re: /(\b\d+n?\b)/g, color: '#fb923c' },
+  ];
+
+  while (rest.length > 0) {
+    let earliest = null;
+
+    for (const p of patterns) {
+      p.re.lastIndex = 0;
+      const m = p.re.exec(rest);
+      if (m && (earliest == null || m.index < earliest.index)) {
+        earliest = { index: m.index, len: m[0].length, color: p.color, text: m[0] };
+      }
+    }
+
+    if (!earliest) {
+      parts.push(<span key={key++}>{rest}</span>);
+      break;
+    }
+
+    if (earliest.index > 0) {
+      parts.push(<span key={key++}>{rest.slice(0, earliest.index)}</span>);
+    }
+    parts.push(
+      <span key={key++} style={{ color: earliest.color }}>
+        {earliest.text}
+      </span>,
+    );
+    rest = rest.slice(earliest.index + earliest.len);
+  }
+
+  return <>{parts}</>;
+}
+
+function CodeBlock({ code, chain, filename }) {
+  const lines = code.split('\n');
+  const chainLabel = chain === 'solana' ? 'Solana' : 'Aptos';
+  const chainClass =
+    chain === 'solana'
+      ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
+      : 'border-sky-500/25 bg-sky-500/10 text-sky-300';
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-[#080808] shadow-inner">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-white/[0.03] px-3 py-2.5">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+            <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
+          </div>
+          <span className="truncate font-mono text-[11px] text-white/45">{filename}</span>
+        </div>
+        <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${chainClass}`}>
+          {chainLabel}
+        </span>
+      </div>
+      <div className="overflow-x-auto p-4">
+        <pre className="font-mono text-[12px] leading-relaxed sm:text-[13px]">
+          {lines.map((line, i) => (
+            <div key={i} className="flex gap-3 hover:bg-white/[0.02] -mx-1 px-1 rounded">
+              <span className="select-none w-5 shrink-0 text-right text-white/20 tabular-nums">{i + 1}</span>
+              <code className="min-w-0 flex-1 whitespace-pre">{highlightLine(line, chain)}</code>
+            </div>
+          ))}
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+function ChainToggle({ value, onChange }) {
+  const base = 'rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all';
+
+  return (
+    <div className="flex rounded-lg border border-white/10 bg-black/40 p-0.5">
+      <button
+        type="button"
+        onClick={() => onChange?.('solana')}
+        className={`${base} ${
+          value === 'solana' ? 'bg-emerald-500/25 text-emerald-300' : 'text-white/45 hover:text-white/70'
+        }`}
+      >
+        Solana
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange?.('aptos')}
+        className={`${base} ${
+          value === 'aptos' ? 'bg-sky-500/25 text-sky-300' : 'text-white/45 hover:text-white/70'
+        }`}
+      >
+        Aptos
+      </button>
+    </div>
+  );
+}
 
 const ProvablyFairSection = () => {
-  const [activeTab, setActiveTab] = useState(1);
-  
+  const [activeStep, setActiveStep] = useState(1);
+  const [codeChain, setCodeChain] = useState('solana');
+
   const steps = [
     {
       id: 1,
-      title: 'On-Chain Randomness Request',
-      description: 'When you place a bet, the game layer requests verifiable randomness on-chain — Move modules on Aptos or auditable house RNG on Solana, with events logged per chain.',
-      icon: 'randomness-request'
+      short: 'Request',
+      title: 'Randomness request',
+      description:
+        'Before your bet resolves, Solana commits a hidden seed hash you can audit later. Aptos requests VRF randomness inside the Move transaction.',
     },
     {
       id: 2,
-      title: 'On-Chain Randomness',
-      description: 'Solana play logs auditable outcomes; Aptos games use aptos_framework::randomness (VRF). Both paths are transparent and publicly verifiable.',
-      icon: 'aptos-randomness'
+      short: 'Generate',
+      title: 'Draw the outcome',
+      description:
+        'Solana derives the result deterministically from the committed seed. Aptos uses aptos_framework::randomness for on-chain VRF.',
     },
     {
       id: 3,
-      title: 'Game Result Calculation',
-      description: 'Results are settled on-chain or via signed server events tied to your wallet. Verify Aptos txs on Aptos Explorer or Solana play on Solscan.',
-      icon: 'calculation'
+      short: 'Settle',
+      title: 'Calculate payout',
+      description:
+        'Solana publishes a commit/reveal proof with the play event. Aptos settles wins and losses entirely in the smart contract.',
     },
     {
       id: 4,
-      title: 'Blockchain Verification',
-      description: 'Every game result is recorded on-chain or in auditable logs. Check the transaction hash on Solscan or Aptos Explorer for complete transparency.',
-      icon: 'verification'
+      short: 'Verify',
+      title: 'Check the proof',
+      description:
+        'Verify Solana fairness records and play logs on Solscan. Verify Aptos transactions and module events on Aptos Explorer.',
     },
   ];
-  
+
+  const step = steps[activeStep - 1];
+  const StepIcon = STEP_ICONS[activeStep - 1];
+  const codeSample = CODE_SAMPLES[codeChain][activeStep];
+  const codeFile = CODE_FILES[codeChain][activeStep];
+
   return (
-    <section className="py-16 px-4 md:px-8 lg:px-16 relative">
-      {/* Background accents */}
-      <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-red-magic/5 blur-[100px] z-0"></div>
-      <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-blue-magic/5 blur-[100px] z-0"></div>
-      
-      <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex items-center mb-8">
-          <div className="w-1 h-6 bg-gradient-to-r from-red-magic to-blue-magic rounded-full mr-3"></div>
-          <h2 className="text-2xl font-display font-bold text-white">Provably Fair Gaming</h2>
+    <section className="relative px-4 py-16 md:px-8 lg:px-16">
+      <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-red-magic/5 blur-[100px] z-0" />
+      <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-blue-magic/5 blur-[100px] z-0" />
+
+      <div className="relative z-10 mx-auto max-w-7xl">
+        <div className="mb-10 flex items-center gap-3">
+          <div className="h-6 w-1 rounded-full bg-gradient-to-b from-red-magic to-blue-magic" />
+          <div>
+            <h2 className="font-display text-2xl font-bold text-white sm:text-3xl">Provably Fair Gaming</h2>
+            <p className="mt-1 text-sm text-white/50">Transparent outcomes on Solana & Aptos</p>
+          </div>
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left explanation column */}
-          <div className="lg:col-span-5">
-            <div className="p-[1px] bg-gradient-to-r from-red-magic to-blue-magic rounded-xl h-full">
-              <div className="bg-[#1A0015] rounded-xl p-6 h-full">
-                <h3 className="text-white text-xl font-medium mb-4">What is Provably Fair?</h3>
-                <p className="text-white/80 mb-6">
-                  Provably fair gaming on Solana and Aptos uses verifiable on-chain randomness and auditable play events. 
-                  Unlike traditional online casinos that operate as black boxes, outcomes are tied to cryptography and chain data you can verify yourself.
-                </p>
-                
-                <div className="bg-[#250020] p-4 rounded-lg mb-6 border-l-2 border-red-magic">
-                  <h4 className="text-white font-medium mb-2">Why it matters</h4>
-                  <ul className="text-white/70 text-sm space-y-2 list-disc pl-4">
-                    <li>Impossible for the casino to manipulate results</li>
-                    <li>Game outcomes can be independently verified</li>
-                    <li>You don't need to trust us - you can verify yourself</li>
-                    <li>Results are determined by cryptographic algorithms</li>
-                  </ul>
-                </div>
-                
-                <Link href="/provably-fair">
-                  <div className="inline-block">
-                    <div className="p-[1px] bg-gradient-to-r from-red-magic to-blue-magic rounded-md inline-block">
-                      <button className="bg-[#1A0015] hover:bg-[#250020] transition-colors text-white px-6 py-2 rounded-md flex items-center">
-                        Verify Your Games
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </Link>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+          {/* Left — explainer */}
+          <div className="lg:col-span-4">
+            <div className="h-full rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-6 backdrop-blur-sm">
+              <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-red-magic/30 to-blue-magic/30 ring-1 ring-white/10">
+                <Shield className="h-5 w-5 text-white" strokeWidth={1.75} />
               </div>
+
+              <h3 className="mb-3 text-xl font-medium text-white">What is provably fair?</h3>
+              <p className="mb-6 text-sm leading-relaxed text-white/65">
+                Outcomes are tied to cryptography and chain data — not a hidden server RNG. You can
+                verify every result yourself instead of taking our word for it.
+              </p>
+
+              <div className="mb-6 flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
+                  <Image src="/logos/solana-sol-logo.png" alt="" width={14} height={14} className="rounded-full" />
+                  Solana
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/25 bg-sky-500/10 px-2.5 py-1 text-[11px] font-medium text-sky-300">
+                  <Image src="/logos/aptos-logo.png" alt="" width={14} height={14} className="rounded-full" />
+                  Aptos
+                </span>
+              </div>
+
+              <ul className="space-y-3">
+                {WHY_IT_MATTERS.map((item) => (
+                  <li key={item} className="flex gap-2.5 text-sm text-white/70">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400/90" strokeWidth={2} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
-          
-          {/* Right steps column */}
-          <div className="lg:col-span-7">
-            <div className="p-[1px] bg-gradient-to-r from-red-magic/40 to-blue-magic/40 rounded-xl">
-              <div className="bg-[#1A0015] rounded-xl p-6">
-                <h3 className="text-white text-xl font-medium mb-4">How It Works</h3>
-                
-                {/* Steps tabs */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-6">
-                  {steps.map((step) => (
-                    <button
-                      key={step.id}
-                      className={`p-2 rounded-md text-sm font-medium transition-all text-center ${
-                        activeTab === step.id
-                          ? 'bg-gradient-to-r from-red-magic/80 to-blue-magic/80 text-white'
-                          : 'bg-[#250020] text-white/70 hover:text-white'
-                      }`}
-                      onClick={() => setActiveTab(step.id)}
+
+          {/* Right — interactive walkthrough */}
+          <div className="lg:col-span-8">
+            <div className="h-full overflow-hidden rounded-2xl border border-white/10 bg-[#120010]/80 backdrop-blur-sm">
+              <div className="border-b border-white/10 px-5 py-4 sm:px-6">
+                <h3 className="text-lg font-medium text-white">How it works</h3>
+                <p className="mt-0.5 text-xs text-white/45">Four steps from bet to verifiable result</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-[minmax(0,11rem)_1fr]">
+                {/* Step nav */}
+                <nav className="flex md:flex-col gap-1 border-b md:border-b-0 md:border-r border-white/10 p-2 sm:p-3 overflow-x-auto md:overflow-visible">
+                  {steps.map((s) => {
+                    const Icon = STEP_ICONS[s.id - 1];
+                    const active = activeStep === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setActiveStep(s.id)}
+                        className={`flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-all md:w-full ${
+                          active
+                            ? 'bg-gradient-to-r from-red-magic/25 to-blue-magic/25 text-white ring-1 ring-white/15'
+                            : 'text-white/50 hover:bg-white/[0.04] hover:text-white/80'
+                        }`}
+                      >
+                        <span
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${
+                            active
+                              ? 'bg-gradient-to-br from-red-magic to-blue-magic text-white'
+                              : 'bg-white/5 text-white/50'
+                          }`}
+                        >
+                          {active ? <Icon className="h-3.5 w-3.5" strokeWidth={2} /> : s.id}
+                        </span>
+                        <span className="hidden sm:block">
+                          <span className="block text-[10px] uppercase tracking-wider text-white/40">
+                            Step {s.id}
+                          </span>
+                          <span className="block text-sm font-medium">{s.short}</span>
+                        </span>
+                        <span className="sm:hidden text-xs font-medium">{s.short}</span>
+                      </button>
+                    );
+                  })}
+                </nav>
+
+                {/* Step content */}
+                <div className="flex flex-col p-5 sm:p-6">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeStep}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.2 }}
+                      className="mb-5"
                     >
-                      Step {step.id}
-                    </button>
-                  ))}
-                </div>
-                
-                {/* Active tab content */}
-                <div className="min-h-[250px] flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center mb-4">
-                      {/* Step icon placeholder - would be actual icons in production */}
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-magic/60 to-blue-magic/60 flex items-center justify-center mr-4">
-                        <span className="text-white font-bold">{activeTab}</span>
+                      <div className="mb-2 flex items-center gap-2">
+                        <StepIcon className="h-4 w-4 text-fuchsia-300/80" strokeWidth={2} />
+                        <h4 className="text-base font-medium text-white sm:text-lg">{step.title}</h4>
                       </div>
-                      <h4 className="text-white text-lg font-medium">{steps[activeTab-1].title}</h4>
+                      <p className="text-sm leading-relaxed text-white/60">{step.description}</p>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  <div className="mt-auto space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[10px] font-display uppercase tracking-[0.14em] text-white/35">
+                        Example
+                      </span>
+                      <ChainToggle value={codeChain} onChange={setCodeChain} />
                     </div>
-                    
-                    <p className="text-white/80 leading-relaxed mb-8">
-                      {steps[activeTab-1].description}
-                    </p>
-                  </div>
-                  
-                  {/* Code example - In a real implementation this would be more detailed */}
-                  <div className="bg-[#0D0D0D] rounded-lg p-4 overflow-x-auto">
-                    <pre className="text-sm text-green-400 font-mono">
-                      {activeTab === 1 && '// Smart contract requests randomness\n#[randomness]\nentry fun place_bet(user: &signer, amount: u64) {\n    // Request on-chain randomness\n    let random = randomness::u64_range(0, 37);\n    // Use random number for game result\n}'}
-                      {activeTab === 2 && '// Aptos Randomness Module (Aptos Roll)\nuse aptos_framework::randomness;\n\n// Generate random number in range [0, 36]\nlet roll: u8 = (randomness::u64_range(0, 37) as u8);\n\n// Randomness is cryptographically secure\n// and verifiable on-chain'}
-                      {activeTab === 3 && '// Calculate game result on-chain\nlet (win, payout) = settle(\n    amount, \n    bet_kind, \n    bet_value, \n    roll  // From Aptos randomness\n);\n\n// Result is deterministic and verifiable\n// All logic is in smart contract'}
-                      {activeTab === 4 && '// Verify on Aptos Explorer\n// Transaction hash: 0x...\n// View transaction details:\n// - Random number used\n// - Game result\n// - Payout amount\n\n// All data is on-chain and immutable'}
-                    </pre>
+
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`${activeStep}-${codeChain}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <CodeBlock code={codeSample} chain={codeChain} filename={codeFile} />
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
@@ -140,4 +371,4 @@ const ProvablyFairSection = () => {
   );
 };
 
-export default ProvablyFairSection; 
+export default ProvablyFairSection;

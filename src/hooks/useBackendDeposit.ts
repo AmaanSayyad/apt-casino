@@ -8,6 +8,8 @@ export interface DepositResult {
   explorerUrl?: string;
   message?: string;
   netCreditedOctas?: string;
+  balanceRaw?: string;
+  balanceNative?: number;
   platformFeeApt?: number;
   grossApt?: number;
 }
@@ -15,6 +17,64 @@ export interface DepositResult {
 interface UseBackendDepositProps {
   signAndSubmitTransaction?: (payload: unknown) => Promise<{ hash?: string }>;
   isDemo?: boolean;
+}
+
+const PENDING_APT_DEPOSIT_KEY = 'aptcasino_pending_apt_deposit';
+
+async function creditAptDepositOnServer(
+  wallet: string,
+  amountNative: number,
+  txHash: string,
+  referralCode: string | null,
+) {
+  const res = await fetch('/api/chains/aptos/deposit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      wallet,
+      amountNative,
+      txSignature: txHash,
+      referralCode,
+    }),
+  });
+  let data = await res.json();
+  if (!res.ok) {
+    for (let attempt = 0; attempt < 3 && !data.success; attempt++) {
+      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+      const retryRes = await fetch('/api/chains/aptos/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet,
+          amountNative,
+          txSignature: txHash,
+          referralCode,
+        }),
+      });
+      data = await retryRes.json();
+      if (retryRes.ok && data.success) break;
+    }
+  }
+  return data;
+}
+
+function readReferralCode(): string | null {
+  try {
+    const ls = typeof window !== 'undefined' ? window.localStorage.getItem('apt_casino_ref') : null;
+    if (ls && /^[A-Z2-9]{8}$/.test(ls.trim().toUpperCase())) {
+      return ls.trim().toUpperCase();
+    }
+    if (typeof document !== 'undefined') {
+      const m = document.cookie.match(/(?:^|; )apt_casino_ref=([^;]*)/);
+      if (m?.[1]) {
+        const v = decodeURIComponent(m[1]).trim().toUpperCase();
+        if (/^[A-Z2-9]{8}$/.test(v)) return v;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
 }
 
 export const useBackendDeposit = (props?: UseBackendDepositProps) => {
@@ -33,9 +93,11 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
       toast.error('Please enter a valid deposit amount');
       return { success: false, message: 'Invalid amount' };
     }
-    if (amount < 10) {
-      toast.error('Minimum deposit is 10 APT');
-      return { success: false, message: 'Minimum deposit is 10 APT' };
+
+    const minDeposit = Number(process.env.NEXT_PUBLIC_APTOS_MIN_DEPOSIT_APT || 1);
+    if (amount < minDeposit) {
+      toast.error(`Minimum deposit is ${minDeposit} APT`);
+      return { success: false, message: `Minimum deposit is ${minDeposit} APT` };
     }
 
     if (props?.isDemo) {
@@ -50,6 +112,7 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
         success: true,
         message: 'Demo deposit',
         netCreditedOctas: String(net),
+        balanceRaw: String(net),
         grossApt: amount,
         platformFeeApt: feeOct / 100_000_000,
       };
@@ -63,6 +126,45 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
       if (!treasuryAddress) {
         toast.error('Treasury address is not configured (NEXT_PUBLIC_TREASURY_ADDRESS).');
         return { success: false, message: 'Treasury not configured' };
+      }
+
+      const wallet = String(account.address);
+      const referralCode = readReferralCode();
+
+      if (typeof window !== 'undefined') {
+        try {
+          const rawPending = window.sessionStorage.getItem(PENDING_APT_DEPOSIT_KEY);
+          if (rawPending) {
+            const pending = JSON.parse(rawPending);
+            if (pending?.wallet === wallet && pending?.txSignature) {
+              const recovered = await creditAptDepositOnServer(
+                wallet,
+                pending.amountNative,
+                pending.txSignature,
+                referralCode,
+              );
+              if (recovered.success) {
+                window.sessionStorage.removeItem(PENDING_APT_DEPOSIT_KEY);
+                const credited =
+                  recovered.netCreditedNative ??
+                  recovered.creditedNative ??
+                  recovered.balanceNative ??
+                  pending.amountNative;
+                toast.success(`Deposit credited — ${Number(credited).toFixed(4)} APT in play balance`);
+                return {
+                  success: true,
+                  transactionHash: pending.txSignature,
+                  balanceRaw: recovered.balanceRaw,
+                  balanceNative: recovered.balanceNative,
+                  netCreditedOctas: recovered.netCreditedOctas,
+                  grossApt: amount,
+                };
+              }
+            }
+          }
+        } catch {
+          /* ignore stale pending state */
+        }
       }
 
       const amountOctas = Math.floor(amount * 100_000_000);
@@ -84,7 +186,7 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
               type_arguments: [],
               arguments: [treasuryAddress, amountOctas.toString()],
             },
-          });
+          } as never);
         } catch {
           transferResponse = await signAndSubmitTransaction({
             function: '0x1::aptos_account::transfer',
@@ -98,47 +200,35 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
         throw new Error('Transfer transaction failed');
       }
 
-      // Pull a stored referral code (set by ?ref= / /r/CODE capture) so the deposit
-      // endpoint can validate the referral atomically even if /api/referrals/attribute
-      // hasn't landed yet (e.g. user just connected + deposits in the same tick).
-      let referralCode: string | null = null;
-      try {
-        const ls = typeof window !== 'undefined' ? window.localStorage.getItem('apt_casino_ref') : null;
-        if (ls && /^[A-Z2-9]{8}$/.test(ls.trim().toUpperCase())) {
-          referralCode = ls.trim().toUpperCase();
-        } else if (typeof document !== 'undefined') {
-          const m = document.cookie.match(/(?:^|; )apt_casino_ref=([^;]*)/);
-          if (m?.[1]) {
-            const v = decodeURIComponent(m[1]).trim().toUpperCase();
-            if (/^[A-Z2-9]{8}$/.test(v)) referralCode = v;
-          }
-        }
-      } catch {
-        /* ignore */
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(
+          PENDING_APT_DEPOSIT_KEY,
+          JSON.stringify({ wallet, amountNative: amount, txSignature: transferResponse.hash }),
+        );
       }
 
-      const backendResponse = await fetch('/api/deposit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userAddress: account.address,
-          amount,
-          transactionHash: transferResponse.hash,
-          referralCode,
-        }),
-      });
-
-      const backendData = await backendResponse.json();
+      const backendData = await creditAptDepositOnServer(
+        wallet,
+        amount,
+        transferResponse.hash,
+        referralCode,
+      );
 
       if (!backendData.success) {
         throw new Error(backendData.error || 'Backend deposit failed');
       }
 
-      const netOct = backendData.netCreditedOctas
-        ? parseInt(String(backendData.netCreditedOctas), 10)
-        : Math.floor(amount * 100_000_000);
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(PENDING_APT_DEPOSIT_KEY);
+      }
+
+      const credited =
+        backendData.netCreditedNative ??
+        backendData.creditedNative ??
+        backendData.balanceNative ??
+        amount;
       toast.success(
-        `Deposited ${amount} APT. Credited ${(netOct / 100_000_000).toFixed(4)} APT after platform fee.`,
+        `Deposited ${amount} APT. Credited ${Number(credited).toFixed(4)} APT after platform fee.`,
       );
       if (backendData.depositBonus?.rewardAptc > 0) {
         toast.info(
@@ -150,10 +240,11 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
       return {
         success: true,
         transactionHash: transferResponse.hash,
-        explorerUrl: backendData.explorerUrl,
         message: backendData.message,
-        netCreditedOctas: String(netOct),
-        platformFeeApt: backendData.platformFeeApt,
+        netCreditedOctas: backendData.netCreditedOctas,
+        balanceRaw: backendData.balanceRaw,
+        balanceNative: backendData.balanceNative,
+        platformFeeApt: backendData.platformFeeNative ?? backendData.platformFeeApt,
         grossApt: amount,
       };
     } catch (error: unknown) {

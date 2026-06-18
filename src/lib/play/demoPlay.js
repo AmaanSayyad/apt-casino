@@ -35,3 +35,81 @@ export function writeDemoBalancesByChain(map) {
 export function isDemoPlayWallet(wallet) {
   return wallet === DEMO_PLAY_WALLET || String(wallet || '').startsWith('demo-play');
 }
+
+/** Generic profile payload — demo mode must never load the shared demo wallet row from DB. */
+export function buildDemoProfilePayload(chainId, balanceNative = 0) {
+  const cfg = getPlayChainConfig(chainId);
+  const symbol = cfg?.nativeSymbol ?? (chainId === 'solana' ? 'SOL' : 'APT');
+  return {
+    wallet: DEMO_PLAY_WALLET,
+    chain: chainId,
+    nativeSymbol: symbol,
+    profile: {
+      handle: 'Demo Player',
+      avatar_url: null,
+      bio: 'Practice mode — connect a wallet to see your real profile and on-chain history.',
+      twitter_handle: null,
+      created_at: null,
+      updated_at: null,
+    },
+    onChainBalanceApt: null,
+    onChainBalanceNative: null,
+    deposits: {
+      count: 0,
+      totalApt: 0,
+      totalFeesApt: 0,
+      totalNetCreditedApt: 0,
+      recent: [],
+    },
+    withdrawals: {
+      count: 0,
+      totalApt: 0,
+      pendingCount: 0,
+      pendingApt: 0,
+      recent: [],
+    },
+    staking: {
+      activeCount: 0,
+      claimableCount: 0,
+      totalActiveAptc: 0,
+      positions: [],
+    },
+    referrals: {
+      code: null,
+      validReferrals: 0,
+      pendingReferrals: 0,
+      totalReferrals: 0,
+      earnedApt: 0,
+    },
+    cashback: null,
+    depositAptcBonus: null,
+    dailyStreak: null,
+    promotions: null,
+    feeTiers: [],
+    demoMode: true,
+    houseBalanceNative: balanceNative,
+  };
+}
+
+export function buildDemoGamesPayload() {
+  return {
+    netProfitApt: 0,
+    winrate: 0,
+    totalBets: 0,
+    totalWageredApt: 0,
+    totalWonApt: 0,
+    games: [],
+    recent: [],
+    demoMode: true,
+  };
+}
+
+export function buildDemoReferralStatsPayload() {
+  return {
+    code: null,
+    invited: 0,
+    validated: 0,
+    aptcEarned: 0,
+    demoMode: true,
+  };
+}

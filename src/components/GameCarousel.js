@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaArrowLeft, FaArrowRight, FaUsers, FaStar, FaBolt, FaFire, FaTrophy } from "react-icons/fa6";
 import HeaderText from "@/components/HeaderText";
-import GameStats from "@/components/GameStats";
 import { useSharedLiveStats } from "@/hooks/useSharedStats";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MOBILE_LIVE_GAME_ORDER, sortGamesByDisplayOrder } from "@/lib/gameDisplayOrder";
@@ -230,16 +229,11 @@ const GameCarousel = () => {
       <div className="absolute -top-40 -left-20 w-80 h-80 rounded-full bg-red-magic/5 blur-[100px] z-0"></div>
       <div className="absolute top-1/3 right-1/4 w-60 h-60 rounded-full bg-blue-magic/5 blur-[80px] z-0"></div>
     
-      <div className="mb-12 flex flex-col md:flex-row items-center justify-between">
-        <div className="text-center md:text-left md:max-w-2xl">
-          <HeaderText
-            header="Featured Games"
-            description="Experience our premium selection of games with the highest payout rates and player counts"
-          />
-        </div>
-        <div className="mt-6 md:mt-0">
-          <GameStats />
-        </div>
+      <div className="mb-12 text-center lg:text-left">
+        <HeaderText
+          header="Featured Games"
+          description="Experience our premium selection of games with the highest payout rates and player counts"
+        />
       </div>
       
       {/* Category filters */}

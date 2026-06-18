@@ -127,7 +127,7 @@ export default function ChainConnectModal({ open, onClose }) {
                 <p className="mt-1 text-[11px] text-gray-400 sm:text-sm">
                   {view === 'aptos'
                     ? 'Aptos Mainnet'
-                    : 'Solana is live — other networks coming soon'}
+                    : 'Solana & Aptos live on mainnet'}
                 </p>
               </div>
               <div className="flex items-center gap-2">

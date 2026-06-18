@@ -5,6 +5,11 @@ import GradientBorderButton from './GradientBorderButton';
 import PlayWalletButton from './PlayWalletButton';
 import { usePlayWallet } from '@/hooks/usePlayWallet';
 import { CHAINS_SHORT, FUND_PLAY_COPY } from '@/lib/copy/siteChains';
+import { getAptcTradeLinks } from '@/lib/config/tokenomics';
+
+const DEXSCREENER_HREF =
+  getAptcTradeLinks().find((l) => l.id === 'dexscreener')?.href ?? 'https://dexscreener.com/solana';
+const EARN_REWARDS_HREF = 'https://x.com/AptCasinofun/status/2064351575708209531?s=20';
 
 const AUTO_ROTATE_MS = 7000;
 const PAUSE_AFTER_MANUAL_MS = 15000;
@@ -133,11 +138,16 @@ const HowItWorksSection = () => {
                     <PlayWalletButton variant="cta" label="Connect Wallet" />
                   </div>
                 ) : activeStep === 2 ? (
-                  <Link href="/stake" className="inline-block">
+                  <a
+                    href={DEXSCREENER_HREF}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block"
+                  >
                     <GradientBorderButton className="transform transition-transform hover:scale-105">
                       Get APTC Tokens
                     </GradientBorderButton>
-                  </Link>
+                  </a>
                 ) : activeStep === 3 ? (
                   <Link href="/game" className="inline-block">
                     <GradientBorderButton className="transform transition-transform hover:scale-105">
@@ -145,11 +155,16 @@ const HowItWorksSection = () => {
                     </GradientBorderButton>
                   </Link>
                 ) : (
-                  <Link href="/referral" className="inline-block">
+                  <a
+                    href={EARN_REWARDS_HREF}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block"
+                  >
                     <GradientBorderButton className="transform transition-transform hover:scale-105">
                       View Rewards
                     </GradientBorderButton>
-                  </Link>
+                  </a>
                 )}
               </div>
             </div>

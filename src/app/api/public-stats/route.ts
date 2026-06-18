@@ -38,6 +38,6 @@ export async function GET() {
     platformFeeWithdrawBps: getWithdrawFeeBps(),
     feeTiers: getFeeTiersPublicPayload(),
     manualWithdrawUsdThreshold: getManualWithdrawUsdThreshold(),
-    chainsEnabled: ['aptos'],
+    chainsEnabled: ['solana', 'aptos'],
   });
 }

@@ -6,6 +6,12 @@ import {
   solanaDepositPOST,
   solanaWithdrawPOST,
 } from './solana';
+import {
+  aptosBalanceGET,
+  aptosBetPOST,
+  aptosDepositPOST,
+  aptosWithdrawPOST,
+} from './aptos';
 
 export function assertPlayChain(chainId: string): chainId is ChainId {
   if (!isPlayableChainId(chainId)) {
@@ -35,6 +41,8 @@ export async function handleChainBalanceGET(chainId: string, request: Request) {
   switch (chainId) {
     case 'solana':
       return solanaBalanceGET(wallet);
+    case 'aptos':
+      return aptosBalanceGET(wallet);
     default:
       return chainNotSupported(chainId);
   }
@@ -45,6 +53,8 @@ export async function handleChainBetPOST(chainId: string, request: Request) {
   switch (chainId) {
     case 'solana':
       return solanaBetPOST(request);
+    case 'aptos':
+      return aptosBetPOST(request);
     default:
       return chainNotSupported(chainId);
   }
@@ -55,6 +65,8 @@ export async function handleChainDepositPOST(chainId: string, request: Request) 
   switch (chainId) {
     case 'solana':
       return solanaDepositPOST(request);
+    case 'aptos':
+      return aptosDepositPOST(request);
     default:
       return chainNotSupported(chainId);
   }
@@ -65,6 +77,8 @@ export async function handleChainWithdrawPOST(chainId: string, request: Request)
   switch (chainId) {
     case 'solana':
       return solanaWithdrawPOST(request);
+    case 'aptos':
+      return aptosWithdrawPOST(request);
     default:
       return chainNotSupported(chainId);
   }

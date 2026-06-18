@@ -124,9 +124,11 @@ const MAX_AGGREGATE_ROWS = 50_000;
 
 type PlayEventsAggregate = {
   totalBets: number;
+  totalBetsByChain: Record<string, number>;
   totalWageredByChain: Record<string, number>;
   maxWinByChain: Record<string, number>;
   playerWins: number;
+  playerWinsByChain: Record<string, number>;
   activePlayers: number;
   uniqueWallets: number;
 };
@@ -138,9 +140,11 @@ async function aggregatePlayEventsSinceUncached(sinceMs: number | null): Promise
   const db = getSupabaseAdmin();
   const empty = {
     totalBets: 0,
+    totalBetsByChain: {} as Record<string, number>,
     totalWageredByChain: {} as Record<string, number>,
     maxWinByChain: {} as Record<string, number>,
     playerWins: 0,
+    playerWinsByChain: {} as Record<string, number>,
     activePlayers: 0,
     uniqueWallets: 0,
   };
@@ -162,7 +166,9 @@ async function aggregatePlayEventsSinceUncached(sinceMs: number | null): Promise
   if (error || !data) return empty;
 
   const totalWageredByChain: Record<string, number> = {};
+  const totalBetsByChain: Record<string, number> = {};
   const maxWinByChain: Record<string, number> = {};
+  const playerWinsByChain: Record<string, number> = {};
   const wallets = new Set<string>();
   let playerWins = 0;
 
@@ -173,8 +179,12 @@ async function aggregatePlayEventsSinceUncached(sinceMs: number | null): Promise
     const bet = Number(row.bet_raw) / units;
     const payout = Number(row.payout_raw) / units;
     totalWageredByChain[chain] = (totalWageredByChain[chain] ?? 0) + bet;
+    totalBetsByChain[chain] = (totalBetsByChain[chain] ?? 0) + 1;
     const profit = payout - bet;
-    if (profit > 0) playerWins += 1;
+    if (profit > 0) {
+      playerWins += 1;
+      playerWinsByChain[chain] = (playerWinsByChain[chain] ?? 0) + 1;
+    }
     const prevMax = maxWinByChain[chain] ?? 0;
     if (payout > prevMax) maxWinByChain[chain] = payout;
 
@@ -184,9 +194,11 @@ async function aggregatePlayEventsSinceUncached(sinceMs: number | null): Promise
 
   return {
     totalBets: allTimeCount?.count ?? data.length,
+    totalBetsByChain,
     totalWageredByChain,
     maxWinByChain,
     playerWins,
+    playerWinsByChain,
     activePlayers: wallets.size,
     uniqueWallets: wallets.size,
   };

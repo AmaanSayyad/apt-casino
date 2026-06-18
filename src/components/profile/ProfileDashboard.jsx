@@ -38,6 +38,7 @@ import CashbackPanel from './CashbackPanel';
 import DepositAptcBonusPanel from './DepositAptcBonusPanel';
 import DailyStreakPanel from './DailyStreakPanel';
 import PromotionsPanel from './PromotionsPanel';
+import PlayerAvatar from '@/components/PlayerAvatar';
 const TABS = [
   { id: 'overview', label: 'Overview', icon: FaChartLine },
   { id: 'games', label: 'Games', icon: FaDice },
@@ -108,7 +109,7 @@ export default function ProfileDashboard({
 
   const chainUi = CHAIN_UI[chain] || CHAIN_UI.solana;
   const displayHandle = profile?.profile?.handle || null;
-  const avatarUrl = profile?.profile?.avatar_url || null;
+  const avatarUrl = profile?.resolvedAvatarUrl ?? profile?.profile?.avatar_url ?? null;
   const bio = profile?.profile?.bio || null;
   const twitter = profile?.profile?.twitter_handle || null;
   const onChainNative = profile?.onChainBalanceNative ?? profile?.onChainBalanceApt ?? null;
@@ -201,7 +202,14 @@ export default function ProfileDashboard({
             <div className="flex gap-4 sm:gap-5">
               <div className="relative shrink-0">
                 <div className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-red-magic/50 to-blue-magic/50 opacity-80" />
-                <ProfileAvatar url={avatarUrl} handle={displayHandle} address={address} />
+                <PlayerAvatar
+                  avatarUrl={avatarUrl}
+                  twitterHandle={twitter}
+                  handle={displayHandle}
+                  wallet={address}
+                  size={96}
+                  rounded="rounded-2xl"
+                />
                 <motion.div
                   className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-[#0f0f0f]"
                   title={chainLabel}
@@ -290,7 +298,8 @@ export default function ProfileDashboard({
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10"
+                disabled={demoMode}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <FaEdit /> Edit
               </button>
@@ -887,30 +896,6 @@ function EarnMoreWaysPanel() {
 }
 
 // ——— UI primitives ———
-
-function ProfileAvatar({ url, handle, address }) {
-  const initial = (handle || address || '?').slice(0, 2);
-  const safeUrl = useMemo(() => {
-    if (!url) return null;
-    try {
-      const u = new URL(url);
-      return u.protocol === 'http:' || u.protocol === 'https:' ? u.toString() : null;
-    } catch {
-      return null;
-    }
-  }, [url]);
-
-  return (
-    <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-white/10 bg-[#1A0015] md:h-24 md:w-24 flex items-center justify-center">
-      {safeUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={safeUrl} alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-      ) : (
-        <span className="text-2xl font-bold uppercase text-white/85 md:text-3xl">{initial}</span>
-      )}
-    </div>
-  );
-}
 
 function QuickLink({ href, icon, label, primary }) {
   return (
