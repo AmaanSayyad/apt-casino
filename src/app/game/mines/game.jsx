@@ -93,7 +93,6 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
   const [autoRevealInProgress, setAutoRevealInProgress] = useState(false);
   const [isCashingOut, setIsCashingOut] = useState(false);
   const [isStartingGame, setIsStartingGame] = useState(false);
-  const [gameSessionId, setGameSessionId] = useState(null); // Store session ID for verification
 
   // Audio refs
   const audioRefs = {
@@ -361,11 +360,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
 
         void (async () => {
           try {
-            const debit = await debitNative(stake, playAddress, {
-              game: 'mines',
-              gameData: { minesCount: mineCount, gridSize }
-            });
-            
+            const debit = await debitNative(stake, playAddress);
             if (!debit.ok) {
               isPlayingRef.current = false;
               setIsPlaying(false);
@@ -376,9 +371,6 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
               }
               return;
             }
-
-            // Store session ID for verification when cashing out
-            setGameSessionId(debit.sessionId);
 
             if (shouldAutoReveal) {
               startAutoRevealRef.current(tilesToAutoReveal);
@@ -435,7 +427,6 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
           setGameOver(true);
           setMultiplier(1.0);
           setProfit(0);
-          setGameSessionId(null); // Clear session ID (no payout for mine hit)
           revealAll();
 
           // Mark game as completed to prevent auto-restart
@@ -485,30 +476,11 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
             setIsPlaying(false);
             setHasPlacedBet(false);
 
-            // Reset game state for win and credit the payout
-            const resetAfterWin = async () => {
-              const finalPayout = calculatePayout();
-              const finalMultiplier = newMultiplier;
-
-              try {
-                // Credit with verification
-                await creditNative(finalPayout, playAddress, {
-                  sessionId: gameSessionId,
-                  outcome: {
-                    revealedTiles: newCount,
-                    hitMine: false,
-                    multiplier: finalMultiplier
-                  }
-                });
-              } catch (error) {
-                console.error('Error crediting win:', error);
-                toast.error(`Failed to credit win: ${error.message}`);
-              }
-
+            // Reset game state for win
+            const resetAfterWin = () => {
               setGameWon(true);
               setMultiplier(1.0);
               setProfit(0);
-              setGameSessionId(null); // Clear session ID
               revealAll();
 
               // Mark game as completed to prevent auto-restart
@@ -525,8 +497,8 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
                   mines: minesCount,
                   betAmount: betAmount,
                   won: true,
-                  payout: finalPayout,
-                  multiplier: finalMultiplier
+                  payout: calculatePayout(),
+                  multiplier: multiplier
                 });
               }
             };
@@ -571,15 +543,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
       toast.success(`Cashed out: ${payout.toFixed(4)} ${symbol} (${activeMultiplier.toFixed(2)}x)`);
       playSound('cashout');
 
-      // Credit with verification data
-      await creditNative(payout, playAddress, {
-        sessionId: gameSessionId,
-        outcome: {
-          revealedTiles: activeRevealed,
-          hitMine: false,
-          multiplier: activeMultiplier
-        }
-      });
+      await creditNative(payout, playAddress);
 
       if (activeMultiplier > 1.5) {
         setShowConfetti(true);
@@ -597,7 +561,6 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
         setAutoRevealInProgress(false);
         setIsStartingGame(false);
         setIsCashingOut(false);
-        setGameSessionId(null); // Clear session ID
         isCashoutCompleteRef.current = true;
 
         const resetGrid = initializeGrid(minesCount);
@@ -721,7 +684,6 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
       multiplierRef.current = 1;
       setMultiplier(1.0);
       setProfit(0);
-      setGameSessionId(null); // Clear session ID (no payout for mine hit)
 
       const allRevealed = gridRef.current.map((row) =>
         row.map((cell) => ({ ...cell, isRevealed: true })),

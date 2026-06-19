@@ -29,11 +29,6 @@ import {
   consumePendingStakeForCredit,
   recordPendingStake,
 } from '@/lib/server/play/pendingStakes';
-import {
-  createGameSession,
-  verifyGameOutcome,
-  type GameType,
-} from '@/lib/server/play/gameVerification';
 import { assertWithdrawalAllowed } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
 import { isValidReferralCode, normalizeWalletForChain } from '@/lib/server/referrals';
@@ -125,7 +120,6 @@ export async function aptosBetPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    
     const action = body.action === 'credit' ? 'credit' : 'debit';
     const amountNative = parseFloat(body.amountNative ?? body.amountApt);
     const game = typeof body.game === 'string' ? body.game.trim().slice(0, 32) : null;
@@ -137,104 +131,33 @@ export async function aptosBetPOST(request: Request) {
     const cfg = getPlayChainConfig(CHAIN)!;
     const amountRaw = nativeToRaw(CHAIN, amountNative);
 
-    // CREDIT ACTION - Verify game outcome before crediting
     if (action === 'credit') {
-      const sessionId = body.sessionId as string | undefined;
-      const outcome = body.outcome as Record<string, unknown> | undefined;
-
-      if (!sessionId || !outcome) {
-        return NextResponse.json(
-          { error: 'sessionId and outcome required for credit' },
-          { status: 400 }
-        );
-      }
-
-      // Verify the game outcome server-side
-      let verification;
-      try {
-        verification = await verifyGameOutcome({
-          sessionId,
-          wallet,
-          chain: CHAIN,
-          outcome,
-        });
-      } catch (verifyError) {
-        return NextResponse.json(
-          { error: verifyError instanceof Error ? verifyError.message : 'Invalid game session' },
-          { status: 400 }
-        );
-      }
-
-      if (!verification.valid) {
-        return NextResponse.json(
-          { error: 'Invalid game outcome - verification failed' },
-          { status: 403 }
-        );
-      }
-
-      // Use the original bet amount from the session, not the client-sent amount
-      const sessionBetRaw = BigInt(verification.betRaw);
-      const payoutRaw = BigInt(Math.floor(Number(sessionBetRaw) * verification.payoutMultiplier));
-
-      console.log('[CREDIT DEBUG]', {
-        sessionBetRaw: sessionBetRaw.toString(),
-        multiplier: verification.payoutMultiplier,
-        payoutRaw: payoutRaw.toString(),
-        wallet,
-      });
-
-      // Verify against pending stake and multiplier cap
-      await consumePendingStakeForCredit({ wallet, chain: CHAIN, creditRaw: payoutRaw });
-
-      // Credit the verified amount
+      await consumePendingStakeForCredit({ wallet, chain: CHAIN, creditRaw: amountRaw });
       const newBalance = await creditHouseBalance({
         wallet,
         chain: CHAIN,
         currency: cfg.dbCurrency,
-        amountRaw: payoutRaw,
+        amountRaw,
       });
-
       return NextResponse.json({
         success: true,
         balanceRaw: newBalance.toString(),
         balanceNative: rawToNative(CHAIN, newBalance),
-        verifiedMultiplier: verification.payoutMultiplier,
-        serverSeed: verification.serverSeed,
       });
     }
 
-    // DEBIT ACTION - Create game session and record stake
-    const gameType = (game as GameType) || 'mines';
-    const clientSeed = body.clientSeed as string | undefined;
-    const gameData = body.gameData as Record<string, unknown> | undefined;
-
-    // Debit the bet amount first
     const newBalance = await debitHouseBalance({
       wallet,
       chain: CHAIN,
       currency: cfg.dbCurrency,
       amountRaw,
     });
-
-    // Create game session for verification
-    const { sessionId, serverSeedHash } = await createGameSession({
-      wallet,
-      chain: CHAIN,
-      game: gameType,
-      betRaw: amountRaw,
-      clientSeed,
-      gameData,
-    });
-
-    // Record pending stake (for additional security)
-    await recordPendingStake({ wallet, chain: CHAIN, betRaw: amountRaw, game: gameType });
+    await recordPendingStake({ wallet, chain: CHAIN, betRaw: amountRaw, game });
 
     return NextResponse.json({
       success: true,
       balanceRaw: newBalance.toString(),
       balanceNative: rawToNative(CHAIN, newBalance),
-      sessionId,
-      serverSeedHash,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Bet update failed';
