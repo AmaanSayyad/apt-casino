@@ -363,7 +363,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
           try {
             const debit = await debitNative(stake, playAddress, {
               game: 'mines',
-              gameData: { minesCount: activeMines, gridSize }
+              gameData: { minesCount: mineCount, gridSize }
             });
             
             if (!debit.ok) {
