@@ -176,6 +176,13 @@ export async function aptosBetPOST(request: Request) {
       const sessionBetRaw = BigInt(verification.betRaw);
       const payoutRaw = BigInt(Math.floor(Number(sessionBetRaw) * verification.payoutMultiplier));
 
+      console.log('[CREDIT DEBUG]', {
+        sessionBetRaw: sessionBetRaw.toString(),
+        multiplier: verification.payoutMultiplier,
+        payoutRaw: payoutRaw.toString(),
+        wallet,
+      });
+
       // Verify against pending stake and multiplier cap
       await consumePendingStakeForCredit({ wallet, chain: CHAIN, creditRaw: payoutRaw });
 
