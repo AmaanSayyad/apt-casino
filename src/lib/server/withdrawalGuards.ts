@@ -27,6 +27,21 @@ export function getAutoWithdrawMaxNative(chain: ChainId): number {
   return Infinity;
 }
 
+/** Max total native auto-withdrawn per wallet per 24h (above → manual review). */
+export function getAutoWithdrawDailyMaxNative(chain: ChainId): number {
+  if (chain === 'solana') {
+    const raw = process.env.AUTO_WITHDRAW_DAILY_MAX_SOL?.trim() ?? '0.1';
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : 0.1;
+  }
+  if (chain === 'aptos') {
+    const raw = process.env.AUTO_WITHDRAW_DAILY_MAX_APT?.trim() ?? '10';
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : 10;
+  }
+  return Infinity;
+}
+
 export function getAutoWithdrawNativeSymbol(chain: ChainId): string {
   const cfg = getPlayChainConfig(chain);
   return cfg?.nativeSymbol ?? chain.toUpperCase();
@@ -112,7 +127,7 @@ export type WithdrawalGuardResult =
 /**
  * Validates withdrawal eligibility before debiting house balance.
  * - Requires at least one verified deposit on this chain.
- * - Forces manual review above native caps (0.1 SOL / 1 APT per tx and per 24h auto total).
+ * - Forces manual review above per-tx native caps (0.1 SOL / 1 APT) or daily auto caps (0.1 SOL / 10 APT).
  * - Also forces manual review above USD threshold or cumulative USD auto cap.
  */
 export async function assertWithdrawalAllowed(input: {
@@ -131,14 +146,14 @@ export async function assertWithdrawalAllowed(input: {
   }
 
   const maxNative = getAutoWithdrawMaxNative(input.chain);
-  const nativeSymbol = getAutoWithdrawNativeSymbol(input.chain);
+  const dailyMaxNative = getAutoWithdrawDailyMaxNative(input.chain);
   const autoNative24h = await getAutoWithdrawNativeInWindow(input.wallet, input.chain);
 
   if (input.amountNative > maxNative) {
     return { ok: true, forceManual: true, reason: 'per_tx_native_cap' };
   }
 
-  if (autoNative24h + input.amountNative > maxNative) {
+  if (autoNative24h + input.amountNative > dailyMaxNative) {
     return { ok: true, forceManual: true, reason: 'daily_native_cap' };
   }
 
@@ -167,13 +182,14 @@ export function manualWithdrawReasonMessage(
   thresholdUsd?: number,
 ): string {
   const maxNative = getAutoWithdrawMaxNative(chain);
+  const dailyMaxNative = getAutoWithdrawDailyMaxNative(chain);
   const symbol = getAutoWithdrawNativeSymbol(chain);
 
   if (reason === 'per_tx_native_cap') {
     return `Withdrawals above ${maxNative} ${symbol} require manual approval.`;
   }
   if (reason === 'daily_native_cap') {
-    return `Auto-withdrawals are capped at ${maxNative} ${symbol} per 24 hours. This request requires manual approval.`;
+    return `Auto-withdrawals are capped at ${dailyMaxNative} ${symbol} per 24 hours. This request requires manual approval.`;
   }
   if (reason === 'daily_auto_cap') {
     const cap = process.env.AUTO_WITHDRAW_DAILY_USD_CAP?.trim() || '50';
