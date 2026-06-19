@@ -172,9 +172,9 @@ export async function aptosBetPOST(request: Request) {
         );
       }
 
-      // Calculate actual payout based on verified multiplier
-      const betRaw = nativeToRaw(CHAIN, amountNative / (verification.payoutMultiplier || 1));
-      const payoutRaw = BigInt(Math.floor(Number(betRaw) * verification.payoutMultiplier));
+      // Use the original bet amount from the session, not the client-sent amount
+      const sessionBetRaw = BigInt(verification.betRaw);
+      const payoutRaw = BigInt(Math.floor(Number(sessionBetRaw) * verification.payoutMultiplier));
 
       // Verify against pending stake and multiplier cap
       await consumePendingStakeForCredit({ wallet, chain: CHAIN, creditRaw: payoutRaw });

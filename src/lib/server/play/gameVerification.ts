@@ -80,7 +80,7 @@ export async function verifyGameOutcome(input: {
   wallet: string;
   chain: ChainId;
   outcome: Record<string, unknown>;
-}): Promise<{ valid: boolean; payoutMultiplier: number; serverSeed: string }> {
+}): Promise<{ valid: boolean; payoutMultiplier: number; serverSeed: string; betRaw: string }> {
   const db = getSupabaseAdmin();
   if (!db) throw new Error('Database not configured');
 
@@ -103,6 +103,7 @@ export async function verifyGameOutcome(input: {
   const serverSeed = session.server_seed;
   const clientSeed = input.outcome.clientSeed as string | undefined;
   const gameData = session.game_data as Record<string, unknown>;
+  const betRaw = session.bet_raw;  // Get the original bet amount
 
   let payoutMultiplier = 0;
   let valid = false;
@@ -150,7 +151,7 @@ export async function verifyGameOutcome(input: {
     })
     .eq('id', input.sessionId);
 
-  return { valid, payoutMultiplier, serverSeed };
+  return { valid, payoutMultiplier, serverSeed, betRaw };
 }
 
 /**
