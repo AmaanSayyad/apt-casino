@@ -13,13 +13,13 @@ CREATE TABLE IF NOT EXISTS game_sessions (
   payout_multiplier DECIMAL(20, 6),
   consumed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  expires_at TIMESTAMPTZ NOT NULL,
-  
-  -- Indexes for performance
-  INDEX idx_game_sessions_wallet (wallet),
-  INDEX idx_game_sessions_expires (expires_at),
-  INDEX idx_game_sessions_consumed (consumed_at)
+  expires_at TIMESTAMPTZ NOT NULL
 );
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_game_sessions_wallet ON game_sessions (wallet);
+CREATE INDEX IF NOT EXISTS idx_game_sessions_expires ON game_sessions (expires_at);
+CREATE INDEX IF NOT EXISTS idx_game_sessions_consumed ON game_sessions (consumed_at);
 
 -- RLS policies (if needed)
 ALTER TABLE game_sessions ENABLE ROW LEVEL SECURITY;
