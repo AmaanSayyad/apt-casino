@@ -143,7 +143,9 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
   const calculatePayout = () => {
     // Use the bet amount from settings (form) instead of local state
     const currentBetAmount = settings.betAmount || 0.1;
-    return currentBetAmount * multiplier;
+    const payout = currentBetAmount * multiplier;
+    // Round to 8 decimal places to avoid floating point precision issues
+    return Math.round(payout * 100000000) / 100000000;
   };
 
   // Multiplier ladder (shared with Mines payout card — post–house-edge).
@@ -1079,7 +1081,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
                 } rounded-lg text-white font-bold shadow-lg transition-all flex items-center justify-center gap-2`}
             >
               <FaCoins className="text-yellow-300" />
-              <span>{isCashingOut ? 'CASHING OUT…' : `CASH OUT (${calculatePayout()} ${symbol})`}</span>
+              <span>{isCashingOut ? 'CASHING OUT…' : `CASH OUT (${calculatePayout().toFixed(8)} ${symbol})`}</span>
             </button>
           </div>
         )}
@@ -1089,7 +1091,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
           <div className="text-center py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg text-white font-bold">
             <span>🎉 CONGRATULATIONS! YOU WON! 🎉</span>
             <div className="mt-2 text-sm opacity-90">
-              Winnings: {calculatePayout()} {symbol} ({multiplier.toFixed(2)}x)
+              Winnings: {calculatePayout().toFixed(8)} {symbol} ({multiplier.toFixed(2)}x)
             </div>
           </div>
         )}
