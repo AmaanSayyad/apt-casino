@@ -499,14 +499,15 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
                 const currentBetAmount = betAmountRef.current || settings.betAmount || betAmount || 0.1;
                 const winPayout = currentBetAmount * newMultiplier;
                 
-                // Send verification data to server
-                const creditResult = await creditNative(winPayout, playAddress, {
+                // Send verification data to server (only if we have a sessionId)
+                const hasSession = gameSessionIdRef.current != null;
+                const creditResult = await creditNative(winPayout, playAddress, hasSession ? {
                   sessionId: gameSessionIdRef.current,
                   outcome: {
                     revealedTiles: newCount,
                     hitMine: false,
                   },
-                });
+                } : {});
 
                 if (!creditResult.ok) {
                   toast.error(`Verification failed: ${creditResult.error}`);
@@ -584,14 +585,15 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
       toast.success(`Cashing out: ${payout.toFixed(4)} ${symbol} (${activeMultiplier.toFixed(2)}x)`);
       playSound('cashout');
 
-      // Send verification data to server
-      const creditResult = await creditNative(payout, playAddress, {
+      // Send verification data to server (only if we have a sessionId)
+      const hasSession = gameSessionIdRef.current != null;
+      const creditResult = await creditNative(payout, playAddress, hasSession ? {
         sessionId: gameSessionIdRef.current,
         outcome: {
           revealedTiles: activeRevealed,
           hitMine: false,
         },
-      });
+      } : {});
 
       if (!creditResult.ok) {
         throw new Error(creditResult.error || 'Verification failed');

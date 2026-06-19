@@ -45,7 +45,7 @@ export function usePlayBalance() {
       const raw = displayToRaw(amountNative, chain);
       if (demoMode || !usesServerLedger) {
         dispatch(subtractFromBalance(String(raw)));
-        return { ok: true };
+        return { ok: true, sessionId: null }; // Return null sessionId for demo/non-server modes
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
       const result = await postPlayBet(chain, { 
