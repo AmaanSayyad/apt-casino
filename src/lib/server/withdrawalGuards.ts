@@ -12,6 +12,26 @@ export function getAutoWithdrawDailyUsdCap(): number {
   return n;
 }
 
+/** Max native amount per auto-withdraw tx (above → manual review). */
+export function getAutoWithdrawMaxNative(chain: ChainId): number {
+  if (chain === 'solana') {
+    const raw = process.env.AUTO_WITHDRAW_MAX_SOL?.trim() ?? '0.1';
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : 0.1;
+  }
+  if (chain === 'aptos') {
+    const raw = process.env.AUTO_WITHDRAW_MAX_APT?.trim() ?? '1';
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }
+  return Infinity;
+}
+
+export function getAutoWithdrawNativeSymbol(chain: ChainId): string {
+  const cfg = getPlayChainConfig(chain);
+  return cfg?.nativeSymbol ?? chain.toUpperCase();
+}
+
 export async function getWalletNetDepositedNative(
   wallet: string,
   chain: ChainId,
@@ -59,6 +79,32 @@ export async function getAutoWithdrawUsdInWindow(
   }, 0);
 }
 
+export async function getAutoWithdrawNativeInWindow(
+  wallet: string,
+  chain: ChainId,
+  windowMs = AUTO_WITHDRAW_WINDOW_MS,
+): Promise<number> {
+  const db = getSupabaseAdmin();
+  if (!db) return 0;
+
+  const since = new Date(Date.now() - windowMs).toISOString();
+  const { data, error } = await db
+    .from('withdrawal_requests')
+    .select('gross_apt')
+    .eq('wallet', wallet)
+    .eq('chain', chain)
+    .eq('status', 'auto')
+    .gte('created_at', since);
+
+  if (error || !data?.length) return 0;
+
+  return data.reduce((sum, row) => {
+    const native = Number(row.gross_apt);
+    if (Number.isFinite(native) && native > 0) return sum + native;
+    return sum;
+  }, 0);
+}
+
 export type WithdrawalGuardResult =
   | { ok: true; forceManual: boolean; reason?: string }
   | { ok: false; error: string };
@@ -66,7 +112,8 @@ export type WithdrawalGuardResult =
 /**
  * Validates withdrawal eligibility before debiting house balance.
  * - Requires at least one verified deposit on this chain.
- * - Forces manual review above per-tx USD threshold OR cumulative auto cap ($50/24h default).
+ * - Forces manual review above native caps (0.1 SOL / 1 APT per tx and per 24h auto total).
+ * - Also forces manual review above USD threshold or cumulative USD auto cap.
  */
 export async function assertWithdrawalAllowed(input: {
   wallet: string;
@@ -81,6 +128,18 @@ export async function assertWithdrawalAllowed(input: {
       error:
         'Withdrawals require at least one verified deposit to this wallet. No deposit found on record.',
     };
+  }
+
+  const maxNative = getAutoWithdrawMaxNative(input.chain);
+  const nativeSymbol = getAutoWithdrawNativeSymbol(input.chain);
+  const autoNative24h = await getAutoWithdrawNativeInWindow(input.wallet, input.chain);
+
+  if (input.amountNative > maxNative) {
+    return { ok: true, forceManual: true, reason: 'per_tx_native_cap' };
+  }
+
+  if (autoNative24h + input.amountNative > maxNative) {
+    return { ok: true, forceManual: true, reason: 'daily_native_cap' };
   }
 
   const perTxThreshold = getManualWithdrawUsdThreshold();
@@ -100,4 +159,26 @@ export async function assertWithdrawalAllowed(input: {
   }
 
   return { ok: true, forceManual: false };
+}
+
+export function manualWithdrawReasonMessage(
+  chain: ChainId,
+  reason?: string,
+  thresholdUsd?: number,
+): string {
+  const maxNative = getAutoWithdrawMaxNative(chain);
+  const symbol = getAutoWithdrawNativeSymbol(chain);
+
+  if (reason === 'per_tx_native_cap') {
+    return `Withdrawals above ${maxNative} ${symbol} require manual approval.`;
+  }
+  if (reason === 'daily_native_cap') {
+    return `Auto-withdrawals are capped at ${maxNative} ${symbol} per 24 hours. This request requires manual approval.`;
+  }
+  if (reason === 'daily_auto_cap') {
+    const cap = process.env.AUTO_WITHDRAW_DAILY_USD_CAP?.trim() || '50';
+    return `Auto-withdrawals are capped at $${cap} per 24 hours. This request requires manual approval.`;
+  }
+  const threshold = thresholdUsd ?? getManualWithdrawUsdThreshold();
+  return `Withdrawal exceeds $${threshold} USD equivalent and requires manual approval.`;
 }

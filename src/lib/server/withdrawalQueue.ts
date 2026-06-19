@@ -2,6 +2,7 @@ import type { ChainId } from '@/lib/chains/registry';
 import { getManualWithdrawUsdThreshold } from '@/lib/server/platformFees';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { nativeAmountToUsd } from '@/lib/server/nativeUsdPrice';
+import { manualWithdrawReasonMessage } from '@/lib/server/withdrawalGuards';
 
 export type PendingWithdrawalInsert = {
   chain: ChainId;
@@ -59,10 +60,10 @@ export async function queueWithdrawalRequest(
   return { requestId: data.id, thresholdUsd };
 }
 
-export function pendingWithdrawalMessage(thresholdUsd: number, reason?: string): string {
-  if (reason === 'daily_auto_cap') {
-    const cap = process.env.AUTO_WITHDRAW_DAILY_USD_CAP?.trim() || '50';
-    return `Auto-withdrawals are capped at $${cap} per 24 hours. This request requires manual approval.`;
-  }
-  return `Withdrawal exceeds $${thresholdUsd} USD equivalent and requires manual approval.`;
+export function pendingWithdrawalMessage(
+  chain: ChainId,
+  thresholdUsd: number,
+  reason?: string,
+): string {
+  return manualWithdrawReasonMessage(chain, reason, thresholdUsd);
 }

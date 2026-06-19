@@ -22,7 +22,6 @@ import {
   estimateWithdrawalUsd,
   pendingWithdrawalMessage,
   queueWithdrawalRequest,
-  requiresManualWithdrawalApproval,
 } from '@/lib/server/withdrawalQueue';
 import {
   consumePendingStakeForCredit,
@@ -373,8 +372,7 @@ export async function solanaWithdrawPOST(request: Request) {
       return NextResponse.json({ error: withdrawalGuard.error }, { status: 403 });
     }
 
-    const needsManual =
-      requiresManualWithdrawalApproval(usdEstimate) || withdrawalGuard.forceManual;
+    const needsManual = withdrawalGuard.forceManual;
 
     if (needsManual) {
       const newBalance = await debitHouseBalance({
@@ -398,7 +396,7 @@ export async function solanaWithdrawPOST(request: Request) {
         success: true,
         pendingApproval: true,
         requestId,
-        message: pendingWithdrawalMessage(thresholdUsd, withdrawalGuard.reason),
+        message: pendingWithdrawalMessage(CHAIN, thresholdUsd, withdrawalGuard.reason),
         grossNative: amountNative,
         estimatedUsd: usdEstimate,
         platformFeeNative: rawToNative(CHAIN, feeRaw),
