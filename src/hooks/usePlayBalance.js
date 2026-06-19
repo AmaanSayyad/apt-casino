@@ -45,23 +45,28 @@ export function usePlayBalance() {
       const raw = displayToRaw(amountNative, chain);
       if (demoMode || !usesServerLedger) {
         dispatch(subtractFromBalance(String(raw)));
-        return { ok: true, sessionId: null }; // Return null sessionId for demo/non-server modes
+        return { ok: true };
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
+      
+      // Include game metadata for server-side verification
       const result = await postPlayBet(chain, { 
         wallet, 
         action: 'debit', 
         amountNative,
         game: gameOptions.game,
         gameData: gameOptions.gameData,
-        clientSeed: gameOptions.clientSeed,
+        clientSeed: gameOptions.clientSeed
       });
+      
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
+      
+      // Return sessionId and serverSeedHash for verification
       return { 
         ok: true, 
         sessionId: result.sessionId,
-        serverSeedHash: result.serverSeedHash,
+        serverSeedHash: result.serverSeedHash
       };
     },
     [chain, demoMode, dispatch, usesServerLedger],
@@ -75,19 +80,24 @@ export function usePlayBalance() {
         return { ok: true };
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
+      
+      // Include sessionId and outcome for server-side verification
       const result = await postPlayBet(chain, {
         wallet,
         action: 'credit',
         amountNative,
         sessionId: verificationData.sessionId,
-        outcome: verificationData.outcome,
+        outcome: verificationData.outcome
       });
+      
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
+      
+      // Return verified multiplier and server seed
       return {
         ok: true,
         verifiedMultiplier: result.verifiedMultiplier,
-        serverSeed: result.serverSeed,
+        serverSeed: result.serverSeed
       };
     },
     [chain, demoMode, dispatch, usesServerLedger],
