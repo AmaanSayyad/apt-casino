@@ -41,33 +41,54 @@ export function usePlayBalance() {
   const usesServerLedger = config?.balanceMode === 'server';
 
   const debitNative = useCallback(
-    async (amountNative, wallet) => {
+    async (amountNative, wallet, gameOptions = {}) => {
       const raw = displayToRaw(amountNative, chain);
       if (demoMode || !usesServerLedger) {
         dispatch(subtractFromBalance(String(raw)));
         return { ok: true };
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
-      const result = await postPlayBet(chain, { wallet, action: 'debit', amountNative });
+      const result = await postPlayBet(chain, { 
+        wallet, 
+        action: 'debit', 
+        amountNative,
+        game: gameOptions.game,
+        gameData: gameOptions.gameData,
+        clientSeed: gameOptions.clientSeed,
+      });
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
-      return { ok: true };
+      return { 
+        ok: true, 
+        sessionId: result.sessionId,
+        serverSeedHash: result.serverSeedHash,
+      };
     },
     [chain, demoMode, dispatch, usesServerLedger],
   );
 
   const creditNative = useCallback(
-    async (amountNative, wallet) => {
+    async (amountNative, wallet, verificationData = {}) => {
       const raw = displayToRaw(amountNative, chain);
       if (demoMode || !usesServerLedger) {
         dispatch(addToBalance(String(raw)));
         return { ok: true };
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
-      const result = await postPlayBet(chain, { wallet, action: 'credit', amountNative });
+      const result = await postPlayBet(chain, {
+        wallet,
+        action: 'credit',
+        amountNative,
+        sessionId: verificationData.sessionId,
+        outcome: verificationData.outcome,
+      });
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
-      return { ok: true };
+      return {
+        ok: true,
+        verifiedMultiplier: result.verifiedMultiplier,
+        serverSeed: result.serverSeed,
+      };
     },
     [chain, demoMode, dispatch, usesServerLedger],
   );
