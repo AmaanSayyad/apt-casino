@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { isAptcLaunched, getLaunchStyles } from '@/lib/config/launchStatus';
+import BagsAnalyticsPanel from '@/components/BagsAnalyticsPanel';
 
 const EMBED_PARAMS =
   'embed=1&loadChartSettings=0&chartLeftToolbar=0&chartDefaultOnMobile=1&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15';
@@ -78,7 +79,7 @@ export default function DexscreenerEmbedSection() {
                 ? 'Real-time chart, liquidity, and trade activity for the $APTC pair — the same feed used on Stake page and GGR buyback estimates.'
                 : launched
                 ? 'Live chart and trading data will appear here once indexed on DexScreener.'
-                : 'Live chart and trading data will appear here once the token launches on Raydium.'
+                : 'Live chart and trading data will appear here once APTC launches on Bags (Meteora bonding curve).'
               }
             </p>
           </div>
@@ -105,6 +106,10 @@ export default function DexscreenerEmbedSection() {
           )}
         </div>
 
+        <div className="mb-6">
+          <BagsAnalyticsPanel bags={stats?.bags} loading={loading} />
+        </div>
+
         <div className="apt-dex-embed-slot rounded-2xl border border-white/10 overflow-hidden bg-[#0a0008] shadow-[0_24px_80px_rgba(0,0,0,0.45)] min-h-0">
           {loading ? (
             <div className="apt-dex-embed-placeholder flex items-center justify-center text-white/40 text-sm">
@@ -127,7 +132,7 @@ export default function DexscreenerEmbedSection() {
               <p className="text-sm text-white/45 max-w-md">
                 {launched 
                   ? 'DexScreener is indexing the pool. Refresh in a few moments to see live data.'
-                  : 'Live chart and trading data will appear here once the token launches on Raydium.'
+                  : 'Live chart and trading data will appear here once APTC launches on Bags (Meteora bonding curve).'
                 }
               </p>
               <Link

@@ -9,10 +9,11 @@
 
 export const APTC_SOLANA_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || '';
 
-/** Raydium CPMM pool — preferred for DexScreener quotes (more accurate than token-wide scan). */
+/** DexScreener pair or token mint — preferred for quotes when configured. */
 const APTC_DEX_PAIR =
   process.env.NEXT_PUBLIC_APTC_DEXSCREENER_PAIR?.trim() ||
-  process.env.APTC_RAYDIUM_POOL_ADDRESS?.trim() ||
+  process.env.APTC_DEX_PAIR_ADDRESS?.trim() ||
+  process.env.APTC_RAYDIUM_POOL_ADDRESS?.trim() || // legacy env name
   '';
 
 export type DexscreenerStats = {

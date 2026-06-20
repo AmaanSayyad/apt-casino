@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     estimate,
     feeExplanation: {
       tokenTradeTax:
-        '0.5% Raydium CPMM pool fee on APTC/SOL swaps — paid to LPs. See raydium.io.',
+        '2% Bags Default (Founder) trade fee on APTC/SOL — 1% creator + 1% protocol pre-graduation. See docs.bags.fm.',
       swapPlatformFee:
         'Wallet-specific: Phantom 0.85% on select pairs; Solflare/Glow/Backpack/Jupiter manual often 0% platform fee — network + price impact still apply.',
     },

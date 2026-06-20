@@ -1,8 +1,8 @@
 # APTC tokenomics
 
-Last updated: 2026-06-15
+Last updated: 2026-06-20
 
-Native SPL token for AptCasino.fun — live on Solana via Raydium CPMM fair launch.
+Native SPL token for AptCasino.fun — fair launch on **Bags.fm** via **Meteora Dynamic Bonding Curve (DBC)**, graduating at **85 SOL** into **Meteora DAMM v2**.
 
 ## Token
 
@@ -10,63 +10,82 @@ Native SPL token for AptCasino.fun — live on Solana via Raydium CPMM fair laun
 |-------|--------|
 | **Name** | AptCasino.fun |
 | **Symbol** | APTC |
-| **Chain** | Solana (SPL) |
-| **Mint** | `ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg` |
-| **Raydium pair** | `C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL` |
-| **Max supply** | 1,000,000,000 (6 decimals) |
-| **Mint authority** | Revoked |
-| **Freeze authority** | Revoked |
-| **Update authority** | Revoked |
+| **Chain** | Solana (SPL · Bags + Meteora) |
+| **Mint** | Set at TGE → `NEXT_PUBLIC_APTC_SOLANA_MINT` |
+| **Max supply** | 1,000,000,000 (9 decimals) |
+| **Mint authority** | Revoked at creation |
+| **Freeze authority** | Revoked at creation |
+| **Token authority** | Bags Token Authority (standard Bags launch) |
 
-## Launch (Raydium CPMM fair launch)
+## Launch (Bags.fm · Founder / Default mode)
 
 | Parameter | Value |
 |-----------|--------|
-| **Pair** | APTC/SOL |
-| **Venue** | Raydium Standard AMM (CPMM) |
-| **LP seed** | 1B APTC + 40 SOL |
-| **Fee tier** | 0.5% |
-| **Approx liquidity** | ~$5,408 |
-| **Approx launch MC** | ~$2,704 |
-| **Initial price** | ~$0.000002704 |
+| **Platform** | [bags.fm/launch](https://bags.fm/launch) |
+| **Curve** | Meteora DBC (virtual pool pre-graduation) |
+| **Fee mode** | `DEFAULT` — Founder mode ([docs](https://docs.bags.fm/how-to-guides/customize-token-fees)) |
+| **Trade fee** | 2% pre- and post-migration (1% protocol + 1% creator on curve) |
+| **Creator initial buy** | **$610 → 23%** (~230M APTC) |
+| **Public curve** | **77%** (~770M APTC) sold on bonding curve |
+| **Graduation** | **85 SOL** raised → auto-migrate to Meteora DAMM v2 |
+| **Fee share** | 100% → @aptcasinofun (operations wallet) |
+| **Est. spot FDV at TGE** | ~$10k–$14k (after 23% creator buy) |
+| **Est. average-cost FDV** | ~$2,650 ($610 ÷ 23%) |
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant T as Token creation
-    participant W as Launch wallet
-    participant R as Raydium CPMM
-    participant D as DexScreener / Jupiter
-    participant L as Listings
+    participant C as Creator wallet
+    participant B as Bags.fm
+    participant D as Meteora DBC
+    participant M as Meteora DAMM v2
+    participant X as DexScreener / Jupiter
 
-    T->>T: 1B APTC minted
-    Note over T: Mint, freeze, update revoked
-    T->>W: Full supply to launch wallet
-    W->>R: 1B APTC + 40 SOL LP
-    R->>D: APTC/SOL pair live
-    D->>L: CG / CMC applications
+    C->>B: Launch APTC + $610 initial buy (23%)
+    B->>D: Token live on bonding curve
+    Note over D: 2% trade fee · 1% creator share
+    D->>D: Public buys until 85 SOL
+    D->>M: Graduation → real AMM liquidity
+    M->>X: Post-grad trading + indexing
 ```
 
-## Supply allocation (100%)
+## Supply allocation
 
-| Bucket | % | Amount |
-|--------|---|--------|
-| Raydium LP | 100% | 1B |
+| Bucket | % | Amount | Notes |
+|--------|---|--------|-------|
+| Creator initial buy | 23% | 230M | Ops, buybacks, listings, rewards, liquidity support |
+| Bonding curve (public) | 77% | 770M | Traded on Meteora DBC until graduation |
 
 ```mermaid
 pie title APTC supply at TGE (1B)
-    "Raydium LP 100%" : 100
+    "Creator initial buy 23%" : 23
+    "Bonding curve 77%" : 77
 ```
 
-## Launch wallet
+There is **no Raydium-style LP burn**. At graduation, accumulated SOL and remaining curve inventory **seed the Meteora DAMM v2 pool**. Post-graduation, **25% of trade fees compound** back into pool liquidity.
 
-| Wallet | Amount | Address |
-|--------|--------|---------|
-| Launch & LP | 1B | `CAVLQyCEycrok3Mbv5mdCbE3epGQW3ibQ447fwTLweYx` |
+## Fee economics (Default mode)
+
+| Stage | Total fee | Creator (you) | Protocol | Compounding |
+|-------|-----------|---------------|----------|-------------|
+| Pre-migration (curve) | 2% | 1% | 1% | — |
+| Post-migration (DAMM v2) | 2% | 0.75% | 0.75% | 0.5% into pool |
+
+With **100% fee share to @aptcasinofun**, creator-side fees fund operations, marketing, buybacks, staking rewards, and partnerships from a **single treasury wallet**. No separate team or marketing wallets.
+
+## Liquidity projections (post-graduation, illustrative)
+
+| FDV | Est. DEX liquidity |
+|-----|-------------------|
+| $50k | ~$8k–$15k |
+| $100k | ~$15k–$28k |
+| $200k | ~$28k–$55k |
+
+Liquidity grows with volume, price, and fee compounding — not fixed at TGE.
 
 ## GGR flywheel
 
-30% of gross gaming revenue funds open-market APTC buybacks on Raydium and Jupiter. Split (configurable via env):
+30% of gross gaming revenue funds open-market APTC buybacks on **Jupiter / Meteora**. Split (configurable via env):
 
 - Burn
 - Staker rewards
@@ -74,10 +93,25 @@ pie title APTC supply at TGE (1B)
 
 See `/api/ggr/buyback` and litepaper § GGR.
 
+## On-chain programs
+
+| Program | ID |
+|---------|-----|
+| Meteora DBC | `dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN` |
+| Meteora DAMM v2 | `cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG` |
+| Bags Fee Share V2 | `FEE2tBhCKAt7shrod19QttSVREUYPiyMzoku1mL1gqVK` |
+
+## API & analytics
+
+- **Bags API:** [docs.bags.fm/api-reference/introduction](https://docs.bags.fm/api-reference/introduction) — pools, lifetime fees, claim stats (homepage + tokenomics widget via `/api/staking/aptc-stats`)
+- **Meteora DBC (on-chain):** bonding-curve SOL reserve + graduation progress (works without Bags API key)
+- **DexScreener:** holders, MC, liquidity, volume, price changes
+- **Env:** `BAGS_API_KEY` (from [dev.bags.fm](https://dev.bags.fm)) — optional but enables lifetime fees + claim stats
+
 ## Links
 
 - **Website:** https://aptcasino.fun/
+- **Launch:** https://bags.fm/launch
 - **Stake:** https://aptcasino.fun/stake
 - **Litepaper:** https://aptcasino.fun/litepaper
-- **DexScreener:** https://dexscreener.com/solana/c9ej1qvpj9tyckgwzsukl9rduz65vzx2wfg7rfhaqsal
-- **Solscan:** https://solscan.io/token/ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg
+- **Reference Bags token:** [Bynomo on Solscan](https://solscan.io/token/Faw8wwB6MnyAm9xG3qeXgN1isk9agXBoaRZX9Ma8BAGS)

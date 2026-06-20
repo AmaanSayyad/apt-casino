@@ -1,6 +1,6 @@
 # Liquidity & treasury
 
-Last updated: 2026-06-08
+Last updated: 2026-06-20
 
 How player funds, house edge, and payouts flow in the current APT Casino stack.
 
@@ -178,28 +178,35 @@ timeline
 - Solana program pause instruction
 - Platform fee wallets separate from player payout treasury where possible
 
-## APTC on Raydium (token liquidity)
+## APTC on Bags / Meteora (token liquidity)
 
-APTC/SOL trades on **Raydium Standard AMM (CPMM)** — separate from player SOL/APT treasury balances.
+APTC/SOL trades on **Bags.fm → Meteora DBC → DAMM v2** — separate from player SOL/APT casino treasury balances.
 
 ```mermaid
 flowchart TB
-    subgraph Launch["APTC launch liquidity"]
-        LPW[Liquidity wallet 120M] --> POOL[Raydium CPMM APTC/SOL]
-        SOL[37 SOL] --> POOL
-        POOL --> BURN[~16.67% LP burned]
+    subgraph Launch["APTC launch (Bags)"]
+        CRE[Creator buy 23% · $610] --> DBC[Meteora DBC virtual pool]
+        PUB[Public buys 77%] --> DBC
+        DBC -->|85 SOL raised| DAMM[Meteora DAMM v2 real pool]
+        DAMM --> FEE[25% fees compound into LP]
     end
 
     subgraph Flywheel["GGR flywheel"]
         GGR[Gross gaming revenue] --> BB[Buyback budget]
-        BB --> RD[Raydium / Jupiter]
-        RD --> SINK[Burn · Stakers · Treasury]
+        BB --> SW[Jupiter / Meteora]
+        SW --> SINK[Burn · Stakers · Treasury]
+    end
+
+    subgraph CreatorFees["Bags fee share"]
+        TRADE[2% trade fee] --> FS[@aptcasinofun 100%]
     end
 
     PLAY[Player bets] --> GGR
+    DBC --> TRADE
+    DAMM --> TRADE
 ```
 
-See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for wallet addresses and allocation.
+See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for launch parameters and fee economics.
 
 ## Related docs
 

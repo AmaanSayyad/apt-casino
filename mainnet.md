@@ -1,35 +1,37 @@
 # Mainnet deployment guide
 
-Last updated: 2026-06-08
+Last updated: 2026-06-20
 
 Checklist for launching APT Casino on production infrastructure. Solana is the primary live chain; Aptos modules can run in parallel when `NEXT_PUBLIC_CASINO_MODULE_ADDRESS` is set and Aptos is marked `live` in the chain registry.
 
-## APTC token (live)
+## APTC token (Bags.fm launch)
 
-- [x] SPL mint — `ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg`
-- [x] Raydium pair — `C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL`
-- [x] Mint, freeze, update authorities revoked
-- [x] Supply distribution (see [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md))
-- [x] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production
-- [ ] Raydium CPMM pool live (1B APTC + 40 SOL fair launch)
-- [ ] ~16.67% LP token burn
+- [ ] Launch on [bags.fm/launch](https://bags.fm/launch) — Founder (Default) mode, 2% fee
+- [ ] Creator initial buy: **$610 / 23%** · fee share **100% → @aptcasinofun**
+- [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production
+- [ ] Set `BAGS_API_KEY` for pool/fee analytics (optional)
+- [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` once DexScreener indexes the pair
+- [ ] Bonding curve live on Meteora DBC (virtual pool)
+- [ ] Graduation at **85 SOL** → Meteora DAMM v2
 - [ ] DexScreener Enhanced Token Info submitted
-- [ ] Jupiter routing visible on pair
+- [ ] Jupiter routing visible
 - [ ] CoinGecko & CoinMarketCap applications submitted
-- [x] Enable staking: `APTC_STAKING_ENABLED=true` · vault `4Ka1vdinFUqhh3TtHaohj1MiKVUrvJBrgsVp1MfVnXFQ`
+- [ ] Enable staking: `APTC_STAKING_ENABLED=true` · configure `NEXT_PUBLIC_APTC_STAKING_VAULT`
 
 ```mermaid
 sequenceDiagram
     participant Env as Vercel env
     participant Site as aptcasino.fun
+    participant B as Bags.fm
     participant DS as DexScreener
-    participant R as Raydium
 
     Env->>Site: NEXT_PUBLIC_APTC_SOLANA_MINT
+    B->>Site: Token + bonding curve live
     Site->>DS: Price / chart embed
-    R->>DS: APTC/SOL pair indexed
     Site->>Site: Tokenomics + roadmap live
 ```
+
+See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for full launch parameters.
 
 ## Launch pipeline
 
@@ -91,6 +93,11 @@ SOLANA_RPC_URL=
 NEXT_PUBLIC_SOL_TREASURY_ADDRESS=
 SOL_TREASURY_SECRET_KEY=
 NEXT_PUBLIC_APT_CASINO_PROGRAM_ID=
+
+# APTC (Bags launch)
+NEXT_PUBLIC_APTC_SOLANA_MINT=
+NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=
+# BAGS_API_KEY=
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
@@ -174,6 +181,8 @@ Or use `./deploy.sh -n mainnet` for combined contract + Vercel flow.
 - [ ] Mobile layouts verified on iOS Safari and Android Chrome
 - [ ] Demo mode refill shows 100 native units (or `NEXT_PUBLIC_DEMO_START_NATIVE`)
 - [ ] Error rate and latency in Vercel logs acceptable
+- [ ] Bags bonding curve progress toward 85 SOL graduation
+- [ ] Creator fees claimable via Bags fee share
 
 ## Rollback
 
@@ -199,6 +208,7 @@ flowchart TD
 |------|-------------|
 | Aptos module publish | tens of APT (gas + package size) |
 | Solana program deploy | ~1–3 SOL + rent |
+| Bags token launch | ~0.2 SOL tx fees + initial buy (~$610 / 23%) |
 | Vercel Pro | per plan |
 | Supabase Pro | per plan |
 | Livepeer / RPC | usage-based |

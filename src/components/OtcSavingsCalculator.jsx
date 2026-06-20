@@ -25,7 +25,7 @@ function fmtUsd(n) {
 }
 
 /**
- * Per-buy fee + market loss calculator (swap, Raydium pool fee, price impact / slippage).
+ * Per-buy fee + market loss calculator (swap, Bags/Meteora trade fee, price impact / slippage).
  */
 export default function OtcSavingsCalculator({
   solPerBuy,
@@ -143,7 +143,7 @@ export default function OtcSavingsCalculator({
                 muted
               />
               <Row
-                label={`Raydium pool fee (${APTC_DEX_POOL_FEE.totalLabel})`}
+                label={`DEX trade fee (${APTC_DEX_POOL_FEE.totalLabel})`}
                 value={`−${fmtSol(dex.tokenTaxSol)} SOL`}
                 muted
               />
@@ -189,7 +189,7 @@ export default function OtcSavingsCalculator({
               bold
             />
             <p className="text-xs text-emerald-200/70 pt-1">
-              Avoid ~<strong>{dex.totalLossPct}%</strong> DEX loss on this size — no swap fees, Raydium pool
+              Avoid ~<strong>{dex.totalLossPct}%</strong> DEX loss on this size — no swap fees, DEX trade
               fees, or price impact.
             </p>
           </div>

@@ -9,8 +9,11 @@ import {
   APTC_TOKENOMICS,
   APTC_UTILITY,
   solscanTokenUrl,
+  bagsTokenUrl,
+  meteoraPoolUrl,
 } from '@/lib/config/tokenomics';
 import { isAptcLaunched, getLaunchStatusText } from '@/lib/config/launchStatus';
+import BagsAnalyticsPanel from '@/components/BagsAnalyticsPanel';
 
 const AllocationDonut = dynamic(
   () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.AllocationDonut),
@@ -31,7 +34,8 @@ function getTradeTools() {
   if (!launched) {
     // Pre-launch: generic URLs
     return [
-      { id: 'raydium',      label: 'Raydium',       logo: '/logos/Raydium.png',          href: `https://raydium.io/` },
+      { id: 'bags',         label: 'Bags',          logo: '/APTC_logo_1000x1000.png',     href: 'https://bags.fm/launch' },
+      { id: 'meteora',      label: 'Meteora',       logo: '/logos/meteora-logo.png',     href: 'https://app.meteora.ag/' },
       { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/` },
       { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
       { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana` },
@@ -50,7 +54,8 @@ function getTradeTools() {
   
   // Post-launch: token-specific URLs
   return [
-    { id: 'raydium',      label: 'Raydium',       logo: '/logos/Raydium.png',          href: `https://raydium.io/swap/?inputMint=So11111111111111111111111111111111111111112&outputMint=${mint}` },
+    { id: 'bags',         label: 'Bags',          logo: '/APTC_logo_1000x1000.png',     href: bagsTokenUrl(mint) },
+    { id: 'meteora',      label: 'Meteora',       logo: '/logos/meteora-logo.png',     href: meteoraPoolUrl(mint) },
     { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/swap/SOL-${mint}` },
     { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
     { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana/${mint}` },
@@ -114,7 +119,11 @@ export default function TokenomicsSection() {
   const liqUsd = market?.liquidityUsd ?? m.approxLiquidityUsd;
   const vol24h = market?.volume24hUsd ?? null;
   const priceChange24h = market?.priceChange24h ?? null;
-  const marketLabel = hasLiveMarket ? 'Live market · DexScreener' : 'Launch targets';
+  const marketLabel = hasLiveMarket
+    ? 'Live market · DexScreener'
+    : market?.bags?.source === 'live'
+      ? 'Live · Bags / Meteora'
+      : 'Launch targets';
 
   return (
     <section id="tokenomics" className="py-16 md:py-24 px-4 md:px-8 lg:px-16 bg-[#070005]">
@@ -135,7 +144,7 @@ export default function TokenomicsSection() {
             Tokenomics
           </h2>
           <p className="mt-3 text-base md:text-lg text-white/55 max-w-2xl leading-relaxed">
-            1B fixed supply · fair launch on Raydium CPMM. Casino GGR funds open-market buybacks — not empty emissions.
+            1B fixed supply · fair bonding curve on Bags (Meteora DBC). Creator fees + casino GGR fund buybacks — not empty emissions.
           </p>
         </div>
 
@@ -150,7 +159,7 @@ export default function TokenomicsSection() {
               <div className="flex flex-wrap gap-2 mb-4">
                 <AuthorityChip label="Mint revoked" />
                 <AuthorityChip label="Freeze revoked" />
-                <AuthorityChip label="Update revoked" />
+                <AuthorityChip label="Bags Token Authority" />
               </div>
               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-white/45">
                 {APTC_LAUNCH_STEPS.map((step, i) => (
@@ -188,7 +197,8 @@ export default function TokenomicsSection() {
               </div>
               {!marketLoading && !hasLiveMarket && (
                 <p className="mt-3 text-[10px] text-amber-200/70 leading-relaxed">
-                  Targets from Raydium pool seed (1B APTC + 40 SOL). Live quotes appear once indexed.
+                  Pre-launch targets: ~${(m.approxSpotFdvUsd / 1000).toFixed(1)}k spot FDV after $610 / 23% creator buy ·
+                  graduates at {m.graduationSol} SOL → Meteora DAMM v2.
                 </p>
               )}
               <div className={`mt-4 flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs ${
@@ -216,13 +226,16 @@ export default function TokenomicsSection() {
               </div>
             </div>
 
+            <BagsAnalyticsPanel bags={market?.bags} loading={marketLoading} compact />
+
             {/* Launch stats + trade & research grid */}
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6 space-y-5">
               <div className="flex flex-wrap gap-2">
-                <LaunchStat label="Pool" value={`${m.aptcInLpShort} + ${m.solInLp} SOL`} />
-                <LaunchStat label="Fee tier" value={`${m.feeTierPct}%`} />
-                <LaunchStat label="Launch MC" value={`~$${(m.approxMarketCapUsd / 1000).toFixed(1)}k`} />
-                <LaunchStat label="Liquidity" value={`~$${(m.approxLiquidityUsd / 1000).toFixed(1)}k`} />
+                <LaunchStat label="Launch" value="Bags DBC" />
+                <LaunchStat label="Creator buy" value={`${m.initialBuyPct}% · $${m.initialBuyUsd}`} />
+                <LaunchStat label="Graduation" value={`${m.graduationSol} SOL`} />
+                <LaunchStat label="Trade fee" value={`${m.tradeFeePreMigrationPct}%`} />
+                <LaunchStat label="Spot FDV (est.)" value={`~$${(m.approxSpotFdvUsd / 1000).toFixed(1)}k`} />
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35 mb-3">
@@ -254,14 +267,14 @@ export default function TokenomicsSection() {
           <div className="flex flex-col gap-5">
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
               <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
-              <p className="text-xs text-white/45 mb-6">1B APTC · 100% Raydium LP</p>
+              <p className="text-xs text-white/45 mb-6">1B APTC · 23% creator · 77% bonding curve</p>
               <AllocationDonut />
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
               <h3 className="text-xl font-semibold text-white mb-1">GGR → buyback</h3>
               <p className="text-sm text-white/50 mb-2">
-                Play → GGR → market buy on Raydium & Jupiter → burn · stake · treasury
+                Play → GGR → market buy on Jupiter / Meteora → burn · stake · treasury
               </p>
               <BuybackSplitDonut config={cfg} />
               {est?.projectedBuybackUsd30d != null && (

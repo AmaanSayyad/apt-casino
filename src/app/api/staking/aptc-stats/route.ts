@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { fetchAptcDexscreenerStats } from '@/lib/server/dexscreener';
+import { fetchAptcBagsAnalytics } from '@/lib/server/bagsAnalytics';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -13,9 +14,10 @@ export const dynamic = 'force-dynamic';
  * TVL is reported, so the UI still renders meaningful pre-TGE data.
  */
 export async function GET() {
-  const [dex, stakingTotals] = await Promise.all([
+  const [dex, stakingTotals, bags] = await Promise.all([
     fetchAptcDexscreenerStats(),
     getStakingTotals(),
+    fetchAptcBagsAnalytics(),
   ]);
 
   const stakingTvlUsd =
@@ -34,6 +36,7 @@ export async function GET() {
         activePositions: stakingTotals.activePositions,
         stakingTvlUsd,
       },
+      bags,
       tvlUsd,
     },
     { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' } },

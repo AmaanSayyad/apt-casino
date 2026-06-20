@@ -23,9 +23,9 @@ import { getLitepaperUrl } from '../siteMetadata.js';
 export const PUBLIC_ROADMAP_ITEMS = [
   {
     id: 'a1000001-0001-4001-8001-000000000001',
-    title: 'APTC TGE on Raydium CPMM',
+    title: 'APTC TGE on Bags.fm (Meteora DBC)',
     excerpt:
-      '1B APTC + 40 SOL on Raydium Standard AMM · 0.5% fee tier · ~$5.4k liquidity · ~$2.7k launch MC. Mint revoked. Fair launch.',
+      'Fair bonding curve launch · Founder (Default) mode · 23% creator buy · 85 SOL graduation → Meteora DAMM v2 · 2% trade fee · 100% fee share to @aptcasinofun.',
     category: 'Platform',
     status: 'in_progress',
     link: getLitepaperUrl('aptc-token'),
@@ -35,10 +35,10 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000037',
     title: 'Tier 1 — DEX & trader listings',
     excerpt:
-      'Raydium CPMM · DexScreener Enhanced · Jupiter · Birdeye · GeckoTerminal — primary Solana liquidity and chart visibility at TGE.',
+      'Bags.fm · Meteora DBC · DexScreener Enhanced · Jupiter · Birdeye · GeckoTerminal — bonding curve launch and chart visibility at TGE.',
     category: 'Partnership',
     status: 'in_progress',
-    link: 'https://raydium.io',
+    link: 'https://bags.fm/launch',
     sortOrder: 21,
   },
   {
@@ -103,19 +103,19 @@ export const PUBLIC_ROADMAP_ITEMS = [
   },
   {
     id: 'a1000001-0001-4001-8001-000000000008',
-    title: 'Raydium liquidity depth & farm incentives',
+    title: 'Meteora DAMM v2 liquidity depth',
     excerpt:
-      'Deepen APTC/SOL on Raydium CPMM — LP incentives, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
+      'Post-graduation pool depth — fee compounding, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
     category: 'Partnership',
     status: 'planned',
-    link: 'https://raydium.io',
+    link: 'https://app.meteora.ag/',
     sortOrder: 35,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000009',
     title: 'Automated GGR → APTC buyback pipeline',
     excerpt:
-      'Scheduled open-market buys on Raydium & Jupiter from gross gaming revenue — burn, staker, treasury splits published live.',
+      'Scheduled open-market buys on Jupiter & Meteora from gross gaming revenue — burn, staker, treasury splits published live.',
     category: 'Platform',
     status: 'planned',
     link: getLitepaperUrl('ggr-flywheel'),
@@ -145,7 +145,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000012',
     title: 'OTC lottery tiered tranches',
     excerpt:
-      'SOL → discounted APTC with lock periods — skip Raydium slippage and repeated swap fees for power users sizing in.',
+      'SOL → discounted APTC with lock periods — skip bonding-curve / DEX slippage and repeated swap fees for power users sizing in.',
     category: 'Community',
     status: 'planned',
     link: '/otc-lottery',
@@ -225,7 +225,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000020',
     title: 'Telegram & Discord alert bots',
     excerpt:
-      'Stream go-live, Volume Cup standings, Raydium LP events, and large buyback/burn notifications for holders.',
+      'Stream go-live, Volume Cup standings, graduation to DAMM v2, and large buyback/burn notifications for holders.',
     category: 'Community',
     status: 'planned',
     link: null,
@@ -325,7 +325,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000030',
     title: 'Ecosystem wallet & data partners',
     excerpt:
-      'Deeper integrations with DexScreener, Raydium, Jupiter, CoinGecko, and major wallets — co-marketing with Aptos & Solana ecosystems.',
+      'Deeper integrations with Bags, DexScreener, Meteora, Jupiter, CoinGecko, and major wallets — co-marketing with Aptos & Solana ecosystems.',
     category: 'Partnership',
     status: 'planned',
     link: null,

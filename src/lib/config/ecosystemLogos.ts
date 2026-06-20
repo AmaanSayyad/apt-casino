@@ -27,7 +27,7 @@ export const ECOSYSTEM_CHAIN_LOGOS: EcosystemLogo[] = [
 
 /** DEX, analytics & launch tooling */
 export const ECOSYSTEM_DEX_LOGOS: EcosystemLogo[] = [
-  { key: 'raydium', src: '/logos/Raydium.png', alt: 'Raydium' },
+  { key: 'bags', src: '/APTC_logo_1000x1000.png', alt: 'Bags.fm' },
   { key: 'jupiter', src: '/logos/jupiter.jpg', alt: 'Jupiter' },
   { key: 'meteora', src: '/logos/meteora-logo.png', alt: 'Meteora' },
   { key: 'pancakeswap', src: '/logos/pancakeswap-logo.png', alt: 'PancakeSwap' },

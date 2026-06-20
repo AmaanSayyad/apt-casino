@@ -33,8 +33,9 @@ When this is set with a valid Solana token address, the entire site automaticall
 
 ### 5. **Trade & Research Tool Links**
 **Pre-launch** (generic URLs):
-- Raydium: `https://raydium.io/`
+- Bags: `https://bags.fm/launch`
 - Jupiter: `https://jup.ag/`
+- Meteora: `https://app.meteora.ag/`
 - DexScreener: `https://dexscreener.com/solana`
 - Birdeye: `https://birdeye.so/`
 - GeckoTerminal: `https://www.geckoterminal.com/`
@@ -46,8 +47,9 @@ When this is set with a valid Solana token address, the entire site automaticall
 - Plus: CoinGecko, CMC, PancakeSwap, Pump.fun
 
 **Post-launch** (token-specific URLs):
-- Raydium: Swap with token mint
+- Bags: Token page on bags.fm
 - Jupiter: Swap SOL to token
+- Meteora: DAMM v2 pool
 - DexScreener: Token pair page
 - Birdeye: Token analytics
 - GeckoTerminal: Token pool page
@@ -176,9 +178,10 @@ NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL
 
 When you're ready to launch:
 
-- [ ] Create token on Solana
-- [ ] Create Raydium CPMM pool
+- [ ] Launch APTC on [bags.fm/launch](https://bags.fm/launch) — Default (Founder) mode, $610 / 23% initial buy
+- [ ] Fee share 100% → @aptcasinofun
 - [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in Vercel
 - [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` in Vercel (optional, for faster chart)
+- [ ] Set `BAGS_API_KEY` in Vercel (optional, for analytics)
 - [ ] Redeploy to production
 - [ ] ✅ Site automatically updates to "Live" state everywhere!

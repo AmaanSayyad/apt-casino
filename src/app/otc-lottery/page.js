@@ -98,7 +98,7 @@ const BENEFITS = [
   {
     icon: FaChartLine,
     title: 'Skip DEX drag',
-    body: 'Avoid Raydium pool fees, wallet swap markup, and price impact on repeated buys.',
+    body: 'Avoid DEX trade fees, wallet swap markup, and price impact on repeated buys.',
     tint: 'cyan',
   },
   {
@@ -464,7 +464,7 @@ export default function OtcLotteryPage() {
                         <span className="text-white/80">{fmtUsd(estimate.breakdown.swapFeeUsd)}</span>
                       </p>
                       <p className="text-white/55">
-                        Raydium pool fee ~{(estimate.breakdown.tokenTradeTaxBps / 100).toFixed(2)}% →{' '}
+                        DEX trade fee ~{(estimate.breakdown.tokenTradeTaxBps / 100).toFixed(2)}% →{' '}
                         <span className="text-white/80">{fmtUsd(estimate.breakdown.tokenTaxUsd)}</span>
                       </p>
                       <p className="text-emerald-300/90 text-xs pt-1">

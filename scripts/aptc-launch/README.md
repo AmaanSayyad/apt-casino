@@ -1,17 +1,27 @@
 # APTC Solana token launch
 
-Creates SPL mint, Metaplex metadata, mints 1B APTC (6 decimals), distributes supply, revokes authorities.
+**Primary path:** launch via [bags.fm/launch](https://bags.fm/launch) (Meteora DBC → DAMM v2). See [docs/APTC_TOKENOMICS.md](../../docs/APTC_TOKENOMICS.md).
 
-## Prerequisites
+This folder contains a **legacy CLI script** for manual SPL mint + distribution. Use only if you need a custom mint flow outside Bags.
 
-1. Install Solana CLI ([quick install](https://solana.com/docs/intro/installation)):
+## Bags.fm launch (recommended)
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev | bash
-```
+1. Open [bags.fm/launch](https://bags.fm/launch)
+2. Configure: **DEFAULT (Founder) mode**, **$610 / 23%** initial buy, **100% fee share → @aptcasinofun**
+3. Fund wallet with ≥0.2 SOL + ~8.6 SOL for initial buy
+4. After launch, set in Vercel:
+   - `NEXT_PUBLIC_APTC_SOLANA_MINT=<mint from Bags>`
+   - `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=<pair when indexed>`
+   - `BAGS_API_KEY=<from dev.bags.fm>` (optional)
 
-2. Payer keypair with SOL on **mainnet-beta** (see cost table below).
+## Legacy CLI script (optional)
 
+Creates SPL mint, Metaplex metadata, mints 1B APTC, distributes supply, revokes authorities.
+
+### Prerequisites
+
+1. Install Solana CLI ([quick install](https://solana.com/docs/intro/installation))
+2. Payer keypair with SOL on **mainnet-beta**
 3. Set env (never commit the keypair file):
 
 ```bash
@@ -20,60 +30,31 @@ export APTC_LAUNCH_KEYPAIR="/path/to/payer-keypair.json"
 export SOLANA_NETWORK=mainnet-beta
 ```
 
-## Steps
-
-### 1. Vanity mint keypair (prefix `APTC`)
+### Steps
 
 ```bash
-solana-keygen grind --starts-with APTC:1 --ignore-case
-# saves e.g. APTCxxxx.json — export path:
-export APTC_MINT_KEYPAIR="/path/to/APTCxxxx.json"
+npm run aptc:launch:dry   # dry run
+npm run aptc:launch       # live (legacy)
+npm run aptc:launch:resume  # resume if interrupted
 ```
-
-4-char prefix can take a long time. Fallback: `AptC` (~matches docs mint style).
-
-### 2. Dry run (no transactions)
-
-```bash
-npm run aptc:launch:dry
-```
-
-### 3. Live launch
-
-```bash
-npm run aptc:launch
-```
-
-Outputs mint address, Solscan links, and env vars for Vercel.
-
-If distribution or revokes fail mid-run (RPC timeouts), resume with:
-
-```bash
-npm run aptc:launch:resume
-```
-
-## Live mint (mainnet)
-
-`ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg` · [Solscan](https://solscan.io/token/ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg)
-
-Raydium pair: `C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL` · [DexScreener](https://dexscreener.com/solana/c9ej1qvpj9tyckgwzsukl9rduz65vzx2wfg7rfhaqsal)
 
 ## After launch
 
-| Step | ~SOL |
-|------|------|
-| Mint + metadata | 0.02–0.05 |
-| Mint 1B supply | 0.00001 |
-| Distribution transfers | 0.01–0.02 |
-| Authority revokes | 0.003 |
-| **Total** | **~0.05–0.1 SOL** (+ vanity grind is free, only time) |
+| Step | Notes |
+|------|--------|
+| Set mint env | `NEXT_PUBLIC_APTC_SOLANA_MINT` |
+| DexScreener | Submit enhanced info once pair is indexed |
+| Staking | `NEXT_PUBLIC_APTC_STAKING_VAULT` + enable flags |
+| Graduation | Monitor bonding curve until **85 SOL** → DAMM v2 |
 
-## After launch
+## Estimated cost (Bags launch)
 
-1. Set `NEXT_PUBLIC_APTC_SOLANA_MINT=ApTCoJG15om8W9gRpJJbdmG9JDBdF5ZJmiCf9F1RBRg` in Vercel
-2. Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL` in Vercel
-2. Set `NEXT_PUBLIC_APTC_STAKING_VAULT=4Ka1vdinFUqhh3TtHaohj1MiKVUrvJBrgsVp1MfVnXFQ`
-3. Raydium CPMM pool: 120M APTC from liquidity wallet + 37 SOL
-4. DexScreener enhanced info + Jupiter
+| Item | ~Cost |
+|------|--------|
+| Launch tx fees | ≥0.2 SOL |
+| Creator initial buy | ~$610 (~8.6 SOL) |
+| **Total** | **~9 SOL + $610** |
 
-## Estimated SOL cost
+## Reference
+
+Example graduated Bags token: [Bynomo on Solscan](https://solscan.io/token/Faw8wwB6MnyAm9xG3qeXgN1isk9agXBoaRZX9Ma8BAGS)

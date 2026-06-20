@@ -222,17 +222,18 @@ All though started as a idea but now we are thinking to carry forward as a busin
 
 **Be the biggest gamefi/ gambling / games hub centre of the gaming industry.**
 
-## $APTC token (live)
+## $APTC token (Bags.fm launch)
 
-APTC is the native GambleFi token — **live on Solana** via Raydium CPMM. Mint, freeze, and update authorities are all revoked. Full tokenomics: [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md).
+APTC is the native GambleFi token — launching on **Solana via Bags.fm** (Meteora bonding curve → DAMM v2). Full tokenomics: [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md).
 
 ```mermaid
 flowchart LR
     PLAY[Casino play] --> GGR[GGR]
-    GGR --> BUY[Raydium / Jupiter buyback]
+    GGR --> BUY[Jupiter / Meteora buyback]
     BUY --> BURN[Burn 50%]
     BUY --> STAKE[Stakers 35%]
     BUY --> TRES[Treasury 15%]
+    TRADE[Bags 2% fee] --> OPS[@aptcasinofun treasury]
     REF[Referrals] --> APTC[APTC rewards]
     STK[/stake pools] --> APTC
 ```
@@ -409,7 +410,7 @@ Upload the `.next` folder and `public` folder to your hosting provider.
 
 | File | Purpose |
 |------|---------|
-| [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) | **$APTC** — Raydium launch, 9-wallet allocation, GGR flywheel |
+| [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) | **$APTC** — Bags bonding curve launch, allocation, GGR flywheel |
 | [mainnet.md](./mainnet.md) | Mainnet launch checklist (multichain) |
 | [deployment.md](./deployment.md) | Aptos module addresses & entry function reference |
 | [liquidity.md](./liquidity.md) | Treasury, house balance, and fee flow |

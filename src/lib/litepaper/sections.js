@@ -131,7 +131,7 @@ export const LITEPAPER_SECTIONS = [
       'APT-Casino is a Next.js application with chain-specific API routes under /api/chains/{chainId}/, Supabase for profiles, balances, referrals, and audit logs, and Move contracts on Aptos for core game logic.',
       'Sensitive writes (deposits, withdrawals, referral unlocks, GGR estimates) run server-side with service-role Supabase and validated env economics — never trusted from the client alone.',
       'Live features (streaming, chat) sit beside the gaming core: Livepeer for video, Socket.IO for real-time messages bound to wallet identity.',
-      'APTC lives on Solana (SPL); price and market stats integrate via DexScreener and display automatically when the token launches on Raydium.',
+      'APTC lives on Solana (SPL); price and market stats integrate via DexScreener and display automatically when the token launches on Bags (Meteora bonding curve).',
     ],
     mermaid: `flowchart LR
     U[Player Wallet] --> FE[Next.js Client]
@@ -222,9 +222,10 @@ export const LITEPAPER_SECTIONS = [
     title: '8. APTC Token',
     body: [
       `Native ecosystem token: ${APTC_TOKENOMICS.name} (${APTC_TOKENOMICS.symbol}) on ${APTC_TOKENOMICS.chain}.`,
-      `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint, freeze, and update authorities all revoked at creation — fixed metadata, fixed supply.`,
-      `Public launch on ${APTC_TOKENOMICS.launchVenue}: ${APTC_LAUNCH_METRICS.aptcInLpShort} APTC + ${APTC_LAUNCH_METRICS.solInLp} SOL, ${APTC_LAUNCH_METRICS.feeTierPct}% fee tier. Approx launch MC ~$${(APTC_LAUNCH_METRICS.approxMarketCapUsd / 1000).toFixed(1)}k · liquidity ~$${(APTC_LAUNCH_METRICS.approxLiquidityUsd / 1000).toFixed(0)}k.`,
-      `Supply distributed across transparent on-chain allocations — no single-wallet hoard. Mint: ${APTC_TOKENOMICS.mint}.`,
+      `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint and freeze authorities revoked at creation — fixed metadata, fixed supply. Token authority: Bags Token Authority (same pattern as other Bags launches).`,
+      `Fair launch on ${APTC_TOKENOMICS.launchVenue}: ${APTC_LAUNCH_METRICS.feeModeLabel} · ${APTC_LAUNCH_METRICS.tradeFeePreMigrationPct}% trade fee · ${APTC_LAUNCH_METRICS.initialBuyPct}% creator initial buy ($${APTC_LAUNCH_METRICS.initialBuyUsd}) · graduates at ${APTC_LAUNCH_METRICS.graduationSol} SOL into Meteora DAMM v2.`,
+      `Estimated spot FDV after creator buy ~$${(APTC_LAUNCH_METRICS.approxSpotFdvUsd / 1000).toFixed(1)}k (average-cost FDV ~$${(APTC_LAUNCH_METRICS.approxAverageFdvUsd / 1000).toFixed(1)}k). 100% of creator fee share routed to @aptcasinofun via Bags Fee Share V2.`,
+      `Mint: ${APTC_TOKENOMICS.mint}.`,
       utilityText,
       'APTC is not required to place bets in native SOL/APT — it is the rewards, staking, referral, and value-accrual layer on top of core casino play.',
     ],
@@ -234,10 +235,10 @@ export const LITEPAPER_SECTIONS = [
     title: '9. APTC Allocation',
     body: [
       `${getAllocationSummary()}`,
-      '12% initial liquidity · 25% treasury · 12% staking · 15% community · 10% referrals · 10% partnerships · 8% founder reserve · 5% marketing · 3% competitions.',
-      `LP burn at TGE: ~${APTC_LAUNCH_METRICS.lpBurnPct}% of LP tokens permanently locked (~${APTC_LAUNCH_METRICS.lockedAptc} APTC + ~${APTC_LAUNCH_METRICS.lockedSol} SOL in pool).`,
+      `${APTC_LAUNCH_METRICS.initialBuyPct}% (${APTC_LAUNCH_METRICS.initialBuyTokensShort}) — creator initial buy at launch for operations, runway, buybacks, listings, staking, rewards, marketing, and partnerships. No separate team or marketing wallets.`,
+      `${100 - APTC_LAUNCH_METRICS.initialBuyPct}% (${APTC_LAUNCH_METRICS.totalSupplyShort} minus creator) — sold on the public Meteora bonding curve via Bags until ${APTC_LAUNCH_METRICS.graduationSol} SOL graduation.`,
+      'No Raydium-style LP burn: at graduation, accumulated SOL and remaining curve inventory seed the Meteora DAMM v2 pool automatically. Post-graduation, 25% of trade fees compound back into pool liquidity.',
       ...APTC_LAUNCH_PHASES.map((p) => `${p.title}: ${p.detail}`),
-      ...APTC_WALLETS.map((w) => `${w.label} (${w.amountShort}): ${truncateAddress(w.address, 6)} — ${w.purpose}`),
     ],
     chart: 'allocation-donut',
   },
@@ -249,11 +250,11 @@ export const LITEPAPER_SECTIONS = [
       'Default economics (env): 30% of GGR allocated to APTC buyback (GGR_BUYBACK_BPS_OF_GGR=3000).',
       'Buyback split: 50% burn · 35% stakers · 15% treasury (GGR_BURN/STAKER/TREASURY_BPS_OF_BUYBACK).',
       'Average house edge assumption for estimates: 2.5% (GGR_AVG_HOUSE_EDGE_BPS=250). Actual edge varies per game (~1–4%).',
-      'Dashboard surfaces estimated GGR and buyback from play events — live buybacks execute on Raydium & Jupiter when treasury ops run.',
+      'Dashboard surfaces estimated GGR and buyback from play events — live buybacks execute on Jupiter / Meteora when treasury ops run.',
     ],
     mermaid: `flowchart LR
     PLAY[Player Bets] --> EDGE[House Edge GGR]
-    EDGE --> BUY[Raydium / Jupiter Buy]
+    EDGE --> BUY[Jupiter / Meteora Buy]
     BUY --> BURN[50% Burn]
     BUY --> STAKE[35% Staker Rewards]
     BUY --> TRES[15% Treasury]`,
@@ -327,8 +328,8 @@ export const LITEPAPER_SECTIONS = [
     title: '16. Roadmap',
     body: [
       'Shipped / live: core casino games, Solana + Aptos play, gasless Aptos UX, referrals, Stake UI, GGR dashboard, live streaming shell, ecosystem partners section.',
-      `Near term: APTC TGE on Raydium CPMM (${APTC_LAUNCH_METRICS.aptcInLpShort} APTC + ${APTC_LAUNCH_METRICS.solInLp} SOL), Tier 1 listings (Raydium · DexScreener · Jupiter · Birdeye · GeckoTerminal), Tier 2 (CoinGecko · CoinMarketCap), staking live, ~${APTC_LAUNCH_METRICS.lpBurnPct}% LP burn.`,
-      'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), Raydium farm incentives, Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
+      `Near term: APTC TGE on Bags.fm (${APTC_LAUNCH_METRICS.initialBuyPct}% creator buy + Meteora DBC, ${APTC_LAUNCH_METRICS.graduationSol} SOL graduation), Tier 1 listings (Bags · DexScreener · Jupiter · Birdeye · GeckoTerminal), Tier 2 (CoinGecko · CoinMarketCap), staking live.`,
+      'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), Meteora LP incentives, Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
       'Long term: largest multichain GambleFi hub — transparent game marketplace, creator revenue share, and community governance over APTC parameters.',
       'The homepage Roadmap section lists 30 curated milestones (Platform, Governance, Community, Security, Tournaments, Partnership) via /api/roadmap — editable in Supabase roadmap_items or src/lib/config/publicRoadmap.js.',
     ],

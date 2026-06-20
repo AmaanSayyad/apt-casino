@@ -52,8 +52,8 @@ export default function LitepaperTokenomicsBlock() {
           at a glance
         </h2>
         <p className="mx-auto mt-2 max-w-2xl text-sm text-white/55">
-          {APTC_TOKENOMICS.maxSupply} max supply · {APTC_TOKENOMICS.chain} · Raydium CPMM · mint, freeze &
-          update revoked
+          {APTC_TOKENOMICS.maxSupply} max supply · {APTC_TOKENOMICS.chain} · Bags bonding curve ·
+          mint & freeze revoked
         </p>
         <p className="mx-auto mt-2 max-w-2xl text-xs text-white/45">{getAllocationSummary()}</p>
       </div>
@@ -72,16 +72,16 @@ export default function LitepaperTokenomicsBlock() {
 
       <div className="mb-5 grid gap-3 sm:grid-cols-3">
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Launch MC</p>
-          <p className="mt-1 text-xl font-bold text-white">~${(m.approxMarketCapUsd / 1000).toFixed(1)}k</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Spot FDV (est.)</p>
+          <p className="mt-1 text-xl font-bold text-white">~${(m.approxSpotFdvUsd / 1000).toFixed(1)}k</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Liquidity</p>
-          <p className="mt-1 text-xl font-bold text-white">~${(m.approxLiquidityUsd / 1000).toFixed(0)}k</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Graduation</p>
+          <p className="mt-1 text-xl font-bold text-white">{m.graduationSol} SOL → DAMM v2</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">LP pair</p>
-          <p className="mt-1 text-xl font-bold text-white">{m.aptcInLpShort} + {m.solInLp} SOL</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Creator buy</p>
+          <p className="mt-1 text-xl font-bold text-white">{m.initialBuyPct}% · ${m.initialBuyUsd}</p>
         </div>
       </div>
 
@@ -90,7 +90,7 @@ export default function LitepaperTokenomicsBlock() {
           <p className="mb-1 text-xs font-black uppercase tracking-widest text-white/45">
             Full supply allocation
           </p>
-          <p className="mb-4 text-xs text-white/40">100% of 1B APTC · Raydium LP</p>
+          <p className="mb-4 text-xs text-white/40">23% creator · 77% bonding curve</p>
           <AllocationDonut variant="litepaper" />
         </div>
         <div className="lp-glass rounded-2xl p-5 sm:p-6">
@@ -105,6 +105,7 @@ export default function LitepaperTokenomicsBlock() {
         <p className="mb-4 text-xs font-black uppercase tracking-widest text-white/45">
           Wallet transparency
         </p>
+        {APTC_WALLETS.some((w) => w.address) ? (
         <table className="w-full min-w-[520px] text-left text-xs">
           <thead>
             <tr className="text-[10px] uppercase tracking-widest text-white/35 border-b border-white/10">
@@ -114,7 +115,7 @@ export default function LitepaperTokenomicsBlock() {
             </tr>
           </thead>
           <tbody>
-            {APTC_WALLETS.map((w) => (
+            {APTC_WALLETS.filter((w) => w.address).map((w) => (
               <tr key={w.id} className="border-b border-white/5">
                 <td className="py-2 pr-3 text-white/85 font-medium">{w.label}</td>
                 <td className="py-2 pr-3 font-mono text-cyan-200/80">{w.amountShort}</td>
@@ -132,6 +133,12 @@ export default function LitepaperTokenomicsBlock() {
             ))}
           </tbody>
         </table>
+        ) : (
+          <p className="text-xs leading-6 text-white/55">
+            Single operations wallet receives the {m.initialBuyPct}% creator initial buy and 100% Bags fee-share
+            claims (@aptcasinofun). Address published at TGE on Solscan and Bags.fm.
+          </p>
+        )}
       </div>
 
       <div className="mt-5">

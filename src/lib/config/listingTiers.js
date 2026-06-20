@@ -8,9 +8,9 @@ export const APTC_LISTING_TIERS = [
     tier: 1,
     label: 'Tier 1 — DEX & trader tools',
     status: 'in_progress',
-    venues: ['Raydium', 'DexScreener', 'Jupiter', 'Birdeye', 'GeckoTerminal'],
+    venues: ['Bags.fm', 'Meteora', 'DexScreener', 'Jupiter', 'Birdeye', 'GeckoTerminal'],
     summary:
-      'Primary Solana liquidity and chart visibility at TGE — Raydium CPMM pool, DexScreener enhanced info, Jupiter swap routing, Birdeye & GeckoTerminal tracking.',
+      'Primary Solana liquidity at TGE — Bags bonding curve (Meteora DBC), graduation to DAMM v2, DexScreener enhanced info, Jupiter swap routing, Birdeye & GeckoTerminal tracking.',
   },
   {
     tier: 2,

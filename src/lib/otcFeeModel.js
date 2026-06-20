@@ -1,19 +1,20 @@
 /**
  * OTC vs DEX fee model — sourced wallet/platform rates for calculator UI.
- * Pool fee follows Raydium CPMM launch config (0.5% LP fee tier).
- * @see https://docs.raydium.io/raydium/
+ * Pool fee follows Bags Default (Founder) mode: 2% trade fee on bonding curve / DAMM v2.
+ * @see https://docs.bags.fm/how-to-guides/customize-token-fees
  */
 
-/** Raydium CPMM pool fee — APTC/SOL launch tier */
+/** Bags Default (Founder) mode — 2% total trade fee pre- and post-migration */
 export const APTC_DEX_POOL_FEE = {
-  totalBps: 50,
-  totalLabel: '0.5%',
-  venue: 'Raydium CPMM',
-  detail: '0.5% LP fee on APTC/SOL swaps — paid to liquidity providers, taken on the trade.',
+  totalBps: 200,
+  totalLabel: '2%',
+  venue: 'Bags · Meteora DBC / DAMM v2',
+  detail:
+    '2% trade fee (1% protocol + 1% creator pre-graduation). Post-graduation: 0.75% + 0.75% + 0.5% compounding into pool liquidity.',
   sources: [
     {
-      label: 'Raydium — Liquidity pools',
-      url: 'https://raydium.io/liquidity-pools/',
+      label: 'Bags — Customize token fees',
+      url: 'https://docs.bags.fm/how-to-guides/customize-token-fees',
     },
   ],
 };
@@ -53,7 +54,7 @@ export const WALLET_SWAP_FEES = [
     name: 'Solflare',
     swapFeeBps: 0,
     swapFeeLabel: '0% (wallet)',
-    notes: 'In-wallet swaps route via Jupiter; no separate Solflare platform fee listed — you still pay Solana network fees and Raydium pool fees.',
+    notes: 'In-wallet swaps route via Jupiter; you still pay Solana network fees and DEX pool fees (Bags/Meteora 2% on APTC).',
     sources: [
       { label: 'Solflare — FAQ', url: 'https://www.solflare.com/faq/' },
       { label: 'Jupiter — Swap fees', url: 'https://docs.jup.ag/user-docs/trade/swap/fees' },
@@ -147,8 +148,8 @@ export const DEX_VALUE_LOSS_SOURCES = [
   },
   {
     id: 'tax',
-    label: 'Raydium pool fee (APTC/SOL)',
-    detail: '0.5% on APTC DEX swaps via Raydium CPMM — paid to LPs. Taken on the trade.',
+    label: 'Bags / Meteora trade fee (APTC/SOL)',
+    detail: '2% on APTC DEX swaps via Bags bonding curve or Meteora DAMM v2 — 1% creator + 1% protocol pre-graduation.',
   },
   {
     id: 'priceImpact',
@@ -226,7 +227,7 @@ export function estimateDexAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd, swa
   };
 }
 
-/** Full APTC if no DEX swap markup and no Raydium pool fee (OTC allotment model). */
+/** Full APTC if no DEX swap markup and no Bags/Meteora trade fee (OTC allotment model). */
 export function estimateOtcAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd) {
   if (!solAmount || !solPriceUsd || !aptcPriceUsd) return { aptc: 0, networkFeeUsd: 0 };
   const grossUsd = solAmount * solPriceUsd;
@@ -319,7 +320,7 @@ export function getWalletById(id) {
 }
 
 /**
- * Per DEX purchase: full value loss in SOL — swap fee, market loss (impact/slippage/LP), Raydium pool fee.
+ * Per DEX purchase: full value loss in SOL — swap fee, market loss (impact/slippage/LP), Bags/Meteora trade fee.
  * @param {number} solIn
  * @param {number} swapFeeBps
  * @param {number} tokenTaxBps
@@ -384,7 +385,7 @@ export function calculateDexFeesPerBuySol(solIn, swapFeeBps, tokenTaxBps, opts =
   };
 }
 
-/** OTC: one SOL transfer; no swap markup or Raydium pool fee on the buy. */
+/** OTC: one SOL transfer; no swap markup or DEX trade fee on the buy. */
 export function calculateOtcPerBuySol(solIn) {
   const networkFeeSol = SOLANA_TX_FEE_SOL;
   return {
