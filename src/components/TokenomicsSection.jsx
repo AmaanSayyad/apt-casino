@@ -11,6 +11,7 @@ import {
   solscanTokenUrl,
   bagsTokenUrl,
   meteoraPoolUrl,
+  BAGS_LOGO_SRC,
 } from '@/lib/config/tokenomics';
 import { isAptcLaunched, getLaunchStatusText } from '@/lib/config/launchStatus';
 import BagsAnalyticsPanel from '@/components/BagsAnalyticsPanel';
@@ -34,7 +35,7 @@ function getTradeTools() {
   if (!launched) {
     // Pre-launch: generic URLs
     return [
-      { id: 'bags',         label: 'Bags',          logo: '/APTC_logo_1000x1000.png',     href: 'https://bags.fm/launch' },
+      { id: 'bags',         label: 'Bags',          logo: BAGS_LOGO_SRC,                  href: 'https://bags.fm/launch' },
       { id: 'meteora',      label: 'Meteora',       logo: '/logos/meteora-logo.png',     href: 'https://app.meteora.ag/' },
       { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/` },
       { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
@@ -54,7 +55,7 @@ function getTradeTools() {
   
   // Post-launch: token-specific URLs
   return [
-    { id: 'bags',         label: 'Bags',          logo: '/APTC_logo_1000x1000.png',     href: bagsTokenUrl(mint) },
+    { id: 'bags',         label: 'Bags',          logo: BAGS_LOGO_SRC,                  href: bagsTokenUrl(mint) },
     { id: 'meteora',      label: 'Meteora',       logo: '/logos/meteora-logo.png',     href: meteoraPoolUrl(mint) },
     { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/swap/SOL-${mint}` },
     { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
@@ -143,7 +144,7 @@ export default function TokenomicsSection() {
             </span>{' '}
             Tokenomics
           </h2>
-          <p className="mt-3 text-base md:text-lg text-white/55 max-w-2xl leading-relaxed">
+          <p className="mt-3 w-full max-w-none text-sm sm:text-base md:text-lg text-white/55 leading-relaxed md:whitespace-nowrap">
             1B fixed supply · fair bonding curve on Bags (Meteora DBC). Creator fees + casino GGR fund buybacks — not empty emissions.
           </p>
         </div>
@@ -267,7 +268,9 @@ export default function TokenomicsSection() {
           <div className="flex flex-col gap-5">
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
               <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
-              <p className="text-xs text-white/45 mb-6">1B APTC · 23% creator · 77% bonding curve</p>
+              <p className="text-xs text-white/45 mb-6">
+                1B APTC · 23% creator (230M) · 77% bonding curve — creator buy funds ops, buybacks, listings, staking & rewards via @aptcasinofun
+              </p>
               <AllocationDonut />
             </div>
 

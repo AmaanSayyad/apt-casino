@@ -136,7 +136,7 @@ export default function DexscreenerEmbedSection() {
                 }
               </p>
               <Link
-                href="/stake"
+                href="/#tokenomics"
                 className="text-sm text-purple-300 hover:text-white transition-colors"
               >
                 Learn more about APTC →

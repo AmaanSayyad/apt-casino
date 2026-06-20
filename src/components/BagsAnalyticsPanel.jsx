@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { APTC_LAUNCH_METRICS } from '@/lib/config/tokenomics';
+import { APTC_LAUNCH_METRICS, BAGS_LOGO_SRC } from '@/lib/config/tokenomics';
 import { isAptcLaunched } from '@/lib/config/launchStatus';
 
 function fmtSol(n) {
@@ -67,9 +67,13 @@ export default function BagsAnalyticsPanel({ bags, loading = false, compact = fa
     >
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40 mb-2">
-            Bags · Meteora analytics
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={BAGS_LOGO_SRC} alt="Bags.fm" className="w-5 h-5 rounded-md object-contain" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">
+              Bags · Meteora analytics
+            </p>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${toneClasses[tone]}`}
@@ -92,6 +96,8 @@ export default function BagsAnalyticsPanel({ bags, loading = false, compact = fa
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/70 hover:text-white hover:border-white/25 transition-colors"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={BAGS_LOGO_SRC} alt="" className="w-3.5 h-3.5 rounded object-contain" aria-hidden />
             View on Bags
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M7 17 17 7M7 7h10v10" strokeLinecap="round" strokeLinejoin="round" />
@@ -104,6 +110,8 @@ export default function BagsAnalyticsPanel({ bags, loading = false, compact = fa
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-fuchsia-200 hover:bg-fuchsia-500/20 transition-colors"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={BAGS_LOGO_SRC} alt="" className="w-3.5 h-3.5 rounded object-contain" aria-hidden />
             Launch on Bags
           </Link>
         )}

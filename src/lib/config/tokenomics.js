@@ -10,6 +10,9 @@ import { getAptcMint, isAptcLaunched, getAptcPairAddress } from './launchStatus'
 /** Bags Default config — 2% pre/post migration, 25% fee compounding post-migration, ~85 SOL graduation */
 export const BAGS_DEFAULT_CONFIG_ID = 'fa29606e-5e48-4c37-827f-4b03d58ee23d';
 
+/** Public Bags.fm brand mark */
+export const BAGS_LOGO_SRC = '/bagsapp.png';
+
 export const APTC_TOKENOMICS = {
   name: 'AptCasino.fun',
   symbol: 'APTC',
@@ -96,7 +99,7 @@ export const APTC_ALLOCATION = [
     tokensShort: '230M',
     fill: '#ec4899',
     color: 'from-fuchsia-500 to-pink-500',
-    detail: '$610 at launch · operations, runway, buybacks, rewards, liquidity support',
+    detail: '$610 at launch · single @aptcasinofun ops wallet · deployed per breakdown below',
   },
   {
     label: 'Bonding curve (public)',
@@ -107,6 +110,20 @@ export const APTC_ALLOCATION = [
     detail: 'Meteora DBC on Bags · trades until 85 SOL graduation → DAMM v2',
   },
 ];
+
+/** How the 23% creator initial buy (230M APTC) is deployed — 100% of one ops wallet */
+export const CREATOR_BUY_TOTAL_TOKENS = 230_000_000;
+
+export const CREATOR_BUY_DEPLOYMENT = [
+  { label: 'Community & rewards', pct: 35, tokensShort: '80.5M', fill: '#c084fc' },
+  { label: 'Liquidity & market making', pct: 25, tokensShort: '57.5M', fill: '#60a5fa' },
+  { label: 'Treasury & operations', pct: 20, tokensShort: '46M', fill: '#fbbf24' },
+  { label: 'Staking emissions', pct: 12, tokensShort: '27.6M', fill: '#34d399' },
+  { label: 'Partnerships & grants', pct: 8, tokensShort: '18.4M', fill: '#fb7185' },
+];
+
+export const CREATOR_BUY_PURPOSE =
+  'Single @aptcasinofun ops wallet — $610 creator buy at launch + 100% Bags fee share. Deployed across ops, buybacks, listings, staking, rewards, marketing & partnerships. No separate team or marketing wallets.';
 
 /** Single operations wallet — initial buy + 100% fee-share claimer */
 export const APTC_WALLETS = [
@@ -248,7 +265,7 @@ export function getAptcTradeLinks(options = {}) {
   const dexscreenerHref = pairUrl || 'https://dexscreener.com/solana';
 
   return [
-    { id: 'bags', label: 'Bags', sub: launched ? 'Token page' : 'Launch', href: bagsHref, external: true, logo: '/APTC_logo_1000x1000.png' },
+    { id: 'bags', label: 'Bags', sub: launched ? 'Token page' : 'Launch', href: bagsHref, external: true, logo: BAGS_LOGO_SRC },
     { id: 'dexscreener', label: 'DexScreener', sub: launched ? 'Live chart' : 'Charts', href: dexscreenerHref, external: true, logo: '/logos/dexscreener.png' },
     { id: 'jupiter', label: 'Jupiter', sub: launched ? 'Swap' : 'Aggregator', href: jupiterHref, external: true, logo: '/logos/jupiter.jpg' },
     { id: 'meteora', label: 'Meteora', sub: launched ? 'DAMM v2 pool' : 'DEX', href: meteoraHref, external: true, logo: '/logos/meteora-logo.png' },

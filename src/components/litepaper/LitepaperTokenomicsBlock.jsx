@@ -90,7 +90,9 @@ export default function LitepaperTokenomicsBlock() {
           <p className="mb-1 text-xs font-black uppercase tracking-widest text-white/45">
             Full supply allocation
           </p>
-          <p className="mb-4 text-xs text-white/40">23% creator · 77% bonding curve</p>
+          <p className="mb-4 text-xs text-white/40">
+            23% creator (230M) · 77% bonding curve — see creator deployment breakdown below
+          </p>
           <AllocationDonut variant="litepaper" />
         </div>
         <div className="lp-glass rounded-2xl p-5 sm:p-6">

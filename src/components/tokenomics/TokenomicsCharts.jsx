@@ -1,7 +1,13 @@
 'use client';
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { APTC_ALLOCATION, APTC_TOKENOMICS, BUYBACK_SPLIT_COLORS } from '@/lib/config/tokenomics';
+import {
+  APTC_ALLOCATION,
+  APTC_TOKENOMICS,
+  BUYBACK_SPLIT_COLORS,
+  CREATOR_BUY_DEPLOYMENT,
+  CREATOR_BUY_PURPOSE,
+} from '@/lib/config/tokenomics';
 
 const CHART_TOOLTIP = {
   contentStyle: {
@@ -35,74 +41,114 @@ export function AllocationDonut({ variant = 'default' }) {
   }));
 
   return (
-    <div
-      className={
-        isLitepaper
-          ? 'flex flex-col items-center gap-8 xl:flex-row xl:items-center xl:justify-center xl:gap-12'
-          : 'flex flex-col lg:flex-row items-center gap-6'
-      }
-    >
+    <div className={isLitepaper ? 'space-y-6' : 'space-y-4'}>
       <div
         className={
           isLitepaper
-            ? 'relative mx-auto aspect-square w-full max-w-[280px] shrink-0 sm:max-w-[300px]'
-            : 'relative mx-auto aspect-square w-full max-w-[240px] shrink-0'
+            ? 'flex flex-col items-center gap-8 xl:flex-row xl:items-start xl:justify-center xl:gap-12'
+            : 'flex flex-col lg:flex-row items-center gap-6'
         }
       >
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius="58%"
-              outerRadius="88%"
-              paddingAngle={2}
-              dataKey="value"
-              stroke="rgba(0,0,0,0.4)"
-              strokeWidth={2}
+        <div
+          className={
+            isLitepaper
+              ? 'relative mx-auto aspect-square w-full max-w-[280px] shrink-0 sm:max-w-[300px]'
+              : 'relative mx-auto aspect-square w-full max-w-[240px] shrink-0'
+          }
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius="58%"
+                outerRadius="88%"
+                paddingAngle={2}
+                dataKey="value"
+                stroke="rgba(0,0,0,0.4)"
+                strokeWidth={2}
+              >
+                {data.map((entry) => (
+                  <Cell key={entry.name} fill={entry.fill} />
+                ))}
+              </Pie>
+              <Tooltip {...CHART_TOOLTIP} formatter={(value) => [`${value}%`, 'Allocation']} />
+            </PieChart>
+          </ResponsiveContainer>
+          <DonutCenter title="Max supply" subtitle={`${APTC_TOKENOMICS.symbol} · 1B`} />
+        </div>
+
+        <ul
+          className={
+            isLitepaper ? 'w-full min-w-0 max-w-md space-y-3 xl:max-w-[340px]' : 'min-w-0 w-full flex-1 space-y-2.5'
+          }
+        >
+          {APTC_ALLOCATION.map((row) => (
+            <li
+              key={row.label}
+              className={`flex items-start gap-3 text-sm ${
+                isLitepaper ? 'rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5' : ''
+              }`}
             >
-              {data.map((entry) => (
-                <Cell key={entry.name} fill={entry.fill} />
-              ))}
-            </Pie>
-            <Tooltip {...CHART_TOOLTIP} formatter={(value) => [`${value}%`, 'Allocation']} />
-          </PieChart>
-        </ResponsiveContainer>
-        <DonutCenter title="Max supply" subtitle={`${APTC_TOKENOMICS.symbol} · 1B`} />
+              <span
+                className={`shrink-0 rounded-full ring-2 ring-white/10 mt-0.5 ${
+                  isLitepaper ? 'h-3 w-3' : 'h-2.5 w-2.5'
+                }`}
+                style={{ backgroundColor: row.fill }}
+              />
+              <span className="flex-1 min-w-0 text-white/80">
+                <span className="block truncate">{row.label}</span>
+                {row.tokensShort && (
+                  <span className="text-[10px] text-white/40 font-mono">{row.tokensShort}</span>
+                )}
+                {row.detail && (
+                  <span className="block mt-1 text-[10px] leading-snug text-white/45">{row.detail}</span>
+                )}
+              </span>
+              <span
+                className={`font-mono tabular-nums text-white shrink-0 ${
+                  isLitepaper ? 'text-base font-semibold' : 'text-sm font-medium'
+                }`}
+              >
+                {row.pct}%
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <ul
-        className={
-          isLitepaper ? 'w-full min-w-0 max-w-md space-y-3 xl:max-w-[340px]' : 'min-w-0 w-full flex-1 space-y-2.5'
-        }
-      >
-        {APTC_ALLOCATION.map((row) => (
-          <li
-            key={row.label}
-            className={`flex items-center gap-3 text-sm ${
-              isLitepaper ? 'rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5' : ''
-            }`}
-          >
+      <CreatorBuyUses variant={variant} />
+    </div>
+  );
+}
+
+/** Breakdown of how the 230M creator initial buy is deployed */
+export function CreatorBuyUses({ variant = 'default' }) {
+  const isLitepaper = variant === 'litepaper';
+
+  return (
+    <div
+      className={
+        isLitepaper
+          ? 'w-full min-w-0 max-w-md xl:max-w-[340px] rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/[0.06] p-4'
+          : 'w-full mt-4 rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/[0.06] p-4'
+      }
+    >
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-fuchsia-200/80 mb-1">
+        Creator buy · 230M deployment
+      </p>
+      <p className="text-[11px] text-white/45 leading-relaxed mb-3">{CREATOR_BUY_PURPOSE}</p>
+      <ul className="space-y-2">
+        {CREATOR_BUY_DEPLOYMENT.map((row) => (
+          <li key={row.label} className="flex items-center gap-2.5 text-xs">
             <span
-              className={`shrink-0 rounded-full ring-2 ring-white/10 ${
-                isLitepaper ? 'h-3 w-3' : 'h-2.5 w-2.5'
-              }`}
+              className="h-2 w-2 shrink-0 rounded-full ring-1 ring-white/10"
               style={{ backgroundColor: row.fill }}
             />
-            <span className="flex-1 min-w-0 text-white/80">
-              <span className="block truncate">{row.label}</span>
-              {row.tokensShort && (
-                <span className="text-[10px] text-white/40 font-mono">{row.tokensShort}</span>
-              )}
-            </span>
-            <span
-              className={`font-mono tabular-nums text-white shrink-0 ${
-                isLitepaper ? 'text-base font-semibold' : 'text-sm font-medium'
-              }`}
-            >
-              {row.pct}%
-            </span>
+            <span className="flex-1 min-w-0 text-white/75">{row.label}</span>
+            <span className="font-mono text-[10px] text-white/40 tabular-nums">{row.tokensShort}</span>
+            <span className="font-mono text-white/70 tabular-nums shrink-0 w-8 text-right">{row.pct}%</span>
           </li>
         ))}
       </ul>
