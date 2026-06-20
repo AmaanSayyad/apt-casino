@@ -74,7 +74,7 @@ export default function DexscreenerEmbedSection() {
                 </span>
               )}
             </h2>
-            <p className="mt-3 text-sm md:text-base text-white/50 max-w-2xl">
+            <p className="mt-3 w-full max-w-none text-sm md:text-base text-white/50 md:whitespace-nowrap">
               {hasLivePair 
                 ? 'Real-time chart, liquidity, and trade activity for the $APTC pair — the same feed used on Stake page and GGR buyback estimates.'
                 : launched
@@ -129,7 +129,7 @@ export default function DexscreenerEmbedSection() {
               <p className="text-white/70 font-medium text-lg">
                 {launched ? '$APTC is Live - Chart loading' : '$APTC Launching Soon on Solana'}
               </p>
-              <p className="text-sm text-white/45 max-w-md">
+              <p className="w-full max-w-none text-sm text-white/45 md:whitespace-nowrap">
                 {launched 
                   ? 'DexScreener is indexing the pool. Refresh in a few moments to see live data.'
                   : 'Live chart and trading data will appear here once APTC launches on Bags (Meteora bonding curve).'

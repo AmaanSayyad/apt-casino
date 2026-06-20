@@ -90,18 +90,18 @@ export default function UpcomingTournaments() {
   return (
     <section className="py-16 px-4 md:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center">
-            <div className="w-1 h-6 bg-gradient-to-r from-red-magic to-blue-magic rounded-full mr-3"></div>
-            <div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-8">
+          <div className="flex items-start min-w-0 flex-1">
+            <div className="w-1 h-6 bg-gradient-to-r from-red-magic to-blue-magic rounded-full mr-3 shrink-0 mt-1"></div>
+            <div className="min-w-0 flex-1">
               <h2 className="text-2xl font-display font-bold text-white">Tournaments &amp; volume cups</h2>
-              <p className="text-white/50 text-sm mt-1">
+              <p className="text-white/50 text-sm mt-1 max-w-3xl leading-relaxed">
                 Volume cups: register with your wallet, then compete by on-chain wager during the window. Standings
                 are on the Volume cup page. Classic registration events use the same button before start.
               </p>
             </div>
           </div>
-          <Link href="/competition">
+          <Link href="/competition" className="shrink-0 self-start lg:pt-1">
             <span className="text-white/70 hover:text-white text-sm flex items-center cursor-pointer">
               Volume cup leaderboard
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
