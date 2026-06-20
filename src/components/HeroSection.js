@@ -75,7 +75,7 @@ export default function HeroSection() {
             quality={100}
             priority
             alt={launched ? "APTC Casino - Token Launched" : "APT-Casino Gaming Platform"}
-            className={`rounded-xl z-10 relative ${launched ? 'w-full h-auto' : ''}`}
+            className="rounded-xl z-10 relative w-full h-auto"
           />
 
           {isDev && (

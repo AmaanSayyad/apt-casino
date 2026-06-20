@@ -89,7 +89,7 @@ export function getLaunchStyles() {
 export function getHeroImagePath() {
   return isAptcLaunched() 
     ? '/images/APTC-Launched.jpg'
-    : '/images/HeroImage.png';
+    : '/22launch.jpg';
 }
 
 /**
@@ -98,7 +98,7 @@ export function getHeroImagePath() {
 export function getHeroImageDimensions() {
   return isAptcLaunched()
     ? { width: 1920, height: 1080 }
-    : { width: 863, height: 487 };
+    : { width: 2048, height: 1152 };
 }
 
 /**
