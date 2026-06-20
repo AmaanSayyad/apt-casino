@@ -99,7 +99,7 @@ export const APTC_ALLOCATION = [
     tokensShort: '230M',
     fill: '#ec4899',
     color: 'from-fuchsia-500 to-pink-500',
-    detail: '$610 at launch · single @aptcasinofun ops wallet · deployed per breakdown below',
+    detail: '230M APTC · @aptcasinofun ops wallet',
   },
   {
     label: 'Bonding curve (public)',
@@ -123,7 +123,7 @@ export const CREATOR_BUY_DEPLOYMENT = [
 ];
 
 export const CREATOR_BUY_PURPOSE =
-  'Single @aptcasinofun ops wallet — $610 creator buy at launch + 100% Bags fee share. Deployed across ops, buybacks, listings, staking, rewards, marketing & partnerships. No separate team or marketing wallets.';
+  '$610 creator buy at launch + ongoing Bags fee share — one wallet, no separate team or marketing allocations.';
 
 /** Single operations wallet — initial buy + 100% fee-share claimer */
 export const APTC_WALLETS = [

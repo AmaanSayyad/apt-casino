@@ -41,18 +41,18 @@ export function AllocationDonut({ variant = 'default' }) {
   }));
 
   return (
-    <div className={isLitepaper ? 'space-y-6' : 'space-y-4'}>
+    <div className={isLitepaper ? 'space-y-8' : 'space-y-4'}>
       <div
         className={
           isLitepaper
-            ? 'flex flex-col items-center gap-8 xl:flex-row xl:items-start xl:justify-center xl:gap-12'
+            ? 'grid gap-8 lg:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] lg:items-center lg:gap-10'
             : 'flex flex-col lg:flex-row items-center gap-6'
         }
       >
         <div
           className={
             isLitepaper
-              ? 'relative mx-auto aspect-square w-full max-w-[280px] shrink-0 sm:max-w-[300px]'
+              ? 'relative mx-auto aspect-square w-full max-w-[280px] shrink-0 lg:mx-0'
               : 'relative mx-auto aspect-square w-full max-w-[240px] shrink-0'
           }
         >
@@ -81,14 +81,16 @@ export function AllocationDonut({ variant = 'default' }) {
 
         <ul
           className={
-            isLitepaper ? 'w-full min-w-0 max-w-md space-y-3 xl:max-w-[340px]' : 'min-w-0 w-full flex-1 space-y-2.5'
+            isLitepaper
+              ? 'w-full min-w-0 space-y-3 self-center'
+              : 'min-w-0 w-full flex-1 space-y-2.5'
           }
         >
           {APTC_ALLOCATION.map((row) => (
             <li
               key={row.label}
               className={`flex items-start gap-3 text-sm ${
-                isLitepaper ? 'rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5' : ''
+                isLitepaper ? 'rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3' : ''
               }`}
             >
               <span
@@ -98,17 +100,23 @@ export function AllocationDonut({ variant = 'default' }) {
                 style={{ backgroundColor: row.fill }}
               />
               <span className="flex-1 min-w-0 text-white/80">
-                <span className="block truncate">{row.label}</span>
+                <span className="block font-medium">{row.label}</span>
                 {row.tokensShort && (
-                  <span className="text-[10px] text-white/40 font-mono">{row.tokensShort}</span>
+                  <span className="text-[11px] text-white/40 font-mono">{row.tokensShort}</span>
                 )}
                 {row.detail && (
-                  <span className="block mt-1 text-[10px] leading-snug text-white/45">{row.detail}</span>
+                  <span
+                    className={`block mt-1 leading-relaxed text-white/45 ${
+                      isLitepaper ? 'text-xs' : 'text-[10px] leading-snug'
+                    }`}
+                  >
+                    {row.detail}
+                  </span>
                 )}
               </span>
               <span
                 className={`font-mono tabular-nums text-white shrink-0 ${
-                  isLitepaper ? 'text-base font-semibold' : 'text-sm font-medium'
+                  isLitepaper ? 'text-lg font-semibold' : 'text-sm font-medium'
                 }`}
               >
                 {row.pct}%
@@ -129,29 +137,42 @@ export function CreatorBuyUses({ variant = 'default' }) {
 
   return (
     <div
-      className={
-        isLitepaper
-          ? 'w-full min-w-0 max-w-md xl:max-w-[340px] rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/[0.06] p-4'
-          : 'w-full mt-4 rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/[0.06] p-4'
-      }
+      className={`w-full rounded-xl border border-white/10 bg-[#120010] ${
+        isLitepaper ? 'p-5 sm:p-6' : 'p-4 md:p-5'
+      }`}
     >
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-fuchsia-200/80 mb-1">
-        Creator buy · 230M deployment
-      </p>
-      <p className="text-[11px] text-white/45 leading-relaxed mb-3">{CREATOR_BUY_PURPOSE}</p>
-      <ul className="space-y-2">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-fuchsia-200/80">
+            Creator buy · 230M deployment
+          </p>
+          <p className="mt-1 text-sm font-medium text-white/90">How the 23% is used</p>
+        </div>
+        <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-fuchsia-200/90">
+          @aptcasinofun
+        </span>
+      </div>
+      <p className="text-xs text-white/45 leading-relaxed mb-4 max-w-3xl">{CREATOR_BUY_PURPOSE}</p>
+      <div className={`grid gap-3 ${isLitepaper ? 'sm:grid-cols-2 xl:grid-cols-5' : 'grid-cols-2 lg:grid-cols-5'}`}>
         {CREATOR_BUY_DEPLOYMENT.map((row) => (
-          <li key={row.label} className="flex items-center gap-2.5 text-xs">
-            <span
-              className="h-2 w-2 shrink-0 rounded-full ring-1 ring-white/10"
-              style={{ backgroundColor: row.fill }}
-            />
-            <span className="flex-1 min-w-0 text-white/75">{row.label}</span>
-            <span className="font-mono text-[10px] text-white/40 tabular-nums">{row.tokensShort}</span>
-            <span className="font-mono text-white/70 tabular-nums shrink-0 w-8 text-right">{row.pct}%</span>
-          </li>
+          <div
+            key={row.label}
+            className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-3"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{ backgroundColor: row.fill }}
+              />
+              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/50 tabular-nums">
+                {row.pct}%
+              </span>
+            </div>
+            <p className="text-xs font-medium text-white/80 leading-snug">{row.label}</p>
+            <p className="mt-1 font-mono text-[11px] text-white/40 tabular-nums">{row.tokensShort}</p>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
