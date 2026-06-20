@@ -98,7 +98,7 @@
     "@types/node": "25.9.1",
     "patch-package": "^8.0.1",
     "tailwind-scrollbar": "^3.0.4",
-    "typescript": "5.8.3"
+    "typescript": "6.0.3"
   },
   "overrides": {
     "bigint-buffer": "1.1.5",
