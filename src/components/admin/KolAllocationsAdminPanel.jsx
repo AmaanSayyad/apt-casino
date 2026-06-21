@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FaCopy, FaExternalLinkAlt, FaGift, FaPlus, FaSync, FaTrash } from 'react-icons/fa';
+import { FaCopy, FaExternalLinkAlt, FaFileExport, FaGift, FaPlus, FaSync, FaTrash } from 'react-icons/fa';
 import { Badge, EmptyState, Panel, SectionHeading } from '@/components/admin/ui';
 
 function fmtNum(n) {
@@ -101,6 +101,8 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
   const [editForm, setEditForm] = useState(null);
   const [detailsId, setDetailsId] = useState(null);
   const [detailsForm, setDetailsForm] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState('');
 
   const [form, setForm] = useState({
     slug: '',
@@ -383,6 +385,56 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
     }
   };
 
+  const exportAllToGoogleSheets = async () => {
+    setExporting(true);
+    setExportMessage('');
+    try {
+      const r = await fetch('/api/admin/kol-allocations/export', {
+        method: 'POST',
+        headers: { 'x-admin-token': adminToken },
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Export failed');
+
+      if (j.mode === 'sheet' && j.sheetUrl) {
+        window.open(j.sheetUrl, '_blank', 'noopener,noreferrer');
+        setExportMessage(`Exported ${j.rowCount} KOLs to Google Sheets.`);
+        return;
+      }
+
+      if (j.csv) {
+        try {
+          await navigator.clipboard.writeText(j.csv);
+          window.open('https://sheets.new', '_blank', 'noopener,noreferrer');
+          setExportMessage(
+            `Copied ${j.rowCount} KOL rows — paste into the new Google Sheet (⌘/Ctrl+V).`,
+          );
+        } catch {
+          const blob = new Blob([j.csv], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `aptc-kol-allocations-${new Date().toISOString().slice(0, 10)}.csv`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+          window.open('https://sheets.new', '_blank', 'noopener,noreferrer');
+          setExportMessage(
+            `Downloaded ${j.rowCount} KOL rows as CSV — import into the new Google Sheet (File → Import).`,
+          );
+        }
+        return;
+      }
+
+      throw new Error('Export response missing data');
+    } catch (err) {
+      alert(err.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const summary = useMemo(() => {
     const total = allocations.reduce((s, a) => s + Number(a.amountAptc || 0), 0);
     return { count: allocations.length, totalAptc: total };
@@ -656,7 +708,16 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-3 text-xs text-white/50">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-white/50">
+          <button
+            type="button"
+            disabled={exporting}
+            onClick={() => void exportAllToGoogleSheets()}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/35 bg-emerald-500/10 px-3 py-1.5 text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
+          >
+            <FaFileExport className={exporting ? 'animate-pulse' : ''} />
+            {exporting ? 'Exporting…' : 'Export all to Google Sheets'}
+          </button>
           <span>{summary.count} KOLs · {fmtNum(summary.totalAptc)} APTC allocated</span>
           <button type="button" onClick={() => load()} className="text-white/70 hover:text-white">
             <FaSync className={loading ? 'animate-spin' : ''} />
@@ -664,6 +725,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
         </div>
       </div>
 
+      {exportMessage ? <p className="text-emerald-300 text-sm">{exportMessage}</p> : null}
       {error ? <p className="text-rose-300 text-sm">{error}</p> : null}
 
       {loading && allocations.length === 0 ? (
