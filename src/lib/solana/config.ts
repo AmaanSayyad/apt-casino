@@ -54,4 +54,9 @@ export function getSolanaStakingVaultConfig() {
   return { address };
 }
 
+/** Receives APTC entry fees (Volume Cup) and other platform fee SPL transfers on Solana. */
+export function getSolanaPlatformFeeWallet(): string {
+  return process.env.NEXT_PUBLIC_PLATFORM_FEE_WALLET_SOL?.trim() || '';
+}
+
 export { getAptCasinoProgramId } from './program';

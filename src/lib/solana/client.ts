@@ -7,7 +7,14 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
-import { getSolanaRpcEndpoint, getSolanaTreasuryAddress, getAptcMintAddress, getSolanaStakingVaultConfig, getBrowserSolanaRpcEndpoint } from './config';
+import {
+  getSolanaRpcEndpoint,
+  getSolanaTreasuryAddress,
+  getAptcMintAddress,
+  getSolanaStakingVaultConfig,
+  getSolanaPlatformFeeWallet,
+  getBrowserSolanaRpcEndpoint,
+} from './config';
 
 let connection: Connection | null = null;
 
@@ -76,21 +83,21 @@ export async function buildSolDepositTransaction(
 }
 
 /**
- * Build SPL transfer of APTC from user wallet to the configured staking vault.
- * Creates the vault ATA in the same transaction when missing (user pays rent).
+ * Build SPL transfer of APTC from user wallet to a recipient (staking vault, fee wallet, etc.).
+ * Creates the recipient ATA in the same transaction when missing (user pays rent).
  */
-export async function buildAptcStakeTransaction(
+export async function buildAptcTransferTransaction(
   amountAptc: number,
   userAddress: string,
-  vaultAddress?: string,
+  recipientAddress: string,
   connectionOverride?: Connection,
 ): Promise<Transaction> {
   const mintStr = getAptcMintAddress();
   if (!mintStr) throw new Error('APTC mint is not configured.');
-  const vault = vaultAddress?.trim() || getSolanaStakingVaultConfig().address;
-  if (!vault) throw new Error('Staking vault address is not configured.');
-  if (userAddress.trim() === vault.trim()) {
-    throw new Error('Use a personal wallet to stake — not the staking vault wallet.');
+  const recipient = recipientAddress?.trim();
+  if (!recipient) throw new Error('Recipient wallet is not configured.');
+  if (userAddress.trim() === recipient) {
+    throw new Error('Use a personal wallet — not the recipient wallet.');
   }
 
   const {
@@ -104,7 +111,7 @@ export async function buildAptcStakeTransaction(
 
   const connection = connectionOverride ?? getSolanaConnection();
   const userPk = new PublicKey(userAddress);
-  const vaultPk = new PublicKey(vault);
+  const recipientPk = new PublicKey(recipient);
   const mintPk = new PublicKey(mintStr);
 
   let tokenProgramId = TOKEN_PROGRAM_ID;
@@ -122,14 +129,14 @@ export async function buildAptcStakeTransaction(
   if (rawAmount <= BigInt(0)) throw new Error('Invalid stake amount.');
 
   const fromAta = getAssociatedTokenAddressSync(mintPk, userPk, false, tokenProgramId);
-  const toAta = getAssociatedTokenAddressSync(mintPk, vaultPk, false, tokenProgramId);
+  const toAta = getAssociatedTokenAddressSync(mintPk, recipientPk, false, tokenProgramId);
 
   const tx = new Transaction();
 
   const toAtaInfo = await connection.getAccountInfo(toAta);
   if (!toAtaInfo) {
     tx.add(
-      createAssociatedTokenAccountInstruction(userPk, toAta, vaultPk, mintPk, tokenProgramId),
+      createAssociatedTokenAccountInstruction(userPk, toAta, recipientPk, mintPk, tokenProgramId),
     );
   }
 
@@ -138,6 +145,29 @@ export async function buildAptcStakeTransaction(
   tx.recentBlockhash = await latestBlockhash(connection);
   tx.feePayer = userPk;
   return tx;
+}
+
+/** Build SPL transfer of APTC from user wallet to the configured staking vault. */
+export async function buildAptcStakeTransaction(
+  amountAptc: number,
+  userAddress: string,
+  vaultAddress?: string,
+  connectionOverride?: Connection,
+): Promise<Transaction> {
+  const vault = vaultAddress?.trim() || getSolanaStakingVaultConfig().address;
+  if (!vault) throw new Error('Staking vault address is not configured.');
+  return buildAptcTransferTransaction(amountAptc, userAddress, vault, connectionOverride);
+}
+
+/** Build SPL transfer of APTC entry fee to the platform fee wallet (Volume Cup). */
+export async function buildAptcEntryFeeTransaction(
+  amountAptc: number,
+  userAddress: string,
+  connectionOverride?: Connection,
+): Promise<Transaction> {
+  const feeWallet = getSolanaPlatformFeeWallet();
+  if (!feeWallet) throw new Error('Platform fee wallet is not configured.');
+  return buildAptcTransferTransaction(amountAptc, userAddress, feeWallet, connectionOverride);
 }
 
 export async function waitForSolanaSignatureConfirmed(

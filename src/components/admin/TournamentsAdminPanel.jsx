@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { FaExternalLinkAlt, FaPlus, FaSync } from 'react-icons/fa';
+import { FaExternalLinkAlt, FaPlus, FaSync, FaEdit, FaTrophy } from 'react-icons/fa';
 import { Badge, EmptyState, Panel } from '@/components/admin/ui';
 
 const GAMES = ['plinko', 'mines', 'roulette', 'wheel'];
@@ -19,6 +19,29 @@ function localToIso(local) {
   if (!local) return null;
   const ms = new Date(local).getTime();
   return Number.isNaN(ms) ? null : new Date(ms).toISOString();
+}
+
+function tournamentToForm(t) {
+  const games = { plinko: false, mines: false, roulette: false, wheel: false };
+  (t.includedGames || []).forEach((g) => {
+    if (games[g] !== undefined) games[g] = true;
+  });
+  if (!t.includedGames?.length) {
+    games.plinko = games.mines = games.roulette = games.wheel = true;
+  }
+  return {
+    name: t.name || '',
+    game: t.game || 'all',
+    prizePoolApt: String(t.prizePoolAptc ?? t.prizePoolApt ?? ''),
+    entryFeeApt: String(t.entryFeeAptc ?? t.entryFeeApt ?? ''),
+    maxParticipants: String(t.maxParticipants ?? ''),
+    startsAt: toLocalDatetimeValue(t.startsAt),
+    endsAt: toLocalDatetimeValue(t.endsAt),
+    competitionMode: t.competitionMode || 'volume',
+    status: t.status || 'open',
+    notes: t.notes || '',
+    includedGames: games,
+  };
 }
 
 function defaultForm() {
@@ -54,6 +77,10 @@ export default function TournamentsAdminPanel({ adminToken }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [actionId, setActionId] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [resultsId, setResultsId] = useState(null);
+  const [resultsData, setResultsData] = useState(null);
+  const [resultsLoading, setResultsLoading] = useState(false);
 
   const load = useCallback(async () => {
     if (!adminToken) return;
@@ -95,33 +122,43 @@ export default function TournamentsAdminPanel({ adminToken }) {
       if (!startsAt) throw new Error('Start time is required.');
       if (!endsAt) throw new Error('End time is required.');
 
-      const r = await fetch('/api/admin/tournaments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': adminToken,
+      const payload = {
+        name: form.name.trim(),
+        game: form.game,
+        prizePoolApt: parseFloat(form.prizePoolApt) || 0,
+        entryFeeApt: parseFloat(form.entryFeeApt) || 0,
+        maxParticipants: parseInt(form.maxParticipants, 10) || 100,
+        startsAt,
+        endsAt,
+        includedGames: form.competitionMode === 'volume' ? includedGamesList : null,
+        competitionMode: form.competitionMode,
+        status: form.status,
+        notes: form.notes.trim() || null,
+      };
+
+      const r = await fetch(
+        editId ? `/api/admin/tournaments/${editId}` : '/api/admin/tournaments',
+        {
+          method: editId ? 'PATCH' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': adminToken,
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          game: form.game,
-          prizePoolApt: parseFloat(form.prizePoolApt) || 0,
-          entryFeeApt: parseFloat(form.entryFeeApt) || 0,
-          maxParticipants: parseInt(form.maxParticipants, 10) || 100,
-          startsAt,
-          endsAt,
-          includedGames: form.competitionMode === 'volume' ? includedGamesList : null,
-          competitionMode: form.competitionMode,
-          status: form.status,
-          notes: form.notes.trim() || null,
-        }),
-      });
+      );
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error || 'Create failed');
-      setSuccess(`Created “${j.tournament?.name}”. It will appear on ${j.tournament?.competitionMode === 'volume' ? '/competition' : 'the homepage'} when live.`);
+      if (!r.ok) throw new Error(j.error || (editId ? 'Update failed' : 'Create failed'));
+      setSuccess(
+        editId
+          ? `Updated “${j.tournament?.name}”.`
+          : `Created “${j.tournament?.name}”. It will appear on ${j.tournament?.competitionMode === 'volume' ? '/competition' : 'the homepage'} when live.`,
+      );
+      setEditId(null);
       setForm(defaultForm());
       await load();
     } catch (err) {
-      setError(err.message || 'Create failed');
+      setError(err.message || (editId ? 'Update failed' : 'Create failed'));
     } finally {
       setSaving(false);
     }
@@ -149,6 +186,86 @@ export default function TournamentsAdminPanel({ adminToken }) {
     }
   };
 
+  const openEdit = (t) => {
+    setEditId(t.id);
+    setForm(tournamentToForm(t));
+    setResultsId(null);
+    setResultsData(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const loadResults = async (id) => {
+    if (!adminToken) return;
+    setResultsId(id);
+    setResultsLoading(true);
+    setResultsData(null);
+    try {
+      const r = await fetch(`/api/admin/tournaments/${id}`, {
+        headers: { 'x-admin-token': adminToken },
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Failed to load results');
+      setResultsData(j);
+    } catch (err) {
+      alert(err.message || 'Failed to load results');
+      setResultsId(null);
+    } finally {
+      setResultsLoading(false);
+    }
+  };
+
+  const approvePrize = async (tournamentId, wallet, prizePoolAptc) => {
+    const tx = window.prompt('APTC prize transfer tx signature (Solana)?', '');
+    if (tx === null) return;
+    const amountStr = window.prompt('Prize amount (APTC)?', String(prizePoolAptc || ''));
+    if (amountStr === null) return;
+    setActionId(wallet);
+    try {
+      const r = await fetch(`/api/admin/tournaments/${tournamentId}/approve-prize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken,
+        },
+        body: JSON.stringify({
+          wallet,
+          prizeTxHash: tx.trim() || undefined,
+          prizeAmount: parseFloat(amountStr) || undefined,
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Approve failed');
+      await loadResults(tournamentId);
+    } catch (err) {
+      alert(err.message || 'Approve failed');
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const markAllDistributed = async (tournamentId) => {
+    if (!window.confirm('Mark all prizes as distributed for this contest?')) return;
+    setActionId(tournamentId);
+    try {
+      const r = await fetch(`/api/admin/tournaments/${tournamentId}/approve-prize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken,
+        },
+        body: JSON.stringify({ markAllDistributed: true }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Update failed');
+      await loadResults(tournamentId);
+      await load();
+    } catch (err) {
+      alert(err.message || 'Update failed');
+    } finally {
+      setActionId(null);
+    }
+  };
+
   if (!adminToken) {
     return (
       <p className="text-sm text-white/50">Save your admin token above to create contests.</p>
@@ -160,14 +277,17 @@ export default function TournamentsAdminPanel({ adminToken }) {
       <Panel className="p-5 md:p-6 border-violet-500/20">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-white">Create contest</h3>
+            <h3 className="text-lg font-semibold text-white">{editId ? 'Edit contest' : 'Create contest'}</h3>
             <p className="text-xs text-white/50 mt-1">
               Volume Cup → <code className="text-violet-200/80">/competition</code> · Registration events → homepage
             </p>
           </div>
           <button
             type="button"
-            onClick={() => setForm(defaultForm())}
+            onClick={() => {
+              setEditId(null);
+              setForm(defaultForm());
+            }}
             className="text-xs px-3 py-1.5 rounded-lg border border-white/10 text-white/70 hover:bg-white/5"
           >
             Reset form
@@ -230,7 +350,7 @@ export default function TournamentsAdminPanel({ adminToken }) {
           </label>
 
           <label className="block">
-            <span className="text-xs uppercase tracking-wide text-white/50">Prize pool (APT label)</span>
+            <span className="text-xs uppercase tracking-wide text-white/50">Prize pool (APTC)</span>
             <input
               type="number"
               min="0"
@@ -242,7 +362,7 @@ export default function TournamentsAdminPanel({ adminToken }) {
           </label>
 
           <label className="block">
-            <span className="text-xs uppercase tracking-wide text-white/50">Entry fee</span>
+            <span className="text-xs uppercase tracking-wide text-white/50">Entry fee (APTC)</span>
             <input
               type="number"
               min="0"
@@ -338,8 +458,20 @@ export default function TournamentsAdminPanel({ adminToken }) {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl magic-gradient text-sm font-semibold disabled:opacity-50"
             >
               <FaPlus size={12} />
-              {saving ? 'Creating…' : 'Create contest'}
+              {saving ? (editId ? 'Saving…' : 'Creating…') : editId ? 'Save changes' : 'Create contest'}
             </button>
+            {editId ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditId(null);
+                  setForm(defaultForm());
+                }}
+                className="ml-3 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/15 text-sm text-white/70 hover:text-white"
+              >
+                Cancel edit
+              </button>
+            ) : null}
           </div>
         </form>
       </Panel>
@@ -385,10 +517,25 @@ export default function TournamentsAdminPanel({ adminToken }) {
                     <p className="text-sm text-white/60 mt-2">
                       {new Date(t.startsAt).toLocaleString()} →{' '}
                       {t.endsAt ? new Date(t.endsAt).toLocaleString() : '—'} · {t.participants}/
-                      {t.maxParticipants} registered · pool {t.prizePoolApt} APT
+                      {t.maxParticipants} registered · pool {t.prizePoolAptc ?? t.prizePoolApt} APTC · fee{' '}
+                      {t.entryFeeAptc ?? t.entryFeeApt} APTC
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(t)}
+                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-violet-500/30 text-violet-200 hover:bg-violet-500/10"
+                    >
+                      <FaEdit size={10} /> Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void loadResults(t.id)}
+                      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-lg border border-amber-500/30 text-amber-200 hover:bg-amber-500/10"
+                    >
+                      <FaTrophy size={10} /> Results
+                    </button>
                     {t.competitionMode === 'volume' ? (
                       <Link
                         href="/competition"
@@ -437,6 +584,110 @@ export default function TournamentsAdminPanel({ adminToken }) {
           })}
         </div>
       )}
+
+      {resultsId ? (
+        <Panel className="p-4 border-amber-500/25">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h3 className="text-lg font-semibold text-white">Contest results & prize approval</h3>
+            <button
+              type="button"
+              onClick={() => {
+                setResultsId(null);
+                setResultsData(null);
+              }}
+              className="text-xs px-2 py-1 rounded border border-white/15 text-white/60"
+            >
+              Close
+            </button>
+          </div>
+          {resultsLoading ? (
+            <p className="text-sm text-white/50">Loading results…</p>
+          ) : resultsData ? (
+            <>
+              <p className="text-sm text-white/60 mb-4">
+                {resultsData.tournament?.name} · {resultsData.results?.length ?? 0} registrants ·{' '}
+                {resultsData.totalEntryFeesCollected?.toLocaleString()} APTC entry fees collected ·{' '}
+                {resultsData.prizesApproved} prizes approved
+              </p>
+              <div className="overflow-x-auto rounded-lg border border-white/10">
+                <table className="w-full text-xs">
+                  <thead className="bg-white/[0.04] text-left text-white/45 uppercase tracking-wider">
+                    <tr>
+                      <th className="px-3 py-2">Rank</th>
+                      <th className="px-3 py-2">Wallet</th>
+                      <th className="px-3 py-2 text-right">Volume</th>
+                      <th className="px-3 py-2 text-right">Bets</th>
+                      <th className="px-3 py-2">Entry fee</th>
+                      <th className="px-3 py-2">Prize</th>
+                      <th className="px-3 py-2">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(resultsData.results ?? []).map((row) => (
+                      <tr key={row.wallet} className="border-t border-white/5">
+                        <td className="px-3 py-2">{row.rank != null ? `#${row.rank}` : '—'}</td>
+                        <td className="px-3 py-2 font-mono">{row.walletShort || row.wallet}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{row.volumeApt}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{row.bets}</td>
+                        <td className="px-3 py-2">
+                          {row.entryFeeAmount ? `${row.entryFeeAmount} APTC` : '—'}
+                          {row.entryFeeTxHash ? (
+                            <span className="block text-[10px] text-white/35 font-mono truncate max-w-[120px]">
+                              {row.entryFeeTxHash.slice(0, 8)}…
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="px-3 py-2">
+                          {row.prizeApprovedAt ? (
+                            <span className="text-emerald-300">
+                              ✓ {row.prizeAmount ? `${row.prizeAmount} APTC` : 'Approved'}
+                            </span>
+                          ) : (
+                            <span className="text-white/40">Pending</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          {!row.prizeApprovedAt && row.rank != null && row.rank <= 10 ? (
+                            <button
+                              type="button"
+                              disabled={actionId === row.wallet}
+                              onClick={() =>
+                                void approvePrize(
+                                  resultsId,
+                                  row.wallet,
+                                  resultsData.tournament?.prizePoolAptc,
+                                )
+                              }
+                              className="text-[10px] px-2 py-1 rounded bg-emerald-600/80 hover:bg-emerald-600 text-white disabled:opacity-50"
+                            >
+                              Approve prize
+                            </button>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {!resultsData.tournament?.rewardsDistributedAt ? (
+                <button
+                  type="button"
+                  disabled={actionId === resultsId}
+                  onClick={() => void markAllDistributed(resultsId)}
+                  className="mt-4 text-xs px-3 py-1.5 rounded-lg border border-emerald-500/35 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-50"
+                >
+                  Mark all prizes distributed
+                </button>
+              ) : (
+                <p className="mt-4 text-xs text-emerald-300">
+                  Prizes marked distributed{' '}
+                  {new Date(resultsData.tournament.rewardsDistributedAt).toLocaleString()}
+                </p>
+              )}
+            </>
+          ) : null}
+        </Panel>
+      ) : null}
     </div>
   );
 }

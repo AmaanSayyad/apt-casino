@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 export const dynamic = 'force-dynamic';
 
 const SELECT =
-  'id, name, game, prize_pool_apt, entry_fee_apt, max_participants, starts_at, ends_at, included_games, competition_mode, status, notes, created_at';
+  'id, name, game, prize_pool_apt, entry_fee_apt, max_participants, starts_at, ends_at, included_games, competition_mode, status, notes, rewards_distributed_at, created_at';
 
 export async function GET(request: NextRequest) {
   const deny = requireDashboardAdmin(request);

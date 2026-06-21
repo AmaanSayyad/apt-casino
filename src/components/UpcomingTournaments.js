@@ -174,14 +174,14 @@ export default function UpcomingTournaments() {
                         <div>
                           <p className="text-white/50 text-xs">Prize Pool</p>
                           <p className="text-white font-bold tabular-nums">
-                            {t.prizePoolApt.toLocaleString('en-US', { maximumFractionDigits: 2 })} SOL · APT
+                            {t.prizePoolApt.toLocaleString('en-US', { maximumFractionDigits: 2 })} APTC
                           </p>
                         </div>
                         <div>
                           <p className="text-white/50 text-xs">Entry Fee</p>
                           <p className="text-white font-bold tabular-nums">
                             {t.entryFeeApt > 0
-                              ? `${t.entryFeeApt.toLocaleString('en-US', { maximumFractionDigits: 4 })} SOL · APT`
+                              ? `${t.entryFeeApt.toLocaleString('en-US', { maximumFractionDigits: 4 })} APTC`
                               : 'Free'}
                           </p>
                         </div>

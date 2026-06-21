@@ -16,6 +16,12 @@ import {
 } from 'react-icons/fa';
 import { usePlayWallet } from '@/hooks/usePlayWallet';
 import ChainConnectModal from '@/components/wallet/ChainConnectModal';
+import {
+  buildAptcEntryFeeTransaction,
+  getSolanaConnection,
+  waitForSolanaSignatureConfirmed,
+  formatSolanaError,
+} from '@/lib/solana/client';
 function walletsMatch(a, b, chain) {
   if (!a || !b) return false;
   if ((chain || '').toLowerCase() === 'solana') {
@@ -70,7 +76,7 @@ function useCountdown(endsAt) {
 }
 
 export default function CompetitionLeaderboardPanel() {
-  const { connected, address, chain, chainLabel } = usePlayWallet();
+  const { connected, address, chain, chainLabel, solana } = usePlayWallet();
   const nativeLabel = chain === 'solana' ? 'SOL' : 'APT';
   const [comp, setComp] = useState(null);
   const [registering, setRegistering] = useState(false);
@@ -106,21 +112,50 @@ export default function CompetitionLeaderboardPanel() {
   const rest = standings.slice(3);
 
   const prizeDisplay = useMemo(() => {
-    if (!c?.prizePoolApt) return '—';
-    return `${fmtVol(c.prizePoolApt)} ${nativeLabel}`;
-  }, [c?.prizePoolApt, nativeLabel]);
+    const pool = c?.prizePoolAptc ?? c?.prizePoolApt;
+    if (!pool) return '—';
+    return `${fmtVol(pool)} APTC`;
+  }, [c?.prizePoolAptc, c?.prizePoolApt]);
+
+  const entryFeeDisplay = useMemo(() => {
+    const fee = c?.entryFeeAptc ?? c?.entryFeeApt ?? 0;
+    if (!fee) return 'Free';
+    return `${fmtVol(fee)} APTC`;
+  }, [c?.entryFeeAptc, c?.entryFeeApt]);
+
+  const solanaReady = chain === 'solana' && connected && address && solana?.sendTransaction;
 
   const registerForActive = async () => {
-    if (!c?.id || !connected || !address) {
+    if (!c?.id) return;
+
+    if (!solanaReady) {
+      toast.error('Connect a Solana wallet to register — APTC entry fees are on Solana.');
       setConnectOpen(true);
       return;
     }
+
+    const entryFee = Number(c?.entryFeeAptc ?? c?.entryFeeApt) || 0;
     setRegistering(true);
     try {
+      let txHash = null;
+
+      if (entryFee > 0) {
+        toast.info(`Confirm ${fmtVol(entryFee)} APTC entry fee in your wallet…`);
+        const connection = getSolanaConnection();
+        const tx = await buildAptcEntryFeeTransaction(entryFee, address, connection);
+        txHash = await solana.sendTransaction(tx, connection);
+        await waitForSolanaSignatureConfirmed(connection, txHash);
+      }
+
       const r = await fetch('/api/tournaments/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournamentId: c.id, wallet: address, chain }),
+        body: JSON.stringify({
+          tournamentId: c.id,
+          wallet: address,
+          chain: 'solana',
+          txHash,
+        }),
       });
       const d = await r.json();
       if (!r.ok || !d.success) {
@@ -131,10 +166,14 @@ export default function CompetitionLeaderboardPanel() {
         }
         throw new Error(d.error || 'Registration failed');
       }
-      toast.success("You're in — start playing to climb the board.");
+      toast.success(
+        entryFee > 0
+          ? `Paid ${fmtVol(entryFee)} APTC — you're in! Start playing to climb the board.`
+          : "You're in — start playing to climb the board.",
+      );
       await loadCompetition();
     } catch (e) {
-      toast.error(e.message || 'Registration failed');
+      toast.error(formatSolanaError(e).message || e.message || 'Registration failed');
     } finally {
       setRegistering(false);
     }
@@ -182,7 +221,7 @@ export default function CompetitionLeaderboardPanel() {
               <h3 className="font-display text-xl font-bold text-white md:text-2xl">{c?.name}</h3>
             )}
             <p className="mt-1 text-sm text-white/50">
-              Wager volume on qualifying games · {chainLabel || 'Solana · Aptos'} wallets
+              Wager volume on qualifying games · Solana registration · APTC prizes
             </p>
           </motion.div>
           <motion.div className="flex flex-wrap gap-2">
@@ -194,35 +233,36 @@ export default function CompetitionLeaderboardPanel() {
             >
               <FaSync className={loading ? 'animate-spin' : ''} /> Refresh
             </button>
-            {connected && !isRegistered && c && (
+            {solanaReady && !isRegistered && c && (
               <button
                 type="button"
                 onClick={registerForActive}
                 disabled={registering || isFull}
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-2 text-xs font-bold uppercase tracking-wider text-black shadow-lg disabled:opacity-50"
               >
-                {registering ? 'Joining…' : isFull ? 'Cup full' : 'Join cup'}
+                {registering ? 'Joining…' : isFull ? 'Cup full' : entryFeeDisplay === 'Free' ? 'Join cup' : `Join · ${entryFeeDisplay}`}
               </button>
             )}
-            {!connected && (
+            {!solanaReady && (
               <button
                 type="button"
                 onClick={() => setConnectOpen(true)}
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-magic to-blue-magic px-5 py-2 text-xs font-bold uppercase tracking-wider text-white"
               >
-                Connect to join
+                Connect Solana to join
               </button>
             )}
           </motion.div>
         </motion.div>
 
         <motion.div
-          className="relative mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          className="relative mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.05 }}
         >
           <StatPill icon={<FaCoins className="text-amber-300" />} label="Prize pool" value={loading ? '…' : prizeDisplay} />
+          <StatPill icon={<FaCoins className="text-emerald-300" />} label="Entry fee" value={loading ? '…' : entryFeeDisplay} />
           <StatPill
             icon={<FaUsers className="text-purple-300" />}
             label="Registered"
@@ -287,16 +327,30 @@ export default function CompetitionLeaderboardPanel() {
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-amber-100/90">
-                  Join the cup to count your wagers toward the leaderboard.
+                  {chain !== 'solana'
+                    ? 'Switch to Solana to register — entry fee is charged in APTC.'
+                    : entryFeeDisplay === 'Free'
+                      ? 'Join the cup to count your wagers toward the leaderboard.'
+                      : `Pay ${entryFeeDisplay} entry fee to join the cup.`}
                 </p>
-                <button
-                  type="button"
-                  onClick={registerForActive}
-                  disabled={registering || isFull}
-                  className="shrink-0 rounded-lg bg-amber-400 px-4 py-2 text-xs font-bold text-black disabled:opacity-50"
-                >
-                  {registering ? '…' : 'Register now'}
-                </button>
+                {solanaReady ? (
+                  <button
+                    type="button"
+                    onClick={registerForActive}
+                    disabled={registering || isFull}
+                    className="shrink-0 rounded-lg bg-amber-400 px-4 py-2 text-xs font-bold text-black disabled:opacity-50"
+                  >
+                    {registering ? '…' : entryFeeDisplay === 'Free' ? 'Register now' : `Pay ${entryFeeDisplay}`}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setConnectOpen(true)}
+                    className="shrink-0 rounded-lg bg-amber-400 px-4 py-2 text-xs font-bold text-black"
+                  >
+                    Connect Solana
+                  </button>
+                )}
               </div>
             )}
           </motion.div>

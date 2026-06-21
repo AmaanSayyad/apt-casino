@@ -17,7 +17,7 @@ const STEPS = [
     n: 1,
     icon: FaBolt,
     title: 'Register',
-    desc: 'Connect Solana or Aptos and join the active Volume Cup.',
+    desc: 'Connect Solana and pay the APTC entry fee to join the active Volume Cup.',
   },
   {
     n: 2,
@@ -29,7 +29,7 @@ const STEPS = [
     n: 3,
     icon: FaMedal,
     title: 'Win',
-    desc: 'Top wallets by wagered volume share the on-chain prize pool.',
+    desc: 'Top wallets by wagered volume share the APTC prize pool.',
   },
 ];
 
@@ -43,7 +43,7 @@ export default function CompetitionPage() {
     <PageShell
       badge="On-chain competition"
       title="Volume Cup"
-      description="Seasonal wager-volume tournaments on Solana and Aptos. Register once, play qualifying games with the same wallet, and climb live standings for SOL · APT prizes."
+      description="Seasonal wager-volume tournaments on Solana. Register with APTC, play qualifying games with the same wallet, and climb live standings for APTC prizes."
       maxWidth="6xl"
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Volume Cup' }]}
     >

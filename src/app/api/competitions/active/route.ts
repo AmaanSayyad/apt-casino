@@ -119,7 +119,10 @@ export async function GET(request: NextRequest) {
       name: active.name,
       displayGame: active.game,
       prizePoolApt: Number(active.prize_pool_apt) || 0,
+      prizePoolAptc: Number(active.prize_pool_apt) || 0,
       entryFeeApt: Number(active.entry_fee_apt) || 0,
+      entryFeeAptc: Number(active.entry_fee_apt) || 0,
+      currency: 'APTC',
       maxParticipants: active.max_participants,
       participantCount,
       startsAt: active.starts_at,
@@ -136,6 +139,6 @@ export async function GET(request: NextRequest) {
     yourBets,
     supabaseConfigured: true,
     rewardLogic:
-      'After registering, each wallet competes by on-chain bet volume (sum of bet_amount) during the contest window on the included games. Top registered wallets receive shares of the prize pool, paid manually from the platform treasury after the contest ends.',
+      'Register with APTC entry fee on Solana. After registering, wager volume on qualifying games counts toward the leaderboard. Top wallets share the APTC prize pool — admin manually approves and records prize payouts after the contest ends.',
   });
 }
