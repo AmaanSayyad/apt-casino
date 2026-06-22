@@ -35,11 +35,12 @@ import { RouletteInfoTriggers, RouletteInfoDialog } from './components/RouletteI
 import { useSelector, useDispatch } from 'react-redux';
 import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
 import { aptosClient, CASINO_MODULE_ADDRESS, parseAptAmount, CasinoGames } from '@/lib/aptos';
-import { applyHouseEdgeToMultiplier, houseEdgePercent } from '@/lib/houseEdge';
+import { houseEdgePercent } from '@/lib/houseEdge';
 import { useGameStats } from '@/hooks/useGameStats';
 import { useProvableFairness } from '@/hooks/useProvableFairness';
 import { deriveRouletteOutcome } from '@/lib/provablyFair/solanaFairness';
 import { formatNativeAmount } from '@/lib/chains/registry';
+import { calculateRouletteRoundResult } from '@/lib/client/roulettePayout';
 import {
   loadRouletteBetHistory,
   saveRouletteBetHistory,
@@ -1259,7 +1260,7 @@ export default function GameRoulette() {
   const dispatch = useDispatch();
   const { userBalance, isLoading: isLoadingBalance } = useSelector((state) => state.balance);
   const { address: playAddress, connected: playConnected, chainLabel } = usePlayWallet();
-  const { balanceNative, debitNative, creditNative, symbol, chain: playChain } = usePlayBalance();
+  const { balanceNative, settleNative, symbol, chain: playChain } = usePlayBalance();
   const fairness = useProvableFairness('roulette', playAddress);
   const [lastFairnessProof, setLastFairnessProof] = useState(null);
   const historyReadyRef = useRef(false);
@@ -1560,14 +1561,7 @@ export default function GameRoulette() {
         remainingBalance: currentBalance - totalBetAmount
       });
 
-      const debit = await debitNative(totalBetAmount, playAddress);
-      if (!debit.ok) {
-        showSnackbar(debit.error || 'Could not place bet. Please try again.', 'error');
-        setSubmitDisabled(false);
-        return;
-      }
-
-      // Convert ALL bets into an array for multiple bet processing
+      // Balance is debited after the spin via settleNative (single atomic server call).
       const allBets = [];
 
       // Add outside bets
@@ -1867,27 +1861,10 @@ export default function GameRoulette() {
           console.log(`🎯 WINNING NUMBER: 0 (Green - No column bet)`);
         }
 
-        // Process ALL bets and calculate total winnings
-        let totalPayout = 0;
-        let winningBets = [];
-        let losingBets = [];
-
-        allBets.forEach(bet => {
-          const isWinner = checkWin(bet.type, bet.value, winningNumber);
-          const payoutRatio = getPayoutRatio(bet.type);
-
-          if (isWinner) {
-            const betPayout = bet.amount * payoutRatio; // Full payout (includes original bet)
-            totalPayout += betPayout;
-            winningBets.push({ ...bet, payout: betPayout, multiplier: payoutRatio });
-          } else {
-            losingBets.push({ ...bet, loss: bet.amount });
-          }
-        });
-
-        // Calculate net result: Since we already deducted the bet amount, 
-        // netResult should be just the winnings (totalPayout includes original bet)
-        const netResult = totalPayout > 0 ? totalPayout : 0;
+        const { totalPayout, netResult, winningBets, losingBets } = calculateRouletteRoundResult(
+          allBets,
+          winningNumber,
+        );
         setWinnings(netResult);
 
         console.log("🎯 WINNINGS CALCULATION:", {
@@ -1908,11 +1885,14 @@ export default function GameRoulette() {
           totalBetAmount
         });
 
-        // Update user balance with final result
-        // netResult = totalPayout (includes original bet since we already deducted it)
-        // So we just add the total winnings to the balance after bet deduction
-        if (netResult > 0) {
-          await creditNative(netResult, playAddress);
+        // Settle house balance in one call: debit stake + credit winnings (or release on loss).
+        const settled = await settleNative(totalBetAmount, netResult, playAddress, 'roulette');
+        if (!settled.ok) {
+          console.error('Roulette settle failed:', settled.error);
+          showSnackbar(
+            settled.error || 'Could not update your house balance for this round. Please refresh and try again.',
+            'error',
+          );
         }
 
         // Add to betting history
@@ -2021,7 +2001,7 @@ export default function GameRoulette() {
   const getBetTypeName = (betType, betValue) => {
     switch (betType) {
       case BetType.COLOR:
-        return betValue === 1 ? 'Red' : 'Black';
+        return betValue === 0 ? 'Red' : 'Black';
       case BetType.ODDEVEN:
         return betValue === 1 ? 'Odd' : 'Even';
       case BetType.HIGHLOW:
@@ -2367,8 +2347,6 @@ export default function GameRoulette() {
 
   // Removed placeAptBet function - now using lockBet with Redux balance
 
-  // Helper function to get payout ratio based on bet kind
-  // Payout ratio = bahsinizi kaç katına çıkarır (1:1 = 2x, 2:1 = 3x, 35:1 = 36x)
   // Helper function to get column numbers for debugging
   const getColumnNumbers = (columnModulo) => {
     const numbers = [];
@@ -2378,62 +2356,6 @@ export default function GameRoulette() {
       }
     }
     return numbers.join(', ');
-  };
-
-  const getPayoutRatio = (kind) => {
-    // Fair European single-zero ratios. The single 0 pocket already gives the
-    // wheel a natural ~2.70% house edge (the player loses on 0 for every bet
-    // except a Single Number on 0 itself). For an additional platform commission
-    // on top of that, set NEXT_PUBLIC_HOUSE_EDGE_BPS_ROULETTE > 0.
-    let fair;
-    switch (kind) {
-      case 0: fair = 36; break; // Single Number (35:1)
-      case 1: fair = 2; break;  // Color (1:1)
-      case 2: fair = 2; break;  // Odd/Even (1:1)
-      case 3: fair = 2; break;  // High/Low (1:1)
-      case 4: fair = 3; break;  // Dozen (2:1)
-      case 5: fair = 3; break;  // Column (2:1)
-      case 6: fair = 18; break; // Split Bet (17:1)
-      case 7: fair = 12; break; // Street Bet (11:1)
-      case 8: fair = 9; break;  // Corner Bet (8:1)
-      default: return 0;
-    }
-    return applyHouseEdgeToMultiplier(fair, 'roulette');
-  };
-
-  // Helper function to check if a bet is a winner
-  const checkWin = (kind, value, winningNumber) => {
-    if (winningNumber === 0 && kind !== 0) return false;
-
-    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-
-    switch (kind) {
-      case 0: return value === winningNumber; // Single Number
-      case 1: return value === 0 ? redNumbers.includes(winningNumber) : !redNumbers.includes(winningNumber); // Color (0=Red, 1=Black)
-      case 2: return value === 1 ? winningNumber % 2 !== 0 : winningNumber % 2 === 0; // Odd/Even (0=Even, 1=Odd)
-      case 3: return value === 0 ? winningNumber >= 1 && winningNumber <= 18 : winningNumber >= 19 && winningNumber <= 36; // High/Low (0=Low, 1=High)
-      case 4: // Dozen bets (0=1st dozen, 1=2nd dozen, 2=3rd dozen)
-        return (value === 0 && winningNumber >= 1 && winningNumber <= 12) ||
-          (value === 1 && winningNumber >= 13 && winningNumber <= 24) ||
-          (value === 2 && winningNumber >= 25 && winningNumber <= 36);
-      case 5: // Column bets (0=3rd column, 1=2nd column, 2=1st column) - REVERSED for UI
-        return (value === 0 && winningNumber % 3 === 0) ||
-          (value === 1 && winningNumber % 3 === 2) ||
-          (value === 2 && winningNumber % 3 === 1);
-      case 6: // Split bet - check if winning number matches either of two numbers in the split
-        // For split bets, value is a string like "1,2" or "1,4"
-        const splitNumbers = value.split(',').map(n => parseInt(n));
-        return splitNumbers.includes(winningNumber);
-      case 7: // Street bet - check if winning number is in the row of 3 numbers
-        // For street bets, value is a string like "1,2,3"
-        const streetNumbers = value.split(',').map(n => parseInt(n));
-        return streetNumbers.includes(winningNumber);
-      case 8: // Corner bet - check if winning number is one of 4 corner numbers
-        // For corner bets, value is a string like "20,21,23,24"
-        const cornerNumbers = value.split(',').map(n => parseInt(n));
-        return cornerNumbers.includes(winningNumber);
-      default: return false;
-    }
   };
 
   const handleGoAgain = () => {

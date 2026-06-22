@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { DEFAULT_PLAY_CHAIN } from '@/lib/chains/registry';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 interface LogGameParams {
   gameType: 'plinko' | 'mines' | 'roulette' | 'wheel';
@@ -28,6 +29,7 @@ export const useGameLogger = () => {
   const [isLogging, setIsLogging] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const activeChain = useSelector((s: { balance: { activeChain?: string } }) => s.balance.activeChain) || DEFAULT_PLAY_CHAIN;
+  const { getWalletAuth } = useWalletAuth();
 
   const logGame = async (
     params: LogGameParams,
@@ -35,10 +37,15 @@ export const useGameLogger = () => {
     setIsLogging(true);
     const chain = params.chain || activeChain;
     try {
+      const walletAuth = await getWalletAuth(params.playerAddress, chain);
+      if (!walletAuth) {
+        return { success: false, error: 'Wallet signature required to log games' };
+      }
+
       const response = await fetch('/api/log-game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...params, chain }),
+        body: JSON.stringify({ ...params, chain, walletAuth }),
       });
 
       const data = await response.json();

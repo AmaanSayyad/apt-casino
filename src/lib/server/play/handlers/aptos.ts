@@ -6,6 +6,7 @@ import {
   creditHouseBalance,
   debitHouseBalance,
   getHouseBalance,
+  claimDepositTx,
 } from '@/lib/server/houseBalance';
 import { nativeToRaw, rawToNative } from '@/lib/server/play/amounts';
 import {
@@ -25,11 +26,14 @@ import {
   queueWithdrawalRequest,
 } from '@/lib/server/withdrawalQueue';
 import {
-  consumePendingStakeForCredit,
+  creditWithPendingStake,
   recordPendingStake,
+  releasePendingStake,
+  settlePlayRound,
 } from '@/lib/server/play/pendingStakes';
 import { assertWithdrawalAllowed } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
+import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
 import { isValidReferralCode, normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
 import {
@@ -40,6 +44,7 @@ import { getDepositDealBoost } from '@/lib/server/promotions';
 import {
   computeReferrerAptcReward,
   computeUnlockAt,
+  incrementRefereeVolumeUsd,
 } from '@/lib/server/referralAptc';
 
 const CHAIN = 'aptos' as const;
@@ -70,32 +75,59 @@ function normalizeTreasuryAddress(addr: string): string {
   return `0x${hex}`;
 }
 
+const APTOS_COIN_TYPE = '0x1::aptos_coin::AptosCoin';
+
+export type VerifiedAptosDeposit = {
+  sender: string;
+  amountOctas: bigint;
+};
+
 async function verifyAptosDepositTx(
   transactionHash: string,
   treasuryAddress: string,
-): Promise<boolean> {
+  expectedSender: string,
+): Promise<VerifiedAptosDeposit | null> {
   const aptos = getAptosForServer();
   const treasury = normalizeTreasuryAddress(treasuryAddress);
+  const senderExpected = normalizeTreasuryAddress(expectedSender);
+
   const transaction = (await aptos.getTransactionByHash({ transactionHash })) as {
     success?: boolean;
-    payload?: { type?: string; function?: string; arguments?: unknown[] };
+    sender?: string;
+    payload?: {
+      type?: string;
+      function?: string;
+      arguments?: unknown[];
+      type_arguments?: string[];
+    };
   };
-  if (!transaction.success) return false;
+  if (!transaction.success) return null;
 
-  const payload = transaction.payload as
-    | { type?: string; function?: string; arguments?: unknown[] }
-    | undefined;
-  if (!payload || payload.type !== 'entry_function_payload') return false;
+  const txSender = normalizeTreasuryAddress(String(transaction.sender ?? ''));
+  if (txSender !== senderExpected) return null;
 
-  if (
-    payload.function !== '0x1::aptos_account::transfer' &&
-    payload.function !== '0x1::coin::transfer'
-  ) {
-    return false;
+  const payload = transaction.payload;
+  if (!payload || payload.type !== 'entry_function_payload') return null;
+
+  if (payload.function === '0x1::aptos_account::transfer') {
+    const recipient = normalizeTreasuryAddress(String(payload.arguments?.[0] ?? ''));
+    if (recipient !== treasury) return null;
+    const amountOctas = BigInt(String(payload.arguments?.[1] ?? '0'));
+    if (amountOctas <= 0n) return null;
+    return { sender: txSender, amountOctas };
   }
 
-  const recipient = normalizeTreasuryAddress(String(payload.arguments?.[0] ?? ''));
-  return recipient === treasury;
+  if (payload.function === '0x1::coin::transfer') {
+    const coinType = String(payload.type_arguments?.[0] ?? '').toLowerCase();
+    if (!coinType.includes('aptos_coin::aptoscoin')) return null;
+    const recipient = normalizeTreasuryAddress(String(payload.arguments?.[0] ?? ''));
+    if (recipient !== treasury) return null;
+    const amountOctas = BigInt(String(payload.arguments?.[1] ?? '0'));
+    if (amountOctas <= 0n) return null;
+    return { sender: txSender, amountOctas };
+  }
+
+  return null;
 }
 
 export async function aptosBalanceGET(wallet: string) {
@@ -119,24 +151,82 @@ export async function aptosBetPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const action = body.action === 'credit' ? 'credit' : 'debit';
+    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    if (authErr) return authErr;
+    const action =
+      body.action === 'credit'
+        ? 'credit'
+        : body.action === 'release_stake'
+          ? 'release_stake'
+          : body.action === 'settle'
+            ? 'settle'
+            : 'debit';
     const amountNative = parseFloat(body.amountNative ?? body.amountApt);
+    const betAmountNative = parseFloat(body.betAmountNative ?? body.amountNative ?? body.amountApt);
+    const payoutAmountNative = parseFloat(body.payoutAmountNative ?? '0');
     const game = typeof body.game === 'string' ? body.game.trim().slice(0, 32) : null;
+
+    const cfg = getPlayChainConfig(CHAIN)!;
+
+    if (action === 'release_stake') {
+      await releasePendingStake({ wallet, chain: CHAIN });
+      const balanceRaw = await getHouseBalance(wallet, CHAIN, cfg.dbCurrency);
+      return NextResponse.json({
+        success: true,
+        balanceRaw: balanceRaw.toString(),
+        balanceNative: rawToNative(CHAIN, balanceRaw),
+      });
+    }
+
+    if (action === 'settle') {
+      if (!Number.isFinite(betAmountNative) || betAmountNative <= 0) {
+        return NextResponse.json({ error: 'wallet and positive betAmountNative required' }, { status: 400 });
+      }
+      const betRaw = nativeToRaw(CHAIN, betAmountNative);
+      const payoutRaw =
+        Number.isFinite(payoutAmountNative) && payoutAmountNative > 0
+          ? nativeToRaw(CHAIN, payoutAmountNative)
+          : 0n;
+
+      const newBalance = await settlePlayRound({
+        wallet,
+        chain: CHAIN,
+        currency: cfg.dbCurrency,
+        betAmountRaw: betRaw,
+        payoutAmountRaw: payoutRaw,
+        game,
+        debitHouseBalance: (amountRaw) =>
+          debitHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw }),
+        creditHouseBalance: (amountRaw) =>
+          creditHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw }),
+      });
+
+      if (betAmountNative > 0) {
+        const nativeUsd = Number(process.env.APT_USD_PRICE_OVERRIDE) || 8;
+        incrementRefereeVolumeUsd(wallet, betAmountNative, nativeUsd).catch(() => {});
+      }
+
+      return NextResponse.json({
+        success: true,
+        balanceRaw: newBalance.toString(),
+        balanceNative: rawToNative(CHAIN, newBalance),
+      });
+    }
 
     if (!Number.isFinite(amountNative) || amountNative <= 0) {
       return NextResponse.json({ error: 'wallet and positive amountNative required' }, { status: 400 });
     }
 
-    const cfg = getPlayChainConfig(CHAIN)!;
     const amountRaw = nativeToRaw(CHAIN, amountNative);
 
     if (action === 'credit') {
-      await consumePendingStakeForCredit({ wallet, chain: CHAIN, creditRaw: amountRaw });
-      const newBalance = await creditHouseBalance({
+      const newBalance = await creditWithPendingStake({
         wallet,
         chain: CHAIN,
         currency: cfg.dbCurrency,
-        amountRaw,
+        creditRaw: amountRaw,
+        creditHouseBalance: (creditRaw) =>
+          creditHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw: creditRaw }),
       });
       return NextResponse.json({
         success: true,
@@ -152,6 +242,9 @@ export async function aptosBetPOST(request: Request) {
       amountRaw,
     });
     await recordPendingStake({ wallet, chain: CHAIN, betRaw: amountRaw, game });
+
+    const nativeUsd = Number(process.env.APT_USD_PRICE_OVERRIDE) || 8;
+    incrementRefereeVolumeUsd(wallet, amountNative, nativeUsd).catch(() => {});
 
     return NextResponse.json({
       success: true,
@@ -180,18 +273,37 @@ export async function aptosDepositPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
+    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    if (authErr) return authErr;
 
-    const amountNative = parseFloat(body.amountNative ?? body.amount);
     const txHash = String(body.txSignature || body.transactionHash || '').trim();
     const referralCode =
       typeof body.referralCode === 'string' ? body.referralCode.trim().toUpperCase() : null;
     const { minDeposit, maxDeposit } = limits();
 
-    if (!txHash || !Number.isFinite(amountNative) || amountNative <= 0) {
+    if (!txHash) {
       return NextResponse.json(
-        { error: 'wallet, positive amountNative, and txSignature required' },
+        { error: 'wallet and txSignature required' },
         { status: 400 },
       );
+    }
+
+    const treasuryAddress = getResolvedTreasuryAddress(CHAIN);
+    if (!treasuryAddress) {
+      return NextResponse.json({ error: 'Aptos treasury not configured' }, { status: 503 });
+    }
+
+    const verified = await verifyAptosDepositTx(txHash, treasuryAddress, wallet);
+    if (!verified) {
+      return NextResponse.json(
+        { error: 'Could not verify APT transfer from your wallet to treasury. Wait a few seconds and retry.' },
+        { status: 400 },
+      );
+    }
+
+    const amountNative = rawToNative(CHAIN, verified.amountOctas);
+    if (!Number.isFinite(amountNative) || amountNative <= 0) {
+      return NextResponse.json({ error: 'On-chain deposit amount invalid' }, { status: 400 });
     }
 
     if (amountNative < minDeposit) {
@@ -201,13 +313,8 @@ export async function aptosDepositPOST(request: Request) {
       return NextResponse.json({ error: `Maximum deposit is ${maxDeposit} APT.` }, { status: 400 });
     }
 
-    const treasuryAddress = getResolvedTreasuryAddress(CHAIN);
-    if (!treasuryAddress) {
-      return NextResponse.json({ error: 'Aptos treasury not configured' }, { status: 503 });
-    }
-
     const cfg = getPlayChainConfig(CHAIN)!;
-    const amountRaw = nativeToRaw(CHAIN, amountNative);
+    const amountRaw = verified.amountOctas;
     const feeQuote = await quoteDepositFees(CHAIN, amountNative);
     const depositFeeBps = feeQuote.depositFeeBps;
     const nativeUsd = Number(feeQuote.nativeUsd || 0);
@@ -230,33 +337,46 @@ export async function aptosDepositPOST(request: Request) {
 
     const { data: existing } = await db
       .from('deposits_log')
-      .select('id, platform_fee_tx_hash')
+      .select('id, platform_fee_tx_hash, amount_native, net_credited_octas')
       .eq('user_tx_hash', txHash)
       .maybeSingle();
 
     if (existing) {
       const raw = await getHouseBalance(wallet, CHAIN, cfg.dbCurrency);
+      const priorNet = BigInt(existing.net_credited_octas ?? 0);
       return NextResponse.json({
         success: true,
         alreadyProcessed: true,
         balanceRaw: raw.toString(),
         balanceNative: rawToNative(CHAIN, raw),
-        grossNative: amountNative,
-        creditedNative: netNative,
-        netCreditedNative: netNative,
-        netCreditedOctas: String(netRaw),
+        grossNative: Number(existing.amount_native ?? amountNative),
+        creditedNative: rawToNative(CHAIN, priorNet),
+        netCreditedNative: rawToNative(CHAIN, priorNet),
+        netCreditedOctas: String(priorNet),
         platformFeeBps: depositFeeBps,
         platformFeeNative: feeNative,
         platformFeeTxHash: existing.platform_fee_tx_hash ?? null,
       });
     }
 
-    const ok = await verifyAptosDepositTx(txHash, treasuryAddress);
-    if (!ok) {
-      return NextResponse.json(
-        { error: 'Could not verify APT transfer to treasury. Wait a few seconds and retry.' },
-        { status: 400 },
-      );
+    const claimed = await claimDepositTx({
+      txHash,
+      chain: CHAIN,
+      wallet,
+      amountOctas: Number(amountRaw),
+      amountNative,
+      feeOctas: Number(feeRaw),
+      netCreditedOctas: Number(netRaw),
+    });
+
+    if (!claimed) {
+      const raw = await getHouseBalance(wallet, CHAIN, cfg.dbCurrency);
+      return NextResponse.json({
+        success: true,
+        alreadyProcessed: true,
+        balanceRaw: raw.toString(),
+        balanceNative: rawToNative(CHAIN, raw),
+      });
     }
 
     const newBalance = await creditHouseBalance({
@@ -338,16 +458,12 @@ export async function aptosDepositPOST(request: Request) {
       }
     }
 
-    await db.from('deposits_log').insert({
-      chain: CHAIN,
-      wallet,
-      amount_octas: depositOctas,
-      amount_native: amountNative,
-      fee_octas: feeOctas,
-      net_credited_octas: Number(netRaw),
-      user_tx_hash: txHash,
-      platform_fee_tx_hash: platformFeeTx,
-    });
+    await db
+      .from('deposits_log')
+      .update({
+        platform_fee_tx_hash: platformFeeTx,
+      })
+      .eq('user_tx_hash', txHash);
 
     await syncCashbackCap(wallet, CHAIN).catch((e) =>
       console.warn('[chains/aptos/deposit] cashback cap sync', e),
@@ -455,6 +571,8 @@ export async function aptosWithdrawPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
+    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    if (authErr) return authErr;
 
     const amountNative = parseFloat(body.amountNative ?? body.amount);
     const { minWithdraw } = limits();

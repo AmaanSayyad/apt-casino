@@ -8,14 +8,16 @@ import {
   waitForSolanaSignatureConfirmed,
   formatSolanaError,
 } from '@/lib/solana/client';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 const PENDING_SOL_DEPOSIT_KEY = 'aptcasino_pending_sol_deposit';
 
-async function creditSolDepositOnServer(wallet, amountSol, txSignature) {
+async function creditSolDepositOnServer(wallet, amountSol, txSignature, walletAuth) {
+  const payload = { wallet, amountNative: amountSol, txSignature, walletAuth };
   const res = await fetch('/api/chains/solana/deposit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ wallet, amountNative: amountSol, txSignature: txSignature }),
+    body: JSON.stringify(payload),
   });
   let data = await res.json();
   if (!res.ok) {
@@ -24,7 +26,7 @@ async function creditSolDepositOnServer(wallet, amountSol, txSignature) {
       const retryRes = await fetch('/api/chains/solana/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wallet, amountNative: amountSol, txSignature: txSignature }),
+        body: JSON.stringify(payload),
       });
       data = await retryRes.json();
       if (retryRes.ok && data.success) break;
@@ -37,6 +39,7 @@ export function useSolanaDeposit() {
   const [isDepositing, setIsDepositing] = useState(false);
   const { publicKey, sendTransaction } = useWallet();
   const { connection } = useConnection();
+  const { getWalletAuth } = useWalletAuth();
 
   const deposit = useCallback(
     async (amountSol) => {
@@ -59,10 +62,12 @@ export function useSolanaDeposit() {
             if (rawPending) {
               const pending = JSON.parse(rawPending);
               if (pending?.wallet === wallet && pending?.txSignature) {
+                const walletAuth = await getWalletAuth(wallet, 'solana');
                 const recovered = await creditSolDepositOnServer(
                   wallet,
                   pending.amountNative,
                   pending.txSignature,
+                  walletAuth,
                 );
                 if (recovered.success) {
                   window.sessionStorage.removeItem(PENDING_SOL_DEPOSIT_KEY);
@@ -101,7 +106,12 @@ export function useSolanaDeposit() {
           );
         }
 
-        const data = await creditSolDepositOnServer(wallet, amountSol, sig);
+        const walletAuth = await getWalletAuth(wallet, 'solana');
+        if (!walletAuth) {
+          throw new Error('Sign the wallet auth message to credit your deposit.');
+        }
+
+        const data = await creditSolDepositOnServer(wallet, amountSol, sig, walletAuth);
         if (!data.success) {
           const detail = data.detail ? ` ${data.detail}` : '';
           throw new Error(`${data.error || 'Failed to credit play balance'}${detail}`);
@@ -148,7 +158,7 @@ export function useSolanaDeposit() {
         setIsDepositing(false);
       }
     },
-    [publicKey, sendTransaction, connection],
+    [publicKey, sendTransaction, connection, getWalletAuth],
   );
 
   return { deposit, isDepositing };

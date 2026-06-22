@@ -12,6 +12,7 @@ import {
   creditHouseBalance,
   debitHouseBalance,
   getHouseBalance,
+  claimDepositTx,
 } from '@/lib/server/houseBalance';
 import { nativeToRaw, rawToNative } from '@/lib/server/play/amounts';
 import { getPlayChainConfig } from '@/lib/chains/registry';
@@ -24,15 +25,19 @@ import {
   queueWithdrawalRequest,
 } from '@/lib/server/withdrawalQueue';
 import {
-  consumePendingStakeForCredit,
+  creditWithPendingStake,
   recordPendingStake,
+  releasePendingStake,
+  settlePlayRound,
 } from '@/lib/server/play/pendingStakes';
 import {
   assertWithdrawalAllowed,
 } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
+import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
+import { incrementRefereeVolumeUsd } from '@/lib/server/referralAptc';
 import {
   accrueDepositAptcBonus,
   getDepositBonusLockDays,
@@ -81,24 +86,82 @@ export async function solanaBetPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const action = body.action === 'credit' ? 'credit' : 'debit';
+    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    if (authErr) return authErr;
+    const action =
+      body.action === 'credit'
+        ? 'credit'
+        : body.action === 'release_stake'
+          ? 'release_stake'
+          : body.action === 'settle'
+            ? 'settle'
+            : 'debit';
     const amountNative = parseFloat(body.amountNative ?? body.amountSol);
+    const betAmountNative = parseFloat(body.betAmountNative ?? body.amountNative ?? body.amountSol);
+    const payoutAmountNative = parseFloat(body.payoutAmountNative ?? '0');
     const game = typeof body.game === 'string' ? body.game.trim().slice(0, 32) : null;
+
+    const cfg = getPlayChainConfig(CHAIN)!;
+
+    if (action === 'release_stake') {
+      await releasePendingStake({ wallet, chain: CHAIN });
+      const balanceRaw = await getHouseBalance(wallet, CHAIN, cfg.dbCurrency);
+      return NextResponse.json({
+        success: true,
+        balanceRaw: balanceRaw.toString(),
+        balanceNative: rawToNative(CHAIN, balanceRaw),
+      });
+    }
+
+    if (action === 'settle') {
+      if (!Number.isFinite(betAmountNative) || betAmountNative <= 0) {
+        return NextResponse.json({ error: 'wallet and positive betAmountNative required' }, { status: 400 });
+      }
+      const betRaw = nativeToRaw(CHAIN, betAmountNative);
+      const payoutRaw =
+        Number.isFinite(payoutAmountNative) && payoutAmountNative > 0
+          ? nativeToRaw(CHAIN, payoutAmountNative)
+          : 0n;
+
+      const newBalance = await settlePlayRound({
+        wallet,
+        chain: CHAIN,
+        currency: cfg.dbCurrency,
+        betAmountRaw: betRaw,
+        payoutAmountRaw: payoutRaw,
+        game,
+        debitHouseBalance: (amountRaw) =>
+          debitHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw }),
+        creditHouseBalance: (amountRaw) =>
+          creditHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw }),
+      });
+
+      if (betAmountNative > 0) {
+        const nativeUsd = Number(process.env.SOL_USD_PRICE_OVERRIDE) || 150;
+        incrementRefereeVolumeUsd(wallet, betAmountNative, nativeUsd).catch(() => {});
+      }
+
+      return NextResponse.json({
+        success: true,
+        balanceRaw: newBalance.toString(),
+        balanceNative: rawToNative(CHAIN, newBalance),
+      });
+    }
 
     if (!wallet || !Number.isFinite(amountNative) || amountNative <= 0) {
       return NextResponse.json({ error: 'wallet and positive amountNative required' }, { status: 400 });
     }
 
-    const cfg = getPlayChainConfig(CHAIN)!;
     const amountRaw = nativeToRaw(CHAIN, amountNative);
 
     if (action === 'credit') {
-      await consumePendingStakeForCredit({ wallet, chain: CHAIN, creditRaw: amountRaw });
-      const newBalance = await creditHouseBalance({
+      const newBalance = await creditWithPendingStake({
         wallet,
         chain: CHAIN,
         currency: cfg.dbCurrency,
-        amountRaw,
+        creditRaw: amountRaw,
+        creditHouseBalance: (creditRaw) =>
+          creditHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw: creditRaw }),
       });
       return NextResponse.json({
         success: true,
@@ -114,6 +177,9 @@ export async function solanaBetPOST(request: Request) {
       amountRaw,
     });
     await recordPendingStake({ wallet, chain: CHAIN, betRaw: amountRaw, game });
+
+    const nativeUsd = Number(process.env.SOL_USD_PRICE_OVERRIDE) || 150;
+    incrementRefereeVolumeUsd(wallet, amountNative, nativeUsd).catch(() => {});
 
     return NextResponse.json({
       success: true,
@@ -139,6 +205,8 @@ export async function solanaDepositPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
+    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    if (authErr) return authErr;
     const amountNative = parseFloat(body.amountNative ?? body.amountSol);
     const txSignature = String(body.txSignature || '').trim();
     const { minDeposit, maxDeposit } = limits();
@@ -225,42 +293,31 @@ export async function solanaDepositPOST(request: Request) {
       );
     }
 
+    const claimed = await claimDepositTx({
+      txHash: txSignature,
+      chain: CHAIN,
+      wallet,
+      amountOctas: Number(amountRaw),
+      amountNative,
+      feeOctas: Number(feeRaw),
+      netCreditedOctas: Number(netRaw),
+    });
+
+    if (!claimed) {
+      const raw = await getHouseBalance(wallet, CHAIN, cfg.dbCurrency);
+      return NextResponse.json({
+        success: true,
+        alreadyProcessed: true,
+        balanceRaw: raw.toString(),
+        balanceNative: rawToNative(CHAIN, raw),
+      });
+    }
+
     const newBalance = await creditHouseBalance({
       wallet,
       chain: CHAIN,
       currency: cfg.dbCurrency,
       amountRaw: netRaw,
-    });
-
-    await db.from('deposits_log').insert({
-      chain: CHAIN,
-      wallet,
-      amount_octas: Number(amountRaw),
-      amount_native: amountNative,
-      fee_octas: Number(feeRaw),
-      net_credited_octas: Number(netRaw),
-      user_tx_hash: txSignature,
-      platform_fee_tx_hash: null,
-    });
-
-    await syncCashbackCap(wallet, CHAIN).catch((e) =>
-      console.warn('[chains/solana/deposit] cashback cap sync', e),
-    );
-
-    const dealBoost = await getDepositDealBoost({
-      wallet,
-      chain: CHAIN,
-      depositTxHash: txSignature,
-      depositUsd: amountNative * nativeUsd,
-    });
-
-    const depositBonusResult = await accrueDepositAptcBonus({
-      wallet,
-      chain: CHAIN,
-      depositTxHash: txSignature,
-      depositNative: amountNative,
-      nativeUsdPrice: nativeUsd,
-      extraAptc: dealBoost.extraAptc,
     });
 
     let platformFeeTx: string | null = null;
@@ -286,6 +343,26 @@ export async function solanaDepositPOST(request: Request) {
         );
       }
     }
+
+    await syncCashbackCap(wallet, CHAIN).catch((e) =>
+      console.warn('[chains/solana/deposit] cashback cap sync', e),
+    );
+
+    const dealBoost = await getDepositDealBoost({
+      wallet,
+      chain: CHAIN,
+      depositTxHash: txSignature,
+      depositUsd: amountNative * nativeUsd,
+    });
+
+    const depositBonusResult = await accrueDepositAptcBonus({
+      wallet,
+      chain: CHAIN,
+      depositTxHash: txSignature,
+      depositNative: amountNative,
+      nativeUsdPrice: nativeUsd,
+      extraAptc: dealBoost.extraAptc,
+    });
 
     await fetch(`${getSiteUrl()}/api/players/track`, {
       method: 'POST',
@@ -338,6 +415,8 @@ export async function solanaWithdrawPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
+    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    if (authErr) return authErr;
     const amountNative = parseFloat(body.amountNative ?? body.amountSol);
     const { minWithdraw } = limits();
 

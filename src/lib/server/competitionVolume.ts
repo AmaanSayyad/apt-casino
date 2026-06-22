@@ -57,7 +57,7 @@ export async function aggregateAptosCupVolume(
   return aggregateRegisteredWagerVolume(games, aptosWindows, includedSlugs);
 }
 
-/** Solana volume from Supabase game_play_events for registered wallets. */
+/** Solana volume from server-ledger stakes (consumed debits), not client game logs. */
 export async function aggregateSolanaCupVolume(
   windows: RegisteredWindows,
   includedSlugs: Set<string>,
@@ -73,11 +73,12 @@ export async function aggregateSolanaCupVolume(
   const maxEnd = [...windows.values()].reduce((m, w) => (w.endSec > m ? w.endSec : m), 0n);
 
   const { data, error } = await db
-    .from('game_play_events')
-    .select('wallet, game, bet_raw, created_at')
+    .from('play_pending_stakes')
+    .select('wallet, game, bet_raw, consumed_at')
     .eq('chain', 'solana')
-    .gte('created_at', new Date(Number(minStart) * 1000).toISOString())
-    .lte('created_at', new Date(Number(maxEnd) * 1000).toISOString());
+    .not('consumed_at', 'is', null)
+    .gte('consumed_at', new Date(Number(minStart) * 1000).toISOString())
+    .lte('consumed_at', new Date(Number(maxEnd) * 1000).toISOString());
 
   if (error || !data) return [];
 
@@ -96,10 +97,10 @@ export async function aggregateSolanaCupVolume(
     if (!windowKey) continue;
 
     const slug = String(row.game || '').toLowerCase();
-    if (!includedSlugs.has(slug)) continue;
+    if (slug && !includedSlugs.has(slug)) continue;
 
     const w = windows.get(windowKey)!;
-    const ts = BigInt(Math.floor(new Date(row.created_at).getTime() / 1000));
+    const ts = BigInt(Math.floor(new Date(String(row.consumed_at)).getTime() / 1000));
     if (ts < w.startSec || ts > w.endSec) continue;
 
     const bet = BigInt(row.bet_raw || 0);

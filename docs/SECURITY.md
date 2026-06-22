@@ -41,7 +41,9 @@ Include:
 ## Current high-priority areas
 
 - Treasury key handling and server-only signing routes
+- **If `TREASURY_PRIVATE_KEY` was ever committed to git:** treat that Aptos account as compromised. Generate a new key, migrate funds/modules, update Vercel env, and never reuse the exposed key. Git history and forks remain public.
 - Admin auth token protection and route gating
-- Deposit/withdraw race conditions and replay protections
+- Wallet-auth on user-scoped writes (`WALLET_AUTH_REQUIRED`)
+- Deposit/withdraw race conditions and replay protections (atomic balance RPCs)
 - Promotions abuse resistance (wallet, IP hash, device hash, max claims)
 - KOL auth/session and password update routes

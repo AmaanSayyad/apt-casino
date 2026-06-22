@@ -298,10 +298,16 @@ export async function createKolAllocation(input: {
   const db = getSupabaseAdmin();
   if (!db) throw new Error('Database not configured');
 
-  const slug = normalizeKolSlug(input.slug);
+  const slugSource = String(input.slug || input.telegram || '').trim();
+  const slug = normalizeKolSlug(slugSource);
   if (!isValidKolSlug(slug)) {
     throw new Error('Invalid slug — use lowercase letters, numbers, and hyphens');
   }
+
+  const displayName =
+    input.displayName?.trim() ||
+    slugSource.replace(/^@+/, '').trim() ||
+    slug;
 
   const wallet = String(input.walletAddress || '').trim();
   if (wallet.length < 32) throw new Error('Valid Solana wallet address required');
@@ -332,7 +338,7 @@ export async function createKolAllocation(input: {
     .from('kol_allocations')
     .insert({
       kol_slug: slug,
-      display_name: input.displayName.trim(),
+      display_name: displayName.slice(0, 64),
       wallet_address: wallet,
       amount_aptc: amountAptc,
       pct_of_supply: aptcPctOfSupply(amountAptc),
@@ -532,6 +538,45 @@ export async function fulfillKolAllocation(input: {
 
   if (error) throw new Error(error.message);
   return data as KolAllocationRow;
+}
+
+function localDateKey(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Reschedule unlock for many KOLs at once (admin bulk edit). */
+export async function bulkUpdateKolUnlockDates(input: {
+  newUnlockAt: string;
+  matchUnlockDate?: string;
+}) {
+  const newUnlock = parseIsoDate(input.newUnlockAt, 'new unlock time');
+  const matchDay = input.matchUnlockDate?.trim() || null;
+  if (matchDay && !/^\d{4}-\d{2}-\d{2}$/.test(matchDay)) {
+    throw new Error('Filter date must be YYYY-MM-DD');
+  }
+
+  const rows = await listKolAllocations('all');
+  let updated = 0;
+  let skipped = 0;
+
+  for (const row of rows) {
+    if (row.status === 'fulfilled' || row.status === 'revoked') {
+      skipped += 1;
+      continue;
+    }
+    if (matchDay && localDateKey(String(row.unlock_at)) !== matchDay) {
+      skipped += 1;
+      continue;
+    }
+
+    await updateKolAllocation(row.id, { unlockAt: newUnlock.toISOString() });
+    updated += 1;
+  }
+
+  return { updated, skipped, total: rows.length };
 }
 
 export async function authenticateKolPortal(slug: string, password: string) {

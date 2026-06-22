@@ -18,6 +18,8 @@ export type GamePlayEventInput = {
   result?: string;
   fairnessProof?: Record<string, unknown> | null;
   proofReference?: string | null;
+  /** When false, skips cashback accrual (client-authored logs). */
+  trusted?: boolean;
 };
 
 export async function recordGamePlayEvent(input: GamePlayEventInput): Promise<void> {
@@ -44,7 +46,7 @@ export async function recordGamePlayEvent(input: GamePlayEventInput): Promise<vo
     proof_reference: input.proofReference ?? null,
   });
 
-  if (input.chain === 'solana' && betRaw > 0n) {
+  if (input.chain === 'solana' && betRaw > 0n && input.trusted !== false) {
     const wallet = normalizeWalletForChain(input.wallet, input.chain) ?? input.wallet;
     await accrueCashbackOnBet({
       wallet,

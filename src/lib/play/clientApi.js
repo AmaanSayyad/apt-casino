@@ -20,11 +20,19 @@ export async function fetchPlayBalance(chainId, wallet) {
   return { ok: true, balanceRaw: data.balanceRaw, balanceNative: data.balanceNative };
 }
 
-export async function postPlayBet(chainId, { wallet, action, amountNative }) {
+export async function postPlayBet(chainId, { wallet, action, amountNative, betAmountNative, payoutAmountNative, game, walletAuth }) {
   const res = await fetch(playApiPath(chainId, 'bet'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ wallet, action, amountNative }),
+    body: JSON.stringify({
+      wallet,
+      action,
+      amountNative,
+      betAmountNative,
+      payoutAmountNative,
+      game,
+      walletAuth,
+    }),
   });
   const data = await res.json();
   if (!res.ok) return { ok: false, error: data.error || 'Bet update failed' };
@@ -42,11 +50,11 @@ export async function postPlayDeposit(chainId, body) {
   return { ok: true, ...data };
 }
 
-export async function postPlayWithdraw(chainId, { wallet, amountNative }) {
+export async function postPlayWithdraw(chainId, { wallet, amountNative, walletAuth }) {
   const res = await fetch(playApiPath(chainId, 'withdraw'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ wallet, amountNative }),
+    body: JSON.stringify({ wallet, amountNative, walletAuth }),
   });
   const data = await res.json();
   if (!res.ok) return { ok: false, error: data.error || 'Withdrawal failed' };

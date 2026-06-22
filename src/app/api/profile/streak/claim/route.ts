@@ -3,6 +3,7 @@ import type { ChainId } from '@/lib/chains/registry';
 import { claimDailyStreak } from '@/lib/server/dailyStreak';
 import { normalizeWalletForChain, resolveReferralChain } from '@/lib/server/referrals';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
+import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +24,10 @@ export async function POST(req: NextRequest) {
   const guard = await walletGuardResponse(wallet);
   if (guard) return guard;
 
-  const result = await claimDailyStreak(wallet, chain, body.solanaPayoutWallet);
+  const authErr = assertWalletAuth(wallet, chain, readWalletAuthFromBody(body));
+  if (authErr) return authErr;
+
+  const result = await claimDailyStreak(wallet, chain);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

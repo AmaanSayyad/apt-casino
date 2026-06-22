@@ -265,10 +265,8 @@ export async function getDepositAptcBonusStatus(
 function resolveAptcPayoutWallet(
   wallet: string,
   chain: ChainId,
-  solanaPayoutWallet?: string | null,
+  _solanaPayoutWallet?: string | null,
 ): string | null {
-  const explicit = solanaPayoutWallet?.trim();
-  if (explicit && SOLANA_RE.test(explicit)) return explicit;
   if (chain === 'solana' && SOLANA_RE.test(wallet)) return wallet;
   if (inferChainFromWallet(wallet) === 'solana' && SOLANA_RE.test(wallet)) return wallet;
   return null;

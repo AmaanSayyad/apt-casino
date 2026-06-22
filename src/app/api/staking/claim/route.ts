@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { transferBynomoFromStakingVault } from '@/lib/solana/backend-client';
+import { normalizeWalletForChain } from '@/lib/server/referrals';
+import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,12 +25,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const userAddress = String(body.userAddress || '').trim();
+  const userAddress = normalizeWalletForChain(String(body.userAddress || '').trim(), 'solana');
   const positionId = Number(body.positionId);
 
   if (!userAddress) {
     return NextResponse.json({ error: 'userAddress is required' }, { status: 400 });
   }
+
+  const authErr = assertWalletAuth(userAddress, 'solana', readWalletAuthFromBody(body));
+  if (authErr) return authErr;
   if (!Number.isFinite(positionId) || positionId <= 0) {
     return NextResponse.json({ error: 'positionId is required' }, { status: 400 });
   }

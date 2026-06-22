@@ -49,6 +49,91 @@ function addDays(base, days) {
   return d;
 }
 
+function todayDateString() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function localDateKeyFromIso(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Derive URL slug from @handle or raw name. */
+function slugFromHandle(raw) {
+  const input = String(raw || '').trim().toLowerCase().replace(/^@+/, '');
+  const chars = [];
+  let prevHyphen = false;
+  for (const ch of input) {
+    const code = ch.charCodeAt(0);
+    const isLower = code >= 97 && code <= 122;
+    const isDigit = code >= 48 && code <= 57;
+    if (isLower || isDigit) {
+      chars.push(ch);
+      prevHyphen = false;
+      continue;
+    }
+    if (ch === '-' && !prevHyphen && chars.length > 0) {
+      chars.push('-');
+      prevHyphen = true;
+    }
+  }
+  while (chars.length > 0 && chars[chars.length - 1] === '-') chars.pop();
+  return chars.join('').slice(0, 48);
+}
+
+const DEFAULT_PROMOTION = '1 post before and 1 post after token launch';
+
+const DEFAULT_PARTNER_FIELDS = {
+  xHandle: '',
+  country: '',
+  telegram: '',
+  avgPostViews: '1000',
+  promotionCondition: DEFAULT_PROMOTION,
+  broughtBy: '',
+  broughtOn: todayDateString(),
+};
+
+function freshPartnerFields() {
+  return {
+    ...DEFAULT_PARTNER_FIELDS,
+    broughtOn: todayDateString(),
+  };
+}
+
+function suggestUnlockPlusDays(allocations, matchDate, plusDays = 4) {
+  const sample = allocations.find(
+    (row) =>
+      row.status !== 'fulfilled' &&
+      row.status !== 'revoked' &&
+      localDateKeyFromIso(row.unlockAt) === matchDate,
+  );
+  if (!sample) return '';
+  const d = new Date(sample.unlockAt);
+  d.setDate(d.getDate() + plusDays);
+  return toDatetimeLocal(d.toISOString());
+}
+
+function freshCreateForm(defaults) {
+  return {
+    slug: '',
+    slugManuallyEdited: false,
+    walletAddress: '',
+    amountAptc: String(defaults?.amountAptc ?? ''),
+    cliffDays: String(defaults?.cliffDays ?? ''),
+    lockDays: String(defaults?.lockDays ?? ''),
+    lockedAt: '',
+    portalPassword: '',
+    autoGeneratePassword: true,
+    adminNotes: '',
+    ...freshPartnerFields(),
+  };
+}
+
 function computeSchedulePreview({ lockedAt, cliffDays, lockDays, unlockAt, useExactUnlock }) {
   const start = fromDatetimeLocal(lockedAt);
   if (!start) return null;
@@ -67,15 +152,7 @@ const STATUS_BADGE = {
   revoked: 'danger',
 };
 
-const EMPTY_PARTNER_FIELDS = {
-  xHandle: '',
-  country: '',
-  telegram: '',
-  avgPostViews: '',
-  promotionCondition: '',
-  broughtBy: '',
-  broughtOn: '',
-};
+const EMPTY_PARTNER_FIELDS = DEFAULT_PARTNER_FIELDS;
 
 function partnerFieldsFromRow(row) {
   return {
@@ -103,20 +180,10 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
   const [detailsForm, setDetailsForm] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState('');
+  const [bulkUnlock, setBulkUnlock] = useState({ matchUnlockDate: '', newUnlockAt: '' });
+  const [bulkBusy, setBulkBusy] = useState(false);
 
-  const [form, setForm] = useState({
-    slug: '',
-    displayName: '',
-    walletAddress: '',
-    amountAptc: '',
-    cliffDays: '',
-    lockDays: '',
-    lockedAt: '',
-    portalPassword: '',
-    autoGeneratePassword: true,
-    adminNotes: '',
-    ...EMPTY_PARTNER_FIELDS,
-  });
+  const [form, setForm] = useState(() => freshCreateForm(null));
 
   const load = useCallback(async () => {
     if (!adminToken) return;
@@ -179,12 +246,22 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
           'x-admin-token': adminToken,
         },
         body: JSON.stringify({
-          ...form,
+          slug: slugFromHandle(form.slug) || form.slug.trim(),
+          walletAddress: form.walletAddress,
           amountAptc: Number(form.amountAptc),
           cliffDays: Number(form.cliffDays),
           lockDays: Number(form.lockDays),
           lockedAt: form.lockedAt ? new Date(form.lockedAt).toISOString() : undefined,
+          portalPassword: form.portalPassword,
+          autoGeneratePassword: form.autoGeneratePassword,
+          adminNotes: form.adminNotes,
+          xHandle: form.xHandle,
+          country: form.country,
+          telegram: form.telegram,
           avgPostViews: form.avgPostViews ? Number(form.avgPostViews) : undefined,
+          promotionCondition: form.promotionCondition,
+          broughtBy: form.broughtBy,
+          broughtOn: form.broughtOn,
         }),
       });
       const j = await r.json();
@@ -194,19 +271,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
         portalUrl: j.allocation.portalUrl,
         password: j.portalPassword,
       });
-      setForm({
-        slug: '',
-        displayName: '',
-        walletAddress: '',
-        amountAptc: String(defaults?.amountAptc ?? ''),
-        cliffDays: String(defaults?.cliffDays ?? ''),
-        lockDays: String(defaults?.lockDays ?? ''),
-        lockedAt: '',
-        portalPassword: '',
-        autoGeneratePassword: true,
-        adminNotes: '',
-        ...EMPTY_PARTNER_FIELDS,
-      });
+      setForm(freshCreateForm(defaults));
       await load();
     } catch (err) {
       alert(err.message || 'Create failed');
@@ -385,6 +450,47 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
     }
   };
 
+  const applyBulkUnlock = async () => {
+    if (!bulkUnlock.newUnlockAt) {
+      alert('Pick the new unlock date and time');
+      return;
+    }
+    if (!bulkUnlock.matchUnlockDate) {
+      alert('Pick which unlock date to replace');
+      return;
+    }
+    const label = `${bulkMatchCount} KOL${bulkMatchCount === 1 ? '' : 's'}`;
+    if (
+      !window.confirm(
+        `Reschedule unlock to ${fmtDate(new Date(bulkUnlock.newUnlockAt).toISOString())} for ${label} currently unlocking on ${bulkUnlock.matchUnlockDate}?`,
+      )
+    ) {
+      return;
+    }
+    setBulkBusy(true);
+    try {
+      const r = await fetch('/api/admin/kol-allocations/bulk-unlock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken,
+        },
+        body: JSON.stringify({
+          newUnlockAt: new Date(bulkUnlock.newUnlockAt).toISOString(),
+          matchUnlockDate: bulkUnlock.matchUnlockDate,
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Bulk update failed');
+      alert(`Updated ${j.updated} KOL unlock date${j.updated === 1 ? '' : 's'} (${j.skipped} skipped).`);
+      await load();
+    } catch (err) {
+      alert(err.message || 'Bulk update failed');
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   const exportAllToGoogleSheets = async () => {
     setExporting(true);
     setExportMessage('');
@@ -440,6 +546,53 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
     return { count: allocations.length, totalAptc: total };
   }, [allocations]);
 
+  const commonUnlockDate = useMemo(() => {
+    const counts = {};
+    for (const row of allocations) {
+      if (row.status === 'fulfilled' || row.status === 'revoked') continue;
+      const key = localDateKeyFromIso(row.unlockAt);
+      if (!key) continue;
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    let best = '';
+    let bestN = 0;
+    for (const [k, n] of Object.entries(counts)) {
+      if (n > bestN) {
+        best = k;
+        bestN = n;
+      }
+    }
+    return best ? { date: best, count: bestN } : null;
+  }, [allocations]);
+
+  const bulkMatchCount = useMemo(() => {
+    if (!bulkUnlock.matchUnlockDate) return 0;
+    return allocations.filter((row) => {
+      if (row.status === 'fulfilled' || row.status === 'revoked') return false;
+      return localDateKeyFromIso(row.unlockAt) === bulkUnlock.matchUnlockDate;
+    }).length;
+  }, [allocations, bulkUnlock.matchUnlockDate]);
+
+  useEffect(() => {
+    if (!commonUnlockDate?.date) return;
+    setBulkUnlock((b) => {
+      if (b.matchUnlockDate) return b;
+      const sample = allocations.find(
+        (row) =>
+          row.status !== 'fulfilled' &&
+          row.status !== 'revoked' &&
+          localDateKeyFromIso(row.unlockAt) === commonUnlockDate.date,
+      );
+      if (!sample) {
+        return { matchUnlockDate: commonUnlockDate.date, newUnlockAt: b.newUnlockAt };
+      }
+      return {
+        matchUnlockDate: commonUnlockDate.date,
+        newUnlockAt: suggestUnlockPlusDays(allocations, commonUnlockDate.date, 4) || b.newUnlockAt,
+      };
+    });
+  }, [commonUnlockDate, allocations]);
+
   if (!adminToken) {
     return (
       <p className="text-sm text-white/50">Save your admin token above to manage KOL allocations.</p>
@@ -482,25 +635,24 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
 
       <Panel>
         <form onSubmit={createAllocation} className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm">
-            <span className="text-white/60">URL slug</span>
+          <label className="block text-sm md:col-span-2">
+            <span className="text-white/60">KOL name</span>
             <input
               className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
-              placeholder="kol-alice"
+              placeholder="amaanbiz — used in portal URL /kol/amaanbiz"
               value={form.slug}
-              onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  slug: e.target.value,
+                  slugManuallyEdited: true,
+                }))
+              }
               required
             />
-          </label>
-          <label className="block text-sm">
-            <span className="text-white/60">Display name</span>
-            <input
-              className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
-              placeholder="Alice Crypto"
-              value={form.displayName}
-              onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
-              required
-            />
+            <span className="mt-1 block text-[11px] text-white/40">
+              Portal URL: /kol/{slugFromHandle(form.slug) || 'name'}
+            </span>
           </label>
           <label className="block text-sm">
             <span className="text-white/60">APTC allocation</span>
@@ -599,7 +751,17 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                   className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
                   placeholder="@username"
                   value={form.telegram}
-                  onChange={(e) => setForm((f) => ({ ...f, telegram: e.target.value }))}
+                  onChange={(e) => {
+                    const telegram = e.target.value;
+                    setForm((f) => {
+                      const next = { ...f, telegram };
+                      if (!f.slugManuallyEdited) {
+                        const fromTg = slugFromHandle(telegram);
+                        if (fromTg) next.slug = fromTg;
+                      }
+                      return next;
+                    });
+                  }}
                 />
               </label>
               <label className="block text-sm">
@@ -609,7 +771,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                   min="0"
                   step="1"
                   className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2"
-                  placeholder="50000"
+                  placeholder="1000"
                   value={form.avgPostViews}
                   onChange={(e) => setForm((f) => ({ ...f, avgPostViews: e.target.value }))}
                 />
@@ -618,7 +780,7 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                 <span className="text-white/60">Promotion condition</span>
                 <textarea
                   className="mt-1 w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 min-h-[72px]"
-                  placeholder="e.g. 2 posts + 1 space per month"
+                  placeholder={DEFAULT_PROMOTION}
                   value={form.promotionCondition}
                   onChange={(e) => setForm((f) => ({ ...f, promotionCondition: e.target.value }))}
                 />
@@ -693,6 +855,53 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
         </form>
       </Panel>
 
+      {allocations.length > 0 ? (
+        <Panel className="border-amber-500/25 bg-amber-950/10">
+          <p className="text-sm font-medium text-amber-100 mb-1">Bulk reschedule unlock</p>
+          <p className="text-xs text-white/45 mb-4">
+            Move every KOL that unlocks on one date to a new unlock date in one click.
+            {commonUnlockDate
+              ? ` Most common unlock date: ${commonUnlockDate.date} (${commonUnlockDate.count} KOLs).`
+              : ''}
+          </p>
+          <div className="flex flex-wrap gap-4 items-end">
+            <label className="block text-sm">
+              <span className="text-white/60">Only KOLs unlocking on</span>
+              <input
+                type="date"
+                className="mt-1 block rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                value={bulkUnlock.matchUnlockDate}
+                onChange={(e) => {
+                  const matchUnlockDate = e.target.value;
+                  setBulkUnlock((b) => ({
+                    matchUnlockDate,
+                    newUnlockAt:
+                      suggestUnlockPlusDays(allocations, matchUnlockDate, 4) || b.newUnlockAt,
+                  }));
+                }}
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="text-white/60">New unlock date &amp; time</span>
+              <input
+                type="datetime-local"
+                className="mt-1 block rounded-lg bg-black/40 border border-white/10 px-3 py-2"
+                value={bulkUnlock.newUnlockAt}
+                onChange={(e) => setBulkUnlock((b) => ({ ...b, newUnlockAt: e.target.value }))}
+              />
+            </label>
+            <button
+              type="button"
+              disabled={bulkBusy || bulkMatchCount === 0}
+              onClick={() => void applyBulkUnlock()}
+              className="inline-flex items-center gap-2 rounded-lg bg-amber-600 hover:bg-amber-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              Apply to {bulkMatchCount || 0} KOL{bulkMatchCount === 1 ? '' : 's'}
+            </button>
+          </div>
+        </Panel>
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-2 flex-wrap">
           {['all', 'locked', 'ready', 'fulfilled', 'revoked'].map((s) => (
@@ -741,7 +950,6 @@ export default function KolAllocationsAdminPanel({ adminToken }) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-semibold text-white">{row.displayName}</h4>
                     <Badge tone={STATUS_BADGE[row.effectiveStatus] || 'neutral'}>{row.effectiveStatus}</Badge>
-                    <span className="text-xs text-white/40 font-mono">/{row.slug}</span>
                   </div>
                   <p className="text-sm text-white/60 mt-1">
                     {fmtNum(row.amountAptc)} APTC ({row.pctOfSupply}% supply) · cliff {row.cliffDays}d · lock {row.lockDays}d · wallet {short(row.walletAddress)}

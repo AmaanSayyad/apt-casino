@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { toast } from 'react-toastify';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 export interface DepositResult {
   success: boolean;
@@ -26,16 +27,19 @@ async function creditAptDepositOnServer(
   amountNative: number,
   txHash: string,
   referralCode: string | null,
+  walletAuth: { message: string; signature: string; publicKey?: string | null; timestamp?: number } | null,
 ) {
+  const payload = {
+    wallet,
+    amountNative,
+    txSignature: txHash,
+    referralCode,
+    walletAuth,
+  };
   const res = await fetch('/api/chains/aptos/deposit', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      wallet,
-      amountNative,
-      txSignature: txHash,
-      referralCode,
-    }),
+    body: JSON.stringify(payload),
   });
   let data = await res.json();
   if (!res.ok) {
@@ -44,12 +48,7 @@ async function creditAptDepositOnServer(
       const retryRes = await fetch('/api/chains/aptos/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          wallet,
-          amountNative,
-          txSignature: txHash,
-          referralCode,
-        }),
+        body: JSON.stringify(payload),
       });
       data = await retryRes.json();
       if (retryRes.ok && data.success) break;
@@ -80,6 +79,7 @@ function readReferralCode(): string | null {
 export const useBackendDeposit = (props?: UseBackendDepositProps) => {
   const [isDepositing, setIsDepositing] = useState(false);
   const { account, signAndSubmitTransaction: walletSignAndSubmit } = useWallet();
+  const { getWalletAuth } = useWalletAuth();
 
   const signAndSubmitTransaction = props?.signAndSubmitTransaction || walletSignAndSubmit;
 
@@ -137,11 +137,13 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
           if (rawPending) {
             const pending = JSON.parse(rawPending);
             if (pending?.wallet === wallet && pending?.txSignature) {
+              const walletAuth = await getWalletAuth(wallet, 'aptos');
               const recovered = await creditAptDepositOnServer(
                 wallet,
                 pending.amountNative,
                 pending.txSignature,
                 referralCode,
+                walletAuth,
               );
               if (recovered.success) {
                 window.sessionStorage.removeItem(PENDING_APT_DEPOSIT_KEY);
@@ -207,11 +209,17 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
         );
       }
 
+      const walletAuth = await getWalletAuth(wallet, 'aptos');
+      if (!walletAuth) {
+        throw new Error('Sign the wallet auth message to credit your deposit.');
+      }
+
       const backendData = await creditAptDepositOnServer(
         wallet,
         amount,
         transferResponse.hash,
         referralCode,
+        walletAuth,
       );
 
       if (!backendData.success) {
