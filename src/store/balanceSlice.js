@@ -8,8 +8,14 @@ import {
 
 const DEMO_LS = 'aptcasino_demo_mode';
 const BAL_BACKUP_LS = 'aptcasino_balance_backup_octas';
-const CHAIN_LS = 'aptcasino_active_chain';
+export const CHAIN_LS = 'aptcasino_active_chain';
+export const CHAIN_USER_SELECTED_LS = 'aptcasino_chain_user_selected';
 const LEGACY_DEMO_BAL_LS = 'aptcasino_demo_balance_octas';
+
+export function isChainUserSelected() {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(CHAIN_USER_SELECTED_LS) === '1';
+}
 
 const loadDemoMode = () => {
   if (typeof window === 'undefined') return false;
@@ -74,6 +80,23 @@ const loadInitialState = () => {
 
 const initialState = loadInitialState();
 
+function applyActiveChain(state, chainId) {
+  const chain = resolveActiveChain(chainId);
+  const prev = state.activeChain;
+  if (chain === prev) return;
+
+  if (state.demoMode && typeof window !== 'undefined') {
+    persistDemoBalance(prev, state.userBalance);
+    state.userBalance = resolveDemoBalanceRaw(chain);
+    localStorage.setItem('userBalance', state.userBalance);
+  }
+
+  state.activeChain = chain;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(CHAIN_LS, chain);
+  }
+}
+
 const balanceSlice = createSlice({
   name: 'balance',
   initialState,
@@ -120,19 +143,12 @@ const balanceSlice = createSlice({
       }
     },
     setActiveChain(state, action) {
-      const chain = resolveActiveChain(action.payload);
-      const prev = state.activeChain;
-      if (chain === prev) return;
-
-      if (state.demoMode && typeof window !== 'undefined') {
-        persistDemoBalance(prev, state.userBalance);
-        state.userBalance = resolveDemoBalanceRaw(chain);
-        localStorage.setItem('userBalance', state.userBalance);
-      }
-
-      state.activeChain = chain;
+      applyActiveChain(state, action.payload);
+    },
+    setUserActiveChain(state, action) {
+      applyActiveChain(state, action.payload);
       if (typeof window !== 'undefined') {
-        localStorage.setItem(CHAIN_LS, chain);
+        localStorage.setItem(CHAIN_USER_SELECTED_LS, '1');
       }
     },
     setDemoMode(state, action) {
@@ -169,6 +185,7 @@ export const {
   setLoading,
   setDemoMode,
   setActiveChain,
+  setUserActiveChain,
   refillDemoBalance,
 } = balanceSlice.actions;
 

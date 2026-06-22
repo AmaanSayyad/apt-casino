@@ -8,7 +8,7 @@ import { useDispatch } from 'react-redux';
 import { useWallet as useAptosWallet } from '@aptos-labs/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
-import { setActiveChain, setBalance } from '@/store/balanceSlice';
+import { setUserActiveChain, setBalance } from '@/store/balanceSlice';
 import { PLAY_CHAINS } from '@/lib/chains/registry';
 import { CHAIN_UI } from '@/lib/chains/chainUi';
 import { isBenignAptosWalletError } from '@/lib/wallet/aptosWalletErrors';
@@ -55,7 +55,7 @@ export default function ChainConnectModal({ open, onClose }) {
     if (!chain || chain.status !== 'live') return;
 
     await disconnectAll();
-    dispatch(setActiveChain(chainId));
+    dispatch(setUserActiveChain(chainId));
     dispatch(setBalance('0'));
 
     if (chainId === 'solana') {
