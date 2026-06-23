@@ -5,6 +5,7 @@ import { normalizeWallet, normalizeWalletForChain } from '@/lib/server/referrals
 import { getPlayChainConfig, type ChainId } from '@/lib/chains/registry';
 import { loadPlayEventsForLeaderboard } from '@/lib/server/gamePlayEvents';
 import { resolvePlayerAvatarUrl } from '@/lib/xProfile';
+import { loadBannedWalletKeys, walletMatchesBanSet } from '@/lib/bans/walletBan';
 
 export const dynamic = 'force-dynamic';
 
@@ -221,6 +222,7 @@ export async function GET(request: NextRequest) {
 
   const cutoffMs = periodCutoffMs(period);
   const wantedSlug = game === 'all' ? null : game;
+  const bannedWallets = await loadBannedWalletKeys();
 
   let games: RawGame[] = [];
   games = await loadGameHistory();
@@ -232,7 +234,7 @@ export async function GET(request: NextRequest) {
 
   for (const g of games) {
     const wallet = playerWallet(g);
-    if (!wallet) continue;
+    if (!wallet || walletMatchesBanSet(wallet, bannedWallets)) continue;
 
     const slug = GAME_NAMES[Number(g.game_type || 0)] ?? null;
     if (wantedSlug && slug !== wantedSlug) continue;
@@ -254,6 +256,7 @@ export async function GET(request: NextRequest) {
   for (const ev of supabaseEvents) {
     if (ev.chain === 'aptos') continue; // on-chain Aptos history is canonical
     if (wantedSlug && ev.game !== wantedSlug) continue;
+    if (walletMatchesBanSet(ev.wallet, bannedWallets)) continue;
     applyPlayEvent(byWallet, ev.chain, ev.wallet, ev.betRaw, ev.payoutRaw, ev.createdAtMs, ev.game);
     totalBets += 1;
     totalWageredRaw += ev.betRaw;
@@ -282,6 +285,7 @@ export async function GET(request: NextRequest) {
       };
     })
     .filter((row) => {
+      if (walletMatchesBanSet(row.wallet, bannedWallets)) return false;
       if (metric === 'winrate') return row.bets >= MIN_BETS_FOR_WINRATE;
       return true;
     });

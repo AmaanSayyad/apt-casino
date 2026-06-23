@@ -13,6 +13,7 @@ import {
   type TopWinRow,
 } from '@/lib/server/gamePlayEvents';
 import { getPlayChainConfig } from '@/lib/chains/registry';
+import { loadBannedWalletKeys, walletMatchesBanSet } from '@/lib/bans/walletBan';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,7 @@ function aptosRowsFromGames(
   games: Record<string, unknown>[],
   sinceSec: bigint | null,
   top: number,
+  bannedWallets: Set<string>,
 ): TopWinRow[] {
   type WalletAgg = {
     bets: number;
@@ -43,7 +45,7 @@ function aptosRowsFromGames(
     if (sinceSec !== null && ts < sinceSec) continue;
 
     const player = readPlayerAddress(g);
-    if (!player) continue;
+    if (!player || walletMatchesBanSet(player, bannedWallets)) continue;
 
     const bet = u64(g, 'bet_amount');
     const payout = u64(g, 'payout');
@@ -139,13 +141,16 @@ export async function GET(request: NextRequest) {
     const sinceSec = sinceParam ? BigInt(sinceParam) : null;
     const sinceMs = sinceSec !== null ? Number(sinceSec) * 1000 : null;
 
-    const [{ games, moduleAddress }, supabaseRows] = await Promise.all([
+    const [{ games, moduleAddress }, supabaseRows, bannedWallets] = await Promise.all([
       fetchGameHistory().catch(() => ({ games: [] as Record<string, unknown>[], moduleAddress: null })),
       aggregateTopWinsFromPlayEvents(top * 2, sinceMs),
+      loadBannedWalletKeys(),
     ]);
 
-    const aptosRows = moduleAddress ? aptosRowsFromGames(games, sinceSec, top * 2) : [];
-    const rows = mergeTopWins(aptosRows, supabaseRows, top);
+    const aptosRows = moduleAddress ? aptosRowsFromGames(games, sinceSec, top * 2, bannedWallets) : [];
+    const rows = mergeTopWins(aptosRows, supabaseRows, top).filter(
+      (row) => !walletMatchesBanSet(row.wallet, bannedWallets),
+    );
 
     return NextResponse.json({
       wins: rows,
