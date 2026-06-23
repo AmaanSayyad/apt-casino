@@ -2,19 +2,20 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { DEFAULT_PLAY_CHAIN } from '@/lib/chains/registry';
+import { DEFAULT_PLAY_CHAIN, getPlayChainConfig } from '@/lib/chains/registry';
 import {
   buildSolanaFairnessProof,
   createFairnessRound,
 } from '@/lib/provablyFair/solanaFairness';
 
 /**
- * Solana-only commit/reveal flow for game UIs.
+ * Commit/reveal flow for server-ledger play on any chain.
  * Uses a ref for the active round so reveal() works inside timeouts/async callbacks.
  */
 export function useProvableFairness(game, wallet) {
   const activeChain = useSelector((s) => s.balance.activeChain) || DEFAULT_PLAY_CHAIN;
-  const isSolana = activeChain === 'solana';
+  const chainConfig = getPlayChainConfig(activeChain);
+  const fairnessEnabled = chainConfig?.balanceMode === 'server';
 
   const [phase, setPhase] = useState('idle');
   const [round, setRound] = useState(null);
@@ -29,12 +30,12 @@ export function useProvableFairness(game, wallet) {
   }, []);
 
   const begin = useCallback(async () => {
-    if (!isSolana || !wallet) return null;
+    if (!fairnessEnabled || !wallet) return null;
     const next = await createFairnessRound(wallet, game);
     roundRef.current = next;
     setRound(next);
     return next;
-  }, [game, isSolana, wallet]);
+  }, [fairnessEnabled, game, wallet]);
 
   const reveal = useCallback(
     async (outcome, roundOverride = null) => {
@@ -49,7 +50,9 @@ export function useProvableFairness(game, wallet) {
   );
 
   return {
-    isSolana,
+    enabled: fairnessEnabled,
+    /** @deprecated use `enabled` — kept for existing game UIs */
+    isSolana: fairnessEnabled,
     phase,
     round,
     proof,

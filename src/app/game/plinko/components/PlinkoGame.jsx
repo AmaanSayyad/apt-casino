@@ -42,7 +42,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
     useSelector((state) => state.balance.activeChain) || DEFAULT_PLAY_CHAIN;
   const { logGame } = useGameLogger();
   const { address: playAddress } = usePlayWallet();
-  const { balanceNative, debitNative, creditNative, symbol } = usePlayBalance();
+  const { balanceNative, debitNative, creditNative, releaseStake, symbol } = usePlayBalance();
   const fairness = useProvableFairness('plinko', playAddress);
 
   const [ballPosition, setBallPosition] = useState(null);
@@ -65,6 +65,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
   const debitNativeRef = useRef(debitNative);
   const playAddressRef = useRef(playAddress);
   const creditNativeRef = useRef(creditNative);
+  const releaseStakeRef = useRef(releaseStake);
   const fairnessRef = useRef(fairness);
   const onBetHistoryChangeRef = useRef(onBetHistoryChange);
   const activeChainRef = useRef(activeChain);
@@ -90,6 +91,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
 
   playAddressRef.current = playAddress;
   creditNativeRef.current = creditNative;
+  releaseStakeRef.current = releaseStake;
   fairnessRef.current = fairness;
   onBetHistoryChangeRef.current = onBetHistoryChange;
   balanceNativeRef.current = balanceNative;
@@ -372,8 +374,30 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
         ballHighlightTimeoutRef.current = null;
       }, 400);
 
+      let settledFairnessProof = null;
       if (betForRound > 0) {
-        void creditNativeRef.current(reward, playAddressRef.current);
+        const fair = fairnessRef.current;
+        if (fair.enabled && meta.fairRound) {
+          settledFairnessProof = await fair.reveal(
+            { binIndex, multiplier: multiplierValue, rows: meta.rows, riskLevel: meta.riskLevel },
+            meta.fairRound,
+          );
+          fair.reset();
+        }
+        const credit = await creditNativeRef.current(
+          reward,
+          playAddressRef.current,
+          'plinko',
+          {
+            rows: meta.rows,
+            riskLevel: meta.riskLevel,
+            fairnessProof: settledFairnessProof || undefined,
+          },
+          meta.roundId,
+        );
+        if (!credit.ok) {
+          console.error('Plinko credit failed:', credit.error);
+        }
       }
 
         playAudio(binLandAudioRef);
@@ -407,15 +431,6 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
       if (!addr || betForRound <= 0) return;
 
       const gameResult = `${meta.rows}rows_${meta.riskLevel}_bin${binIndex}_${multiplier}`;
-      let fairnessProof = null;
-      const fair = fairnessRef.current;
-      if (fair.isSolana && meta.fairRound) {
-        fairnessProof = await fair.reveal(
-          { binIndex, multiplier, rows: meta.rows, riskLevel: meta.riskLevel },
-          meta.fairRound,
-        );
-        fair.reset();
-      }
 
           logGame({
             gameType: 'plinko',
@@ -423,7 +438,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
         betAmount: betForRound,
             result: gameResult,
             payout: reward,
-        fairnessProof: fairnessProof || undefined,
+        fairnessProof: settledFairnessProof || undefined,
       })
         .then((res) => {
           if (!res?.success) return;
@@ -585,7 +600,10 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
 
     void (async () => {
       try {
-        const debit = await debitNativeRef.current(latestBetAmount, playAddressRef.current);
+        const debit = await debitNativeRef.current(latestBetAmount, playAddressRef.current, 'plinko', {
+          rows: currentRows,
+          riskLevel: currentRiskLevel,
+        });
         releaseReserve(latestBetAmount);
         if (!debit.ok) {
           removeBallFromWorld(ball);
@@ -593,10 +611,11 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
           return;
         }
         roundMeta.debited = true;
+        roundMeta.roundId = debit.roundId ?? null;
 
         const fair = fairnessRef.current;
         const addr = playAddressRef.current;
-        if (fair.isSolana && addr) {
+        if (fair.enabled && addr) {
           const round = await fair.begin();
           if (round) {
             roundMeta.fairRound = round;
@@ -608,7 +627,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
         releaseReserve(latestBetAmount);
         removeBallFromWorld(ball);
         if (roundMeta.debited && latestBetAmount > 0) {
-          await creditNativeRef.current(latestBetAmount, playAddressRef.current);
+          await releaseStakeRef.current(playAddressRef.current, 'plinko').catch(() => {});
           roundMeta.debited = false;
         }
         alert(err instanceof Error ? err.message : 'Could not place bet. Please try again.');

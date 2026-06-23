@@ -209,7 +209,7 @@ export default function Mines() {
 
     let minePositions = null;
 
-    if (fairness.isSolana) {
+    if (fairness.enabled) {
       const fairnessRound = await fairness.begin();
       fairnessRoundRef.current = fairnessRound;
       const minesCount = Number(payload.mines) || 5;
@@ -328,7 +328,7 @@ export default function Mines() {
   const handleGameComplete = async (result) => {
     let fairnessProof = null;
     try {
-      if (fairness.isSolana && fairnessRoundRef.current) {
+      if (fairness.enabled && fairnessRoundRef.current) {
         fairnessProof = await fairness.reveal(
           {
             mines: result.mines,
@@ -615,6 +615,9 @@ export default function Mines() {
             onGameStatusChange={setGameStatus}
             onGameComplete={handleGameComplete}
             onAutoRoundFailed={handleAutoRoundFailed}
+            fairnessEnabled={fairness.enabled}
+            fairnessRoundRef={fairnessRoundRef}
+            fairnessReveal={fairness.reveal}
           />
         </motion.div>
       </motion.div>

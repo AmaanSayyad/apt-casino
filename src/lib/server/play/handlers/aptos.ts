@@ -25,12 +25,7 @@ import {
   pendingWithdrawalMessage,
   queueWithdrawalRequest,
 } from '@/lib/server/withdrawalQueue';
-import {
-  creditWithPendingStake,
-  recordPendingStake,
-  releasePendingStake,
-  settlePlayRound,
-} from '@/lib/server/play/pendingStakes';
+import { handlePlayBetAction } from '@/lib/server/play/betSettlement';
 import { assertWithdrawalAllowed } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
 import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
@@ -153,108 +148,48 @@ export async function aptosBetPOST(request: Request) {
     if (guard) return guard;
     const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
     if (authErr) return authErr;
-    const action =
-      body.action === 'credit'
-        ? 'credit'
-        : body.action === 'release_stake'
-          ? 'release_stake'
-          : body.action === 'settle'
-            ? 'settle'
-            : 'debit';
-    const amountNative = parseFloat(body.amountNative ?? body.amountApt);
-    const betAmountNative = parseFloat(body.betAmountNative ?? body.amountNative ?? body.amountApt);
-    const payoutAmountNative = parseFloat(body.payoutAmountNative ?? '0');
-    const game = typeof body.game === 'string' ? body.game.trim().slice(0, 32) : null;
 
     const cfg = getPlayChainConfig(CHAIN)!;
-
-    if (action === 'release_stake') {
-      await releasePendingStake({ wallet, chain: CHAIN });
-      const balanceRaw = await getHouseBalance(wallet, CHAIN, cfg.dbCurrency);
-      return NextResponse.json({
-        success: true,
-        balanceRaw: balanceRaw.toString(),
-        balanceNative: rawToNative(CHAIN, balanceRaw),
-      });
-    }
-
-    if (action === 'settle') {
-      if (!Number.isFinite(betAmountNative) || betAmountNative <= 0) {
-        return NextResponse.json({ error: 'wallet and positive betAmountNative required' }, { status: 400 });
-      }
-      const betRaw = nativeToRaw(CHAIN, betAmountNative);
-      const payoutRaw =
-        Number.isFinite(payoutAmountNative) && payoutAmountNative > 0
-          ? nativeToRaw(CHAIN, payoutAmountNative)
-          : 0n;
-
-      const newBalance = await settlePlayRound({
-        wallet,
-        chain: CHAIN,
-        currency: cfg.dbCurrency,
-        betAmountRaw: betRaw,
-        payoutAmountRaw: payoutRaw,
-        game,
-        debitHouseBalance: (amountRaw) =>
-          debitHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw }),
-        creditHouseBalance: (amountRaw) =>
-          creditHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw }),
-      });
-
-      if (betAmountNative > 0) {
-        const nativeUsd = Number(process.env.APT_USD_PRICE_OVERRIDE) || 8;
-        incrementRefereeVolumeUsd(wallet, betAmountNative, nativeUsd).catch(() => {});
-      }
-
-      return NextResponse.json({
-        success: true,
-        balanceRaw: newBalance.toString(),
-        balanceNative: rawToNative(CHAIN, newBalance),
-      });
-    }
-
-    if (!Number.isFinite(amountNative) || amountNative <= 0) {
-      return NextResponse.json({ error: 'wallet and positive amountNative required' }, { status: 400 });
-    }
-
-    const amountRaw = nativeToRaw(CHAIN, amountNative);
-
-    if (action === 'credit') {
-      const newBalance = await creditWithPendingStake({
-        wallet,
-        chain: CHAIN,
-        currency: cfg.dbCurrency,
-        creditRaw: amountRaw,
-        creditHouseBalance: (creditRaw) =>
-          creditHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw: creditRaw }),
-      });
-      return NextResponse.json({
-        success: true,
-        balanceRaw: newBalance.toString(),
-        balanceNative: rawToNative(CHAIN, newBalance),
-      });
-    }
-
-    const newBalance = await debitHouseBalance({
+    const result = await handlePlayBetAction({
       wallet,
       chain: CHAIN,
       currency: cfg.dbCurrency,
-      amountRaw,
+      body,
+      debitHouseBalance: (amountRaw) =>
+        debitHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw }),
+      creditHouseBalance: (amountRaw) =>
+        creditHouseBalance({ wallet, chain: CHAIN, currency: cfg.dbCurrency, amountRaw }),
+      getHouseBalance: () => getHouseBalance(wallet, CHAIN, cfg.dbCurrency),
     });
-    await recordPendingStake({ wallet, chain: CHAIN, betRaw: amountRaw, game });
 
-    const nativeUsd = Number(process.env.APT_USD_PRICE_OVERRIDE) || 8;
-    incrementRefereeVolumeUsd(wallet, amountNative, nativeUsd).catch(() => {});
+    const betAmountNative = parseFloat(body.betAmountNative ?? body.amountNative ?? body.amountApt);
+    if (
+      (body.action === 'settle' || body.action === 'debit' || !body.action) &&
+      Number.isFinite(betAmountNative) &&
+      betAmountNative > 0
+    ) {
+      const nativeUsd = Number(process.env.APT_USD_PRICE_OVERRIDE) || 8;
+      incrementRefereeVolumeUsd(wallet, betAmountNative, nativeUsd).catch(() => {});
+    }
 
     return NextResponse.json({
       success: true,
-      balanceRaw: newBalance.toString(),
-      balanceNative: rawToNative(CHAIN, newBalance),
+      balanceRaw: result.balanceRaw,
+      balanceNative: result.balanceNative,
+      roundId: result.roundId,
+      serverSeedHash: result.serverSeedHash,
+      payoutAmountNative: result.payoutAmountNative,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Bet update failed';
     const status =
-      msg.includes('Insufficient') || msg.includes('stake') || msg.includes('Payout')
+      msg.includes('Insufficient') ||
+      msg.includes('stake') ||
+      msg.includes('Payout') ||
+      msg.includes('gameRound') ||
+      msg.includes('fairness') ||
+      msg.includes('verification') ||
+      msg.includes('rejected')
         ? 400
         : 500;
     return NextResponse.json({ error: msg }, { status });

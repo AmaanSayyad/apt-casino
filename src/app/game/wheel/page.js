@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import GameWheel, { wheelDataByRisk } from "../../../components/wheel/GameWheel";
+import GameWheel from "../../../components/wheel/GameWheel";
 import BettingPanel from "../../../components/wheel/BettingPanel";
 import GameHistory from "../../../components/wheel/GameHistory";
 import { calculateResult } from "../../../lib/gameLogic";
@@ -10,15 +10,15 @@ import { FaHistory, FaTrophy, FaInfoCircle, FaChartLine, FaCoins, FaChevronDown,
 import { GiCardRandom, GiWheelbarrow, GiSpinningBlades, GiTrophyCup } from "react-icons/gi";
 import { HiOutlineTrendingUp, HiOutlineChartBar } from "react-icons/hi";
 import { useSelector, useDispatch } from 'react-redux';
-import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
+import { setBalance } from '@/store/balanceSlice';
 import { useNotification } from '@/components/NotificationSystem';
 import { useGameLogger } from '@/hooks/useGameLogger';
 import { usePlayWallet } from '@/hooks/usePlayWallet';
 import { usePlayBalance } from '@/hooks/usePlayBalance';
-import { applyHouseEdgeToMultiplier, houseEdgePercent } from '@/lib/houseEdge';
+import { houseEdgePercent } from '@/lib/houseEdge';
 import { useGameStats } from '@/hooks/useGameStats';
 import { useProvableFairness } from '@/hooks/useProvableFairness';
-import { deriveWheelOutcome } from '@/lib/provablyFair/solanaFairness';
+import { computeWheelPayoutNative, resolveWheelSegmentIndex } from '@/lib/wheel/wheelSegments';
 
 // Import new components
 import WheelVideo from "./components/WheelVideo";
@@ -58,9 +58,11 @@ export default function Home() {
   const notification = useNotification();
   const { logGame } = useGameLogger();
   const { address: playAddress, connected: playConnected, chainLabel } = usePlayWallet();
-  const { balanceNative, toRaw, fromRaw, debitNative, creditNative, symbol, chain: playChain } = usePlayBalance();
+  const { balanceNative, debitNative, creditNative, releaseStake, symbol, chain: playChain } = usePlayBalance();
+  const serverRoundIdRef = useRef(null);
   const fairness = useProvableFairness('wheel', playAddress);
   const [forcedSegmentIndex, setForcedSegmentIndex] = useState(null);
+  const [landedSegmentIndex, setLandedSegmentIndex] = useState(null);
   // symbol drives bet labels in BettingPanel (SOL vs APT)
 
   useEffect(() => {
@@ -101,23 +103,6 @@ export default function Home() {
     saveGameBetHistory('wheel', playChain, playAddress, gameHistory);
   }, [gameHistory, playAddress, playChain]);
 
-  // Use ref to prevent infinite loop in useEffect
-  const isInitialized = useRef(false);
-
-  // Load persisted balance once (skip in demo — Redux already has demo bankroll)
-  useEffect(() => {
-    if (isInitialized.current) return;
-    if (!demoMode) {
-      const savedBalance = loadBalanceFromStorage();
-      if (savedBalance) {
-        dispatch(setBalance(savedBalance));
-      } else {
-        dispatch(setBalance('0'));
-      }
-    }
-    isInitialized.current = true;
-  }, [demoMode, dispatch]);
-
   // Scroll to section function
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -146,129 +131,138 @@ export default function Home() {
     try {
       setIsSpinning(true);
       setHasSpun(false);
+      setLandedSegmentIndex(null);
 
-      const debit = await debitNative(betAmount, playAddress);
+      const debit = await debitNative(betAmount, playAddress, 'wheel', {
+        risk,
+        segments: noOfSegments,
+      });
       if (!debit.ok) {
         alert(debit.error || 'Could not place bet');
         setIsSpinning(false);
         return;
       }
+      serverRoundIdRef.current = debit.roundId ?? null;
 
       let segmentOverride = null;
       let fairnessRound = null;
-      if (fairness.isSolana) {
+      if (fairness.enabled) {
         fairnessRound = await fairness.begin();
-        const wheelData = risk === 'high' ? wheelDataByRisk.high(noOfSegments) : wheelDataByRisk[risk];
-        const probs = wheelData.map((d) => d.probability);
-        segmentOverride = deriveWheelOutcome(fairnessRound.seedBytes, probs) % noOfSegments;
+        segmentOverride = resolveWheelSegmentIndex(
+          fairnessRound.seedBytes,
+          risk,
+          noOfSegments,
+        );
         setForcedSegmentIndex(segmentOverride);
       } else {
         setForcedSegmentIndex(null);
       }
 
       // Set up callback to handle wheel animation completion
-      window.wheelBetCallback = (landedMultiplier) => {
-        console.log('🎯 Wheel animation completed with multiplier:', landedMultiplier);
-
-        // Stop spinning immediately when animation completes
+      window.wheelBetCallback = async (result) => {
+        const segmentIndex =
+          result?.segmentIndex ?? segmentOverride ?? 0;
+        setLandedSegmentIndex(segmentIndex);
         setIsSpinning(false);
 
-        // Wait a moment for color detection to update, then get the REAL result
-        setTimeout(async () => {
-          let actualMultiplier = 0;
-          let detectedColor = "#333947";
+        const payout = computeWheelPayoutNative(
+          betAmount,
+          risk,
+          noOfSegments,
+          segmentIndex,
+        );
+        const { rawMultiplier, adjustedMultiplier, payoutNative: winAmount, segment } = payout;
 
-          // Get the final result from color detection
-          if (window.triggerWheelColorDetection) {
-            const detectionResult = window.triggerWheelColorDetection();
-            if (detectionResult && detectionResult.multiplier !== null) {
-              actualMultiplier = detectionResult.multiplier;
-              detectedColor = detectionResult.color || "#333947";
-              console.log('🎯 Using DETECTED multiplier:', actualMultiplier, 'Color:', detectedColor);
-            } else {
-              console.log('⚠️ Color detection failed, using landed multiplier:', landedMultiplier);
-              actualMultiplier = landedMultiplier;
-            }
-          } else {
-            console.log('⚠️ Color detection not available, using landed multiplier:', landedMultiplier);
-            actualMultiplier = landedMultiplier;
-          }
+        setDetectedColor(segment.color);
+        setDetectedMultiplier(rawMultiplier);
+        setCurrentMultiplier(adjustedMultiplier);
 
-          // Apply platform house edge so the player payout matches RTP guidance.
-          actualMultiplier = applyHouseEdgeToMultiplier(actualMultiplier, 'wheel');
-          const winAmount = betAmount * actualMultiplier;
+        const newHistoryItem = {
+          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+          game: 'Wheel',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          betAmount: betAmount.toFixed(5),
+          multiplier: `${rawMultiplier.toFixed(2)}x`,
+          payout: winAmount.toFixed(5),
+          result: segmentIndex,
+          color: segment.color,
+          txHash: null,
+          fairnessProof: null,
+        };
 
-          // Add to game history
-          const newHistoryItem = {
-            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-            game: 'Wheel',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            betAmount: betAmount.toFixed(5),
-            multiplier: `${actualMultiplier.toFixed(2)}x`,
-            payout: winAmount.toFixed(5),
-            result: 0,
-            color: detectedColor,
-            txHash: null,
-            fairnessProof: null,
-          };
+        setGameHistory((prev) => [newHistoryItem, ...prev]);
 
+        let fairnessProof = null;
+        if (fairness.enabled && fairnessRound) {
+          fairnessProof = await fairness.reveal(
+            {
+              segmentIndex,
+              multiplier: rawMultiplier,
+            },
+            fairnessRound,
+          );
+          fairness.reset();
+        }
 
-
-          setGameHistory(prev => [newHistoryItem, ...prev]);
-
-          // Log game to blockchain
-          if (playAddress) {
-            const gameResult = `${risk}_${noOfSegments}segments_${actualMultiplier.toFixed(2)}x_${detectedColor}`;
-            let fairnessProof = null;
-            if (fairness.isSolana) {
-              fairnessProof = await fairness.reveal(
-                {
-                  segmentIndex: segmentOverride,
-                  multiplier: actualMultiplier,
-                },
-                fairnessRound,
-              );
-              fairness.reset();
-            }
-            logGame({
-              gameType: 'wheel',
-              playerAddress: playAddress,
-              betAmount: betAmount,
-              result: gameResult,
-              payout: winAmount,
-              fairnessProof,
-            }).then(res => {
+        if (playAddress) {
+          const gameResult = `${risk}_${noOfSegments}segments_${rawMultiplier.toFixed(2)}x_${segment.color}`;
+          logGame({
+            gameType: 'wheel',
+            playerAddress: playAddress,
+            betAmount: betAmount,
+            result: gameResult,
+            payout: winAmount,
+            fairnessProof,
+          })
+            .then((res) => {
               if (res?.success) {
-                setGameHistory(prev => prev.map(item =>
-                  item.id === newHistoryItem.id
-                    ? {
-                        ...item,
-                        txHash: res.transactionHash || res.proofReference || null,
-                        explorerUrl: res.explorerUrl || null,
-                        fairnessProof: fairnessProof || item.fairnessProof,
-                      }
-                    : item
-                ));
+                setGameHistory((prev) =>
+                  prev.map((item) =>
+                    item.id === newHistoryItem.id
+                      ? {
+                          ...item,
+                          txHash: res.transactionHash || res.proofReference || null,
+                          explorerUrl: res.explorerUrl || null,
+                          fairnessProof: fairnessProof || item.fairnessProof,
+                        }
+                      : item,
+                  ),
+                );
               }
-            }).catch(error => {
+            })
+            .catch((error) => {
               console.error('Failed to log wheel game:', error);
             });
+        }
+
+        setHasSpun(true);
+
+        if (adjustedMultiplier > 0) {
+          notification.success(
+            `${segment.color} ${rawMultiplier.toFixed(2)}x → ${winAmount.toFixed(8)} ${symbol} (${adjustedMultiplier.toFixed(2)}x after edge)`,
+          );
+          const credit = await creditNative(
+            winAmount,
+            playAddress,
+            'wheel',
+            {
+              risk,
+              segments: noOfSegments,
+              fairnessProof: fairnessProof || undefined,
+            },
+            serverRoundIdRef.current,
+          );
+          if (!credit.ok) {
+            notification.error(credit.error || 'Could not credit winnings');
           }
+          serverRoundIdRef.current = null;
+        } else {
+          notification.info(`Game over — landed on ${rawMultiplier.toFixed(2)}x`);
+          await releaseStake(playAddress, 'wheel').catch(() => {});
+          serverRoundIdRef.current = null;
+        }
 
-          setIsSpinning(false);
-          setHasSpun(true);
-
-          // Show result and update balance
-          if (actualMultiplier > 0) {
-            notification.success(`Congratulations! ${betAmount} ${symbol} × ${actualMultiplier.toFixed(2)} = ${winAmount.toFixed(8)} ${symbol} won!`);
-            await creditNative(winAmount, playAddress);
-          } else {
-            notification.info(`Game over. Multiplier: ${actualMultiplier.toFixed(2)}x`);
-          }
-
-          // Clean up callback
-          window.wheelBetCallback = null;
-        }, 300); // Wait for color detection to update
+        window.wheelBetCallback = null;
       };
 
     } catch (e) {
@@ -317,25 +311,32 @@ export default function Home() {
 
       setHasSpun(false);
 
-      const debit = await debitNative(currentBet, playAddress);
+      const debit = await debitNative(currentBet, playAddress, 'wheel', {
+        risk,
+        segments: noOfSegments,
+      });
       if (!debit.ok) {
         alert(debit.error || 'Could not place bet');
         break;
       }
+      const roundId = debit.roundId ?? null;
       runningBalance -= currentBet;
 
       let segmentOverride = null;
       let fairnessRound = null;
-      if (fairness.isSolana) {
+      if (fairness.enabled) {
         fairnessRound = await fairness.begin();
-        const wheelData =
-          risk === 'high' ? wheelDataByRisk.high(noOfSegments) : wheelDataByRisk[risk];
-        const probs = wheelData.map((d) => d.probability);
-        segmentOverride = deriveWheelOutcome(fairnessRound.seedBytes, probs) % noOfSegments;
+        segmentOverride = resolveWheelSegmentIndex(
+          fairnessRound.seedBytes,
+          risk,
+          noOfSegments,
+        );
         setForcedSegmentIndex(segmentOverride);
       } else {
         setForcedSegmentIndex(null);
       }
+
+      setLandedSegmentIndex(null);
 
       const roundResult = await new Promise((resolve) => {
         const timeoutId = setTimeout(() => {
@@ -345,28 +346,29 @@ export default function Home() {
           }
         }, 10000);
 
-        window.wheelBetCallback = async () => {
+        window.wheelBetCallback = async (result) => {
           clearTimeout(timeoutId);
           window.wheelBetCallback = null;
 
-          let actualMultiplier = 0;
-          let detectedColor = '#333947';
+          const segmentIndex = result?.segmentIndex ?? segmentOverride ?? 0;
+          setLandedSegmentIndex(segmentIndex);
 
-          await new Promise((r) => setTimeout(r, 300));
+          const payout = computeWheelPayoutNative(
+            currentBet,
+            risk,
+            noOfSegments,
+            segmentIndex,
+          );
+          const profit = payout.payoutNative - currentBet;
 
-          if (window.triggerWheelColorDetection) {
-            const detectionResult = window.triggerWheelColorDetection();
-            if (detectionResult?.multiplier != null) {
-              actualMultiplier = detectionResult.multiplier;
-              detectedColor = detectionResult.color || '#333947';
-            }
-          }
-
-          actualMultiplier = applyHouseEdgeToMultiplier(actualMultiplier, 'wheel');
-          const winAmount = currentBet * actualMultiplier;
-          const profit = winAmount - currentBet;
-
-          resolve({ actualMultiplier, winAmount, profit, detectedColor });
+          resolve({
+            segmentIndex,
+            rawMultiplier: payout.rawMultiplier,
+            actualMultiplier: payout.adjustedMultiplier,
+            winAmount: payout.payoutNative,
+            profit,
+            detectedColor: payout.segment.color,
+          });
         };
 
         setIsSpinning(true);
@@ -379,14 +381,43 @@ export default function Home() {
         break;
       }
 
-      const { actualMultiplier, winAmount, profit, detectedColor } = roundResult;
+      const {
+        segmentIndex,
+        rawMultiplier,
+        actualMultiplier,
+        winAmount,
+        profit,
+        detectedColor,
+      } = roundResult;
 
       setCurrentMultiplier(actualMultiplier);
+      setDetectedMultiplier(rawMultiplier);
       setHasSpun(true);
 
+      let fairnessProof = null;
+      if (fairness.enabled && fairnessRound) {
+        fairnessProof = await fairness.reveal(
+          { segmentIndex, multiplier: rawMultiplier },
+          fairnessRound,
+        );
+        fairness.reset();
+      }
+
       if (actualMultiplier > 0) {
-        await creditNative(winAmount, playAddress);
-        runningBalance += winAmount;
+        const credit = await creditNative(
+          winAmount,
+          playAddress,
+          'wheel',
+          {
+            risk,
+            segments: noOfSegments,
+            fairnessProof: fairnessProof || undefined,
+          },
+          roundId,
+        );
+        if (credit.ok) runningBalance += winAmount;
+      } else {
+        await releaseStake(playAddress, 'wheel').catch(() => {});
       }
 
       totalProfit += profit;
@@ -402,26 +433,18 @@ export default function Home() {
         game: 'Wheel',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         betAmount: currentBet.toFixed(5),
-        multiplier: `${actualMultiplier.toFixed(2)}x`,
+        multiplier: `${rawMultiplier.toFixed(2)}x`,
         payout: winAmount.toFixed(5),
-        result: segmentOverride ?? 0,
+        result: segmentIndex,
         color: detectedColor,
         txHash: null,
-        fairnessProof: null,
+        fairnessProof: fairnessProof || null,
       };
 
       setGameHistory((prev) => [newHistoryItem, ...prev]);
 
       if (playAddress) {
-        const gameResult = `${risk}_${noOfSegments}segments_${actualMultiplier.toFixed(2)}x_${detectedColor}`;
-        let fairnessProof = null;
-        if (fairness.isSolana && fairnessRound) {
-          fairnessProof = await fairness.reveal(
-            { segmentIndex: segmentOverride, multiplier: actualMultiplier },
-            fairnessRound,
-          );
-          fairness.reset();
-        }
+        const gameResult = `${risk}_${noOfSegments}segments_${rawMultiplier.toFixed(2)}x_${detectedColor}`;
         logGame({
           gameType: 'wheel',
           playerAddress: playAddress,
@@ -466,10 +489,12 @@ export default function Home() {
       if (stopLoss > 0 && totalProfit <= -stopLoss) break;
 
       setForcedSegmentIndex(null);
+      setLandedSegmentIndex(null);
     }
 
     setIsSpinning(false);
     setForcedSegmentIndex(null);
+    setLandedSegmentIndex(null);
     setBetAmount(currentBet);
   };
 
@@ -650,9 +675,9 @@ export default function Home() {
               onColorDetected={({ color, multiplier }) => {
                 setDetectedColor(color);
                 setDetectedMultiplier(multiplier);
-                console.log('🎯 Color detected from GameWheel:', color, 'Multiplier:', multiplier);
               }}
               forcedSegmentIndex={forcedSegmentIndex}
+              landedSegmentIndex={landedSegmentIndex}
             />
           </div>
           <div className="w-full lg:w-1/3">

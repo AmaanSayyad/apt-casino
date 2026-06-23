@@ -43,7 +43,7 @@ export function usePlayBalance() {
   const usesServerLedger = config?.balanceMode === 'server';
 
   const debitNative = useCallback(
-    async (amountNative, wallet, game) => {
+    async (amountNative, wallet, game, gameData) => {
       const raw = displayToRaw(amountNative, chain);
       if (demoMode || !usesServerLedger) {
         dispatch(subtractFromBalance(String(raw)));
@@ -59,23 +59,31 @@ export function usePlayBalance() {
         action: 'debit',
         amountNative,
         game,
+        gameData,
         walletAuth,
       });
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
-      return { ok: true };
+      return {
+        ok: true,
+        roundId: result.roundId,
+        serverSeedHash: result.serverSeedHash,
+      };
     },
     [chain, demoMode, dispatch, getWalletAuth, usesServerLedger],
   );
 
   const creditNative = useCallback(
-    async (amountNative, wallet, game) => {
+    async (amountNative, wallet, game, gameRound, roundId) => {
       const raw = displayToRaw(amountNative, chain);
       if (demoMode || !usesServerLedger) {
         dispatch(addToBalance(String(raw)));
         return { ok: true };
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
+      if (!game || !gameRound) {
+        return { ok: false, error: 'Game settlement data required.' };
+      }
       const walletAuth = await getWalletAuth(wallet, chain);
       if (!walletAuth) {
         return { ok: false, error: 'Sign the wallet auth message in your wallet to settle bets.' };
@@ -85,11 +93,13 @@ export function usePlayBalance() {
         action: 'credit',
         amountNative,
         game,
+        gameRound,
+        roundId,
         walletAuth,
       });
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
-      return { ok: true };
+      return { ok: true, payoutAmountNative: result.payoutAmountNative };
     },
     [chain, demoMode, dispatch, getWalletAuth, usesServerLedger],
   );
@@ -118,7 +128,7 @@ export function usePlayBalance() {
   );
 
   const settleNative = useCallback(
-    async (betAmountNative, payoutAmountNative, wallet, game) => {
+    async (betAmountNative, payoutAmountNative, wallet, game, gameRound, roundId) => {
       const betRaw = displayToRaw(betAmountNative, chain);
       const payoutRaw = displayToRaw(payoutAmountNative || 0, chain);
       if (demoMode || !usesServerLedger) {
@@ -128,6 +138,9 @@ export function usePlayBalance() {
         return { ok: true };
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
+      if (!game || !gameRound) {
+        return { ok: false, error: 'Game settlement data required.' };
+      }
       const walletAuth = await getWalletAuth(wallet, chain);
       if (!walletAuth) {
         return { ok: false, error: 'Sign the wallet auth message in your wallet to place bets.' };
@@ -136,13 +149,15 @@ export function usePlayBalance() {
         wallet,
         action: 'settle',
         betAmountNative,
-        payoutAmountNative: payoutAmountNative || 0,
+        payoutAmountNative,
         game,
+        gameRound,
+        roundId,
         walletAuth,
       });
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
-      return { ok: true };
+      return { ok: true, payoutAmountNative: result.payoutAmountNative };
     },
     [chain, demoMode, dispatch, getWalletAuth, usesServerLedger, userBalance],
   );

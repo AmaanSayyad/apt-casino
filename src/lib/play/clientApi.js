@@ -20,7 +20,21 @@ export async function fetchPlayBalance(chainId, wallet) {
   return { ok: true, balanceRaw: data.balanceRaw, balanceNative: data.balanceNative };
 }
 
-export async function postPlayBet(chainId, { wallet, action, amountNative, betAmountNative, payoutAmountNative, game, walletAuth }) {
+export async function postPlayBet(
+  chainId,
+  {
+    wallet,
+    action,
+    amountNative,
+    betAmountNative,
+    payoutAmountNative,
+    game,
+    gameRound,
+    roundId,
+    gameData,
+    walletAuth,
+  },
+) {
   const res = await fetch(playApiPath(chainId, 'bet'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -31,12 +45,22 @@ export async function postPlayBet(chainId, { wallet, action, amountNative, betAm
       betAmountNative,
       payoutAmountNative,
       game,
+      gameRound,
+      roundId,
+      gameData,
       walletAuth,
     }),
   });
   const data = await res.json();
   if (!res.ok) return { ok: false, error: data.error || 'Bet update failed' };
-  return { ok: true, balanceRaw: data.balanceRaw, balanceNative: data.balanceNative };
+  return {
+    ok: true,
+    balanceRaw: data.balanceRaw,
+    balanceNative: data.balanceNative,
+    roundId: data.roundId,
+    serverSeedHash: data.serverSeedHash,
+    payoutAmountNative: data.payoutAmountNative,
+  };
 }
 
 export async function postPlayDeposit(chainId, body) {

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setBalance, setLoading, loadBalanceFromStorage, setDemoMode, refillDemoBalance } from '@/store/balanceSlice';
+import { setBalance, setLoading, setDemoMode, refillDemoBalance } from '@/store/balanceSlice';
 import { demoStartNativeAmount } from '@/lib/play/demoPlay';
 import { toast } from 'react-toastify';
 import PlayWalletConnect from "./wallet/PlayWalletConnect";
@@ -123,22 +123,14 @@ export default function Navbar() {
     }).catch(() => {});
   }, [demoMode, playChain, playWallet.address]);
 
-  // Load balance when wallet connects
+  // Load balance when wallet connects (server-ledger chains sync globally via useServerBalanceSync)
   useEffect(() => {
     if (demoMode) return;
-    if (playConfig?.balanceMode === 'server' && playWallet.address) {
-      loadServerPlayBalance(playWallet.address, playChain);
-      return;
-    }
+    if (playConfig?.balanceMode === 'server') return;
     if (playConfig?.walletProvider === 'aptos' && isWalletReady && address) {
-      const savedBalance = loadBalanceFromStorage();
-      if (savedBalance && savedBalance !== "0") {
-        dispatch(setBalance(savedBalance));
-      } else {
-        loadUserBalance();
-      }
+      loadUserBalance();
     }
-  }, [isWalletReady, address, demoMode, playChain, playWallet.address]);
+  }, [isWalletReady, address, demoMode, playChain, playConfig?.balanceMode, playConfig?.walletProvider]);
 
   // Check if wallet was previously connected on page load
   useEffect(() => {
@@ -606,10 +598,7 @@ export default function Navbar() {
             loadServerPlayBalance(playWallet.address, playChain);
             return;
           }
-          const savedBalance = loadBalanceFromStorage();
-          if (savedBalance && savedBalance !== '0') {
-            dispatch(setBalance(savedBalance));
-          } else if (address) {
+          if (address) {
             loadUserBalance();
           }
         }}

@@ -246,7 +246,7 @@ export default function MostPlayed() {
               <div className="min-w-0 flex-1 text-left">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-display text-lg font-bold text-white truncate">{currentFeatured.name}</h3>
-                  {currentFeatured.playersOnline > 0 && (
+                  {currentFeatured.status === 'live' && (
                     <span className="rounded-full border border-green-500/30 bg-green-900/30 px-1.5 py-0.5 text-[10px] font-medium text-green-400">
                       LIVE
                     </span>
@@ -295,7 +295,7 @@ export default function MostPlayed() {
                       <h3 className="font-display text-2xl md:text-3xl font-bold text-white">
                         {currentFeatured.name}
                       </h3>
-                      {currentFeatured.playersOnline > 0 && (
+                      {currentFeatured.status === 'live' && (
                         <div className="flex items-center gap-1.5 bg-green-900/30 border border-green-500/30 px-2 py-0.5 rounded-full">
                           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                           <span className="text-green-400 text-xs font-medium">LIVE</span>
@@ -392,11 +392,9 @@ export default function MostPlayed() {
                             <FaUsers className="text-green-400" />
                             <span>{game.playersOnline.toLocaleString()}</span>
                           </div>
-                          {game.playersOnline > 0 && (
-                            <div className="absolute top-2 right-2 bg-gradient-to-r from-red-600 to-orange-500 text-white text-xs py-1 px-2 rounded-full flex items-center gap-1.5">
-                              <FaFire className="text-yellow-300" /> LIVE
-                            </div>
-                          )}
+                          <div className="absolute top-2 right-2 bg-gradient-to-r from-red-600 to-orange-500 text-white text-xs py-1 px-2 rounded-full flex items-center gap-1.5">
+                            <FaFire className="text-yellow-300" /> LIVE
+                          </div>
                         </>
                       )}
 
@@ -430,12 +428,10 @@ export default function MostPlayed() {
                           <span className="text-amber-200 text-[10px] font-medium">UPCOMING</span>
                         </div>
                       ) : (
-                        game.playersOnline > 0 && (
-                          <div className="flex items-center gap-1 bg-green-900/30 border border-green-500/30 px-1.5 py-0.5 rounded-full">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-green-400 text-[10px] font-medium">LIVE</span>
-                          </div>
-                        )
+                        <div className="flex items-center gap-1 bg-green-900/30 border border-green-500/30 px-1.5 py-0.5 rounded-full">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                          <span className="text-green-400 text-[10px] font-medium">LIVE</span>
+                        </div>
                       )}
                     </div>
                     <p className="text-[10px] sm:text-xs text-white/55 mt-0.5 text-center px-0.5 line-clamp-2">

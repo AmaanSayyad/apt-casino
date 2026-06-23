@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { DEFAULT_PLAY_CHAIN, resolveActiveChain } from '@/lib/chains/registry';
+import { DEFAULT_PLAY_CHAIN, getPlayChainConfig, resolveActiveChain } from '@/lib/chains/registry';
 import {
   demoStartBalanceRaw,
   readDemoBalancesByChain,
@@ -34,6 +34,15 @@ function resolveDemoBalanceRaw(chain) {
   return demoStartBalanceRaw(chain);
 }
 
+function usesServerLedger(chain) {
+  return getPlayChainConfig(chain)?.balanceMode === 'server';
+}
+
+function shouldPersistUserBalance(state) {
+  if (state.demoMode) return true;
+  return !usesServerLedger(state.activeChain);
+}
+
 function persistDemoBalance(chain, raw) {
   const byChain = readDemoBalancesByChain();
   byChain[chain] = raw;
@@ -54,6 +63,9 @@ const loadInitialState = () => {
     let cleanBalance = '0';
     if (demoMode) {
       cleanBalance = resolveDemoBalanceRaw(activeChain);
+    } else if (usesServerLedger(activeChain)) {
+      // Server is source of truth — stale localStorage must not override fresh fetches.
+      cleanBalance = '0';
     } else {
       const savedBalance = localStorage.getItem('userBalance');
       if (savedBalance && !isNaN(savedBalance) && parseFloat(savedBalance) >= 0) {
@@ -110,7 +122,9 @@ const balanceSlice = createSlice({
         state.userBalance = newBalance;
       }
       if (typeof window !== 'undefined') {
-        localStorage.setItem('userBalance', state.userBalance);
+        if (shouldPersistUserBalance(state)) {
+          localStorage.setItem('userBalance', state.userBalance);
+        }
         if (state.demoMode) {
           persistDemoBalance(state.activeChain, state.userBalance);
         }
@@ -122,7 +136,9 @@ const balanceSlice = createSlice({
       const newBalance = Math.max(0, currentBalance + amountToAdd).toFixed(0);
       state.userBalance = newBalance;
       if (typeof window !== 'undefined') {
-        localStorage.setItem('userBalance', newBalance);
+        if (shouldPersistUserBalance(state)) {
+          localStorage.setItem('userBalance', newBalance);
+        }
         if (state.demoMode) persistDemoBalance(state.activeChain, newBalance);
       }
     },
@@ -132,7 +148,9 @@ const balanceSlice = createSlice({
       const newBalance = Math.max(0, currentBalance - amountToSubtract).toFixed(0);
       state.userBalance = newBalance;
       if (typeof window !== 'undefined') {
-        localStorage.setItem('userBalance', newBalance);
+        if (shouldPersistUserBalance(state)) {
+          localStorage.setItem('userBalance', newBalance);
+        }
         if (state.demoMode) persistDemoBalance(state.activeChain, newBalance);
       }
     },

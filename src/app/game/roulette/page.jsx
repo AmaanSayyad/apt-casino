@@ -33,7 +33,7 @@ import WinProbabilities from './components/WinProbabilities';
 import RouletteHistory from './components/RouletteHistory';
 import { RouletteInfoTriggers, RouletteInfoDialog } from './components/RouletteInfoPanel';
 import { useSelector, useDispatch } from 'react-redux';
-import { setBalance, setLoading, loadBalanceFromStorage } from '@/store/balanceSlice';
+import { setBalance } from '@/store/balanceSlice';
 import { aptosClient, CASINO_MODULE_ADDRESS, parseAptAmount, CasinoGames } from '@/lib/aptos';
 import { houseEdgePercent } from '@/lib/houseEdge';
 import { useGameStats } from '@/hooks/useGameStats';
@@ -1829,14 +1829,14 @@ export default function GameRoulette() {
 
       // Simulate wheel spinning and result after delay
       let fairnessRound = null;
-      if (fairness.isSolana) {
+      if (fairness.enabled) {
         fairnessRound = await fairness.begin();
       }
 
       setTimeout(async () => {
         let winningNumber;
         let fairnessProof = null;
-        if (fairness.isSolana && fairnessRound) {
+        if (fairness.enabled && fairnessRound) {
           winningNumber = deriveRouletteOutcome(fairnessRound.seedBytes);
           fairnessProof = await fairness.reveal({ winningNumber }, fairnessRound);
           setLastFairnessProof(fairnessProof);
@@ -1886,7 +1886,20 @@ export default function GameRoulette() {
         });
 
         // Settle house balance in one call: debit stake + credit winnings (or release on loss).
-        const settled = await settleNative(totalBetAmount, netResult, playAddress, 'roulette');
+        const settled = await settleNative(
+          totalBetAmount,
+          netResult,
+          playAddress,
+          'roulette',
+          {
+            bets: allBets.map((bet) => ({
+              type: bet.type,
+              value: bet.value,
+              amount: bet.amount,
+            })),
+            fairnessProof: fairnessProof || undefined,
+          },
+        );
         if (!settled.ok) {
           console.error('Roulette settle failed:', settled.error);
           showSnackbar(

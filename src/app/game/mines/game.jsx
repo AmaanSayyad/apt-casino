@@ -40,14 +40,22 @@ const SOUNDS = {
   bet: "/sounds/bet.mp3",
 };
 
-const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoundFailed }) => {
+const Game = ({
+  betSettings = {},
+  onGameStatusChange,
+  onGameComplete,
+  onAutoRoundFailed,
+  fairnessEnabled = false,
+  fairnessRoundRef,
+  fairnessReveal,
+}) => {
   // Redux integration
   const dispatch = useDispatch();
   const { userBalance } = useSelector((state) => state.balance);
 
   // Wallet integration
   const { address: playAddress, connected: playConnected, chainLabel } = usePlayWallet();
-  const { balanceNative, debitNative, creditNative, symbol } = usePlayBalance();
+  const { balanceNative, debitNative, creditNative, releaseStake, symbol } = usePlayBalance();
 
   // Game Settings
   const defaultSettings = {
@@ -72,6 +80,8 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
   const autoRevealRunIdRef = useRef(0);
   const startAutoRevealRef = useRef(() => {});
   const cashoutInProgressRef = useRef(false);
+  const serverRoundIdRef = useRef(null);
+  const revealedIndicesRef = useRef([]);
 
   // Game State
   const [grid, setGrid] = useState([]);
@@ -357,10 +367,15 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
         setIsPlaying(true);
         setHasPlacedBet(true);
         playSound('bet');
+        serverRoundIdRef.current = null;
+        revealedIndicesRef.current = [];
 
         void (async () => {
           try {
-            const debit = await debitNative(stake, playAddress);
+            const debit = await debitNative(stake, playAddress, 'mines', {
+              minesCount,
+              gridSize,
+            });
             if (!debit.ok) {
               isPlayingRef.current = false;
               setIsPlaying(false);
@@ -371,6 +386,7 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
               }
               return;
             }
+            serverRoundIdRef.current = debit.roundId ?? null;
 
             if (shouldAutoReveal) {
               startAutoRevealRef.current(tilesToAutoReveal);
@@ -422,6 +438,8 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
         setIsPlaying(false);
         setHasPlacedBet(false);
 
+        void releaseStake(playAddress, 'mines').catch(() => {});
+
         // Reset game state for mine hit
         const resetAfterMine = () => {
           setGameOver(true);
@@ -453,6 +471,10 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
         setTimeout(resetAfterMine, 50);
       } else if (grid[row][col].isDiamond) {
         playSound('gem');
+        const tileIndex = row * gridSize + col;
+        if (!revealedIndicesRef.current.includes(tileIndex)) {
+          revealedIndicesRef.current = [...revealedIndicesRef.current, tileIndex];
+        }
 
         setRevealedCount(prev => {
           const newCount = prev + 1;
@@ -543,7 +565,38 @@ const Game = ({ betSettings = {}, onGameStatusChange, onGameComplete, onAutoRoun
       toast.success(`Cashed out: ${payout.toFixed(4)} ${symbol} (${activeMultiplier.toFixed(2)}x)`);
       playSound('cashout');
 
-      await creditNative(payout, playAddress);
+      let fairnessProof = null;
+      if (fairnessEnabled && fairnessRoundRef?.current && fairnessReveal) {
+        fairnessProof = await fairnessReveal(
+          {
+            mines: minesCount,
+            revealedTiles: activeRevealed,
+            hitMine: false,
+            multiplier: activeMultiplier,
+          },
+          fairnessRoundRef.current,
+        );
+      }
+
+      const credit = await creditNative(
+        payout,
+        playAddress,
+        'mines',
+        {
+          minesCount,
+          gridSize,
+          revealedTiles: activeRevealed,
+          hitMine: false,
+          revealedIndices: revealedIndicesRef.current,
+          fairnessProof: fairnessProof || undefined,
+        },
+        serverRoundIdRef.current,
+      );
+      if (!credit.ok) {
+        toast.error(credit.error || 'Could not credit winnings');
+      }
+
+      serverRoundIdRef.current = null;
 
       if (activeMultiplier > 1.5) {
         setShowConfetti(true);
