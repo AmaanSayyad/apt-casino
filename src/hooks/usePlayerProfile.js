@@ -55,7 +55,12 @@ export function usePlayerProfile() {
     avatarUrl: profile?.resolvedAvatarUrl ?? meta?.avatar_url,
     twitterHandle,
   });
-  const displayName = resolvePlayerDisplayName({ handle, twitterHandle, wallet: address });
+  const displayName = resolvePlayerDisplayName({
+    handle,
+    twitterHandle,
+    avatarUrl: profile?.resolvedAvatarUrl ?? meta?.avatar_url,
+    wallet: address,
+  });
 
   return {
     profile,

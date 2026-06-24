@@ -17,9 +17,10 @@ export default function Footer() {
 
   const socialLinks = [
     { name: 'X (Twitter)', url: 'https://x.com/aptcasinofun', icon: '/icons/twitter.svg' },
-    { name: 'Discord', url: 'https://discord.gg/8dhBmbgMke', icon: '/icons/discord.svg' },
     { name: 'Telegram', url: 'https://t.me/apt_casino', icon: '/icons/telegram.svg' },
+    { name: 'Discord', url: 'https://discord.gg/8dhBmbgMke', icon: '/icons/discord.svg' },
     { name: 'GitHub', url: 'https://github.com/AmaanSayyad/apt-casino', icon: '/icons/github.svg' },
+    { name: 'LinkedIn', url: 'https://www.linkedin.com/company/apt-casino', icon: '/icons/linkedin.svg' },
   ];
 
   const navLinks = [

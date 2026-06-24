@@ -19,7 +19,7 @@ import {
   buildDemoProfilePayload,
   isDemoPlayWallet,
 } from '@/lib/play/demoPlay';
-import { resolvePlayerAvatarUrl, xAvatarUrlFromHandle } from '@/lib/xProfile';
+import { resolvePlayerAvatarUrl, xAvatarUrlFromHandle, isXDerivedAvatarUrl, resolveLinkedTwitterHandle } from '@/lib/xProfile';
 
 export const dynamic = 'force-dynamic';
 
@@ -140,14 +140,31 @@ export async function GET(req: NextRequest) {
     .filter((r) => r.status === 'paid')
     .reduce((s, r) => s + Number(r.reward_octas || 0), 0);
 
+  const rawProfile = profileRes.data ?? null;
+  const linkedTwitter = rawProfile
+    ? resolveLinkedTwitterHandle({
+        twitterHandle: rawProfile.twitter_handle,
+        avatarUrl: rawProfile.avatar_url,
+      })
+    : null;
+
+  if (rawProfile && linkedTwitter && !rawProfile.twitter_handle) {
+    const nowIso = new Date().toISOString();
+    void supabase
+      .from('user_profiles')
+      .update({ twitter_handle: linkedTwitter, updated_at: nowIso })
+      .eq('wallet', wallet);
+    rawProfile.twitter_handle = linkedTwitter;
+  }
+
   return NextResponse.json({
     wallet,
     chain: chainId,
     nativeSymbol: chainCfg?.nativeSymbol ?? (chainId === 'solana' ? 'SOL' : 'APT'),
-    profile: profileRes.data ?? null,
+    profile: rawProfile,
     resolvedAvatarUrl: resolvePlayerAvatarUrl({
-      avatarUrl: profileRes.data?.avatar_url,
-      twitterHandle: profileRes.data?.twitter_handle,
+      avatarUrl: rawProfile?.avatar_url,
+      twitterHandle: linkedTwitter ?? rawProfile?.twitter_handle,
     }),
     onChainBalanceApt: onChainBalanceNative,
     onChainBalanceNative,
@@ -303,6 +320,14 @@ export async function POST(req: NextRequest) {
   if ('twitterHandle' in body) {
     if (body.twitterHandle === null || body.twitterHandle === '') {
       patch.twitter_handle = null;
+      const { data: existing } = await supabase
+        .from('user_profiles')
+        .select('avatar_url')
+        .eq('wallet', wallet)
+        .maybeSingle();
+      if (isXDerivedAvatarUrl(existing?.avatar_url)) {
+        patch.avatar_url = null;
+      }
     } else if (typeof body.twitterHandle === 'string' && TWITTER_RE.test(body.twitterHandle.trim())) {
       patch.twitter_handle = body.twitterHandle.trim().replace(/^@/, '');
     } else {

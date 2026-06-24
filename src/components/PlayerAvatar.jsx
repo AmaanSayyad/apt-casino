@@ -27,8 +27,14 @@ export default function PlayerAvatar({
   );
 
   const label = useMemo(
-    () => resolvePlayerDisplayName({ handle, twitterHandle, wallet }),
-    [handle, twitterHandle, wallet],
+    () =>
+      resolvePlayerDisplayName({
+        handle,
+        twitterHandle,
+        avatarUrl,
+        wallet,
+      }),
+    [handle, twitterHandle, avatarUrl, wallet],
   );
 
   const initials = String(label || '?')

@@ -18,7 +18,6 @@ import {
   FaDice,
   FaExternalLinkAlt,
   FaEdit,
-  FaTwitter,
   FaClock,
   FaCheckCircle,
   FaTimesCircle,
@@ -34,11 +33,13 @@ import {
   FaCoins,
 } from 'react-icons/fa';
 import ProfileEditModal from './ProfileEditModal';
+import XProfileConnect from './XProfileConnect';
 import CashbackPanel from './CashbackPanel';
 import DepositAptcBonusPanel from './DepositAptcBonusPanel';
 import DailyStreakPanel from './DailyStreakPanel';
 import PromotionsPanel from './PromotionsPanel';
 import PlayerAvatar from '@/components/PlayerAvatar';
+import { resolvePlayerDisplayName, resolveLinkedTwitterHandle } from '@/lib/xProfile';
 const TABS = [
   { id: 'overview', label: 'Overview', icon: FaChartLine },
   { id: 'games', label: 'Games', icon: FaDice },
@@ -112,6 +113,13 @@ export default function ProfileDashboard({
   const avatarUrl = profile?.resolvedAvatarUrl ?? profile?.profile?.avatar_url ?? null;
   const bio = profile?.profile?.bio || null;
   const twitter = profile?.profile?.twitter_handle || null;
+  const linkedX = resolveLinkedTwitterHandle({ twitterHandle: twitter, avatarUrl });
+  const playerDisplayName = resolvePlayerDisplayName({
+    handle: displayHandle,
+    twitterHandle: twitter,
+    avatarUrl,
+    wallet: address,
+  });
   const onChainNative = profile?.onChainBalanceNative ?? profile?.onChainBalanceApt ?? null;
   const memberSince = profile?.profile?.created_at || null;
   const netPnl = games?.netProfitApt ?? 0;
@@ -172,7 +180,7 @@ export default function ProfileDashboard({
     <PageShell
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Profile' }]}
       badge={chainLabel || chain}
-      title={displayHandle || 'Player profile'}
+      title={playerDisplayName}
       description="House balance, on-chain stats, and account activity for your connected wallet."
       maxWidth="6xl"
     >
@@ -221,7 +229,7 @@ export default function ProfileDashboard({
               <motion.div className="min-w-0 flex-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.05 }}>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-display text-2xl font-bold text-white md:text-3xl">
-                    {displayHandle || short(address)}
+                    {playerDisplayName}
                   </h2>
                   {demoMode && (
                     <span className="rounded-full border border-amber-400/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-200">
@@ -253,56 +261,51 @@ export default function ProfileDashboard({
 
                 {bio ? <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">{bio}</p> : null}
 
-                <motion.div
-                  className="mt-3 flex flex-wrap gap-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  {twitter ? (
-                    <a
-                      href={`https://x.com/${twitter}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs text-white/80 hover:bg-black/60"
-                    >
-                      <FaTwitter className="text-sky-300" /> @{twitter}
-                    </a>
-                  ) : null}
-                  {memberSince ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs text-white/45">
-                      <FaClock /> Since {new Date(memberSince).toLocaleDateString()}
-                    </span>
-                  ) : null}
-                </motion.div>
+                {memberSince ? (
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-xs text-white/45">
+                    <FaClock /> Since {new Date(memberSince).toLocaleDateString()}
+                  </span>
+                ) : null}
               </motion.div>
             </div>
 
             <motion.div
-              className="flex shrink-0 flex-wrap gap-2 lg:ml-auto lg:flex-col"
+              className="flex w-full shrink-0 flex-col gap-3 lg:ml-auto lg:w-auto lg:max-w-[280px]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.08 }}
             >
-              <button
-                type="button"
-                onClick={() => {
-                  onRefresh();
-                  onRefreshGames();
-                }}
-                disabled={loading}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 disabled:opacity-50"
-              >
-                <FaSync className={loading ? 'animate-spin' : ''} /> Refresh
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                disabled={demoMode}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <FaEdit /> Edit
-              </button>
+              <XProfileConnect
+                wallet={address}
+                chain={chain}
+                twitterHandle={linkedX || twitter}
+                displayHandle={displayHandle}
+                avatarUrl={avatarUrl}
+                demoMode={demoMode}
+                onSaved={onSavedProfile}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onRefresh();
+                    onRefreshGames();
+                  }}
+                  disabled={loading}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 disabled:opacity-50"
+                >
+                  <FaSync className={loading ? 'animate-spin' : ''} /> Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  disabled={demoMode}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+                  title="Edit display name and bio"
+                >
+                  <FaEdit /> Profile
+                </button>
+              </div>
             </motion.div>
           </motion.div>
 

@@ -2,8 +2,6 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
-import ChainConnectModal from './wallet/ChainConnectModal';
 import { ACTIVE_GAMES_COUNT } from '@/lib/gameRegistry';
 import { FaGamepad, FaShieldAlt } from 'react-icons/fa';
 import { getPlayChainsForUi } from '@/lib/chains/registry';
@@ -29,7 +27,6 @@ function StatTile({ icon, label, value, sub, accent }) {
 }
 
 export default function LetsPlaySection() {
-  const [walletModalOpen, setWalletModalOpen] = useState(false);
   const liveChains = getPlayChainsForUi();
 
   return (
@@ -105,24 +102,14 @@ export default function LetsPlaySection() {
                 />
               </div>
 
-              {/* CTAs */}
-              <div className="mt-10 flex w-full max-w-md flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
+              <div className="mt-10 flex justify-center">
                 <Link
                   href="/game"
                   className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-red-magic to-blue-magic px-8 py-3.5 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-fuchsia-900/40 transition hover:brightness-110"
                 >
                   Launch game
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => setWalletModalOpen(true)}
-                  className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] px-8 py-3.5 text-sm font-black uppercase tracking-widest text-white transition hover:border-white/25 hover:bg-white/10"
-                >
-                  Connect wallet
-                </button>
               </div>
-
-              <ChainConnectModal open={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
 
               {/* Trust row */}
               <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">

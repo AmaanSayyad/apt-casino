@@ -17,6 +17,8 @@ import { Network } from '@aptos-labs/ts-sdk';
 import { DEFAULT_NETWORK } from '@/lib/aptos';
 import { formatAptosWalletError, isBenignAptosWalletError } from '@/lib/wallet/aptosWalletErrors';
 import '@aptos-labs/wallet-adapter-ant-design/dist/index.css';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const APTOS_DAPP_NETWORK =
   DEFAULT_NETWORK === 'testnet'
@@ -48,6 +50,14 @@ export default function Providers({ children }) {
                   <SessionTracker />
                   <PlayChainSync />
                   {children}
+                  <ToastContainer
+                    position="top-right"
+                    autoClose={4000}
+                    hideProgressBar={false}
+                    closeOnClick
+                    pauseOnHover
+                    theme="dark"
+                  />
                 </ClientThemeProvider>
               </WalletStatusProvider>
             </NotificationProvider>

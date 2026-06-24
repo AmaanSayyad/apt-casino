@@ -2,9 +2,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { toast } from 'react-toastify';
+import { usePlayWallet } from '@/hooks/usePlayWallet';
+import ChainConnectModal from '@/components/wallet/ChainConnectModal';
+import {
+  buildAptcEntryFeeTransaction,
+  getSolanaConnection,
+  waitForSolanaSignatureConfirmed,
+  formatSolanaError,
+} from '@/lib/solana/client';
 import GradientBorderButton from './GradientBorderButton';
+
+function fmtVol(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return '0';
+  if (v >= 1000) return v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  return v.toLocaleString(undefined, { maximumFractionDigits: 4 });
+}
 
 function formatTimeRemaining(seconds) {
   if (seconds <= 0) return 'Now';
@@ -23,8 +37,10 @@ export default function UpcomingTournaments() {
   const [supabaseConfigured, setSupabaseConfigured] = useState(true);
   const [now, setNow] = useState(() => Date.now());
   const [registeringId, setRegisteringId] = useState(null);
-  const { account, connected } = useWallet();
+  const [connectOpen, setConnectOpen] = useState(false);
+  const { connected, address, chain, isDemo, solana } = usePlayWallet();
   const router = useRouter();
+  const solanaReady = chain === 'solana' && connected && address && solana?.sendTransaction && !isDemo;
 
   const load = useMemo(
     () => async () => {
@@ -52,42 +68,67 @@ export default function UpcomingTournaments() {
   }, []);
 
   const register = async (tournament) => {
-    if (!connected || !account?.address) {
-      toast.error('Connect your wallet first');
+    if (!solanaReady) {
+      toast.error('Connect a Solana wallet to register for tournaments.');
+      setConnectOpen(true);
       return;
     }
+
+    const isVolume = tournament.competitionMode === 'volume';
+    const entryFee = Number(tournament.entryFeeApt) || 0;
     setRegisteringId(tournament.id);
     try {
+      let txHash = null;
+
+      if (entryFee > 0) {
+        toast.info(`Confirm ${fmtVol(entryFee)} APTC entry fee in your wallet…`);
+        const connection = getSolanaConnection();
+        const tx = await buildAptcEntryFeeTransaction(entryFee, address, connection);
+        txHash = await solana.sendTransaction(tx, connection);
+        await waitForSolanaSignatureConfirmed(connection, txHash);
+      }
+
       const res = await fetch('/api/tournaments/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournamentId: tournament.id, wallet: String(account.address) }),
+        body: JSON.stringify({
+          tournamentId: tournament.id,
+          wallet: address,
+          chain: 'solana',
+          txHash,
+        }),
       });
       const d = await res.json();
       if (!res.ok || !d.success) {
         if (res.status === 409) {
           toast.info('Already registered — opening the leaderboard.');
-          if (tournament.competitionMode === 'volume') router.push('/competition');
+          if (isVolume) router.push('/competition');
           load();
           return;
         }
         throw new Error(d.error || 'Registration failed');
       }
-      if (tournament.competitionMode === 'volume') {
-        toast.success("You're in. Play to climb the volume leaderboard.");
+      if (isVolume) {
+        toast.success(
+          entryFee > 0
+            ? `Paid ${fmtVol(entryFee)} APTC — you're in. Play to climb the volume leaderboard.`
+            : "You're in. Play to climb the volume leaderboard.",
+        );
         router.push('/competition');
       } else {
         toast.success("You're registered. Good luck!");
       }
       load();
     } catch (e) {
-      toast.error(e.message || 'Registration failed');
+      toast.error(formatSolanaError(e).message || e.message || 'Registration failed');
     } finally {
       setRegisteringId(null);
     }
   };
 
   return (
+    <>
+    <ChainConnectModal open={connectOpen} onClose={() => setConnectOpen(false)} />
     <section className="py-16 px-4 md:px-8 lg:px-16">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-8">
@@ -248,5 +289,6 @@ export default function UpcomingTournaments() {
         )}
       </div>
     </section>
+    </>
   );
 }

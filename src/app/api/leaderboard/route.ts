@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { normalizeWallet, normalizeWalletForChain } from '@/lib/server/referrals';
 import { getPlayChainConfig, type ChainId } from '@/lib/chains/registry';
 import { loadPlayEventsForLeaderboard } from '@/lib/server/gamePlayEvents';
-import { resolvePlayerAvatarUrl } from '@/lib/xProfile';
+import { resolvePlayerAvatarUrl, resolveLinkedTwitterHandle } from '@/lib/xProfile';
 import { loadBannedWalletKeys, walletMatchesBanSet } from '@/lib/bans/walletBan';
 
 export const dynamic = 'force-dynamic';
@@ -314,14 +314,19 @@ export async function GET(request: NextRequest) {
 
   const leaderboard = top200.map((row, i) => {
     const profile = profiles.get(row.wallet) || profiles.get(normalizeWallet(row.wallet) ?? '') || null;
+    const twitterHandle = resolveLinkedTwitterHandle({
+      twitterHandle: profile?.twitter_handle,
+      avatarUrl: profile?.avatar_url,
+    });
     return {
       rank: i + 1,
       chain: row.chain,
       wallet: row.wallet,
       handle: safeProfileHandle(profile?.handle),
+      twitterHandle,
       avatarUrl: resolvePlayerAvatarUrl({
         avatarUrl: profile?.avatar_url,
-        twitterHandle: profile?.twitter_handle,
+        twitterHandle,
       }),
       bets: row.bets,
       wins: row.wins,

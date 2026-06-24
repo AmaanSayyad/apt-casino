@@ -7,6 +7,27 @@ export function normalizeTwitterHandle(input) {
   return h;
 }
 
+/** Recover X handle when avatar_url was saved but twitter_handle was cleared. */
+export function inferTwitterHandleFromAvatarUrl(avatarUrl) {
+  if (!avatarUrl || typeof avatarUrl !== 'string') return null;
+  const m = avatarUrl.trim().match(/unavatar\.io\/x\/([^/?#]+)/i);
+  if (!m?.[1]) return null;
+  try {
+    return normalizeTwitterHandle(decodeURIComponent(m[1]));
+  } catch {
+    return normalizeTwitterHandle(m[1]);
+  }
+}
+
+export function isXDerivedAvatarUrl(avatarUrl) {
+  return !!inferTwitterHandleFromAvatarUrl(avatarUrl);
+}
+
+/** Effective linked X handle from stored fields (handles legacy partial saves). */
+export function resolveLinkedTwitterHandle({ twitterHandle, avatarUrl } = {}) {
+  return normalizeTwitterHandle(twitterHandle) || inferTwitterHandleFromAvatarUrl(avatarUrl);
+}
+
 /** Public X profile photo via unavatar.io (no OAuth / API key required). */
 export function xAvatarUrlFromHandle(handle) {
   const h = normalizeTwitterHandle(handle);
@@ -27,12 +48,13 @@ export function isSafeAvatarUrl(url) {
 /** Prefer stored avatar; fall back to live X profile photo when handle is linked. */
 export function resolvePlayerAvatarUrl({ avatarUrl, twitterHandle } = {}) {
   if (isSafeAvatarUrl(avatarUrl)) return avatarUrl.trim();
-  return xAvatarUrlFromHandle(twitterHandle);
+  const x = resolveLinkedTwitterHandle({ twitterHandle, avatarUrl });
+  return xAvatarUrlFromHandle(x);
 }
 
-export function resolvePlayerDisplayName({ handle, twitterHandle, wallet } = {}) {
+export function resolvePlayerDisplayName({ handle, twitterHandle, wallet, avatarUrl } = {}) {
   if (handle && String(handle).trim()) return String(handle).trim();
-  const x = normalizeTwitterHandle(twitterHandle);
+  const x = resolveLinkedTwitterHandle({ twitterHandle, avatarUrl });
   if (x) return `@${x}`;
   if (wallet) {
     const s = String(wallet);

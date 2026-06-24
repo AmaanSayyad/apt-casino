@@ -15,7 +15,10 @@ import {
   FaSyncAlt,
   FaExternalLinkAlt,
 } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import { CHAINS } from '@/lib/chains';
+import PlayerAvatar from '@/components/PlayerAvatar';
+import { normalizeTwitterHandle, resolvePlayerDisplayName, resolveLinkedTwitterHandle } from '@/lib/xProfile';
 
 const METRIC_TABS = [
   { id: 'pnl', label: 'Net P&L', icon: <FaTrophy />, hint: 'Highest net profit' },
@@ -346,11 +349,7 @@ function PodiumCard({ row, metric, isYou }) {
           <span className="text-xs uppercase tracking-widest text-white/55">{style.label}</span>
         </div>
         <div className="flex items-center gap-3">
-          <Avatar url={row.avatarUrl} fallback={(row.handle || row.wallet || '?').slice(0, 2)} size={48} />
-          <div className="min-w-0">
-            <p className="font-bold truncate">{row.handle || short(row.wallet)}</p>
-            <p className="text-[11px] font-mono text-white/45 truncate">{short(row.wallet)}</p>
-          </div>
+          <PlayerCell row={row} isYou={isYou} avatarSize={48} nameClass="font-bold" />
         </div>
         <div className="mt-4">
           <PrimaryStat row={row} metric={metric} large />
@@ -368,6 +367,10 @@ function PodiumCard({ row, metric, isYou }) {
 function LeaderboardRow({ row, metric, isYou }) {
   const profileHref = `/profile?wallet=${encodeURIComponent(row.wallet)}`;
   const explorerHref = explorerAddressUrl(row.wallet);
+  const xHandle = resolveLinkedTwitterHandle({
+    twitterHandle: row.twitterHandle,
+    avatarUrl: row.avatarUrl,
+  });
   const pnlClass = row.pnlApt > 0 ? 'text-emerald-300' : row.pnlApt < 0 ? 'text-rose-300' : 'text-white/70';
   const winrateClass =
     row.winrate >= 0.55 ? 'text-emerald-300' : row.winrate <= 0.4 ? 'text-rose-300' : 'text-white/70';
@@ -380,20 +383,7 @@ function LeaderboardRow({ row, metric, isYou }) {
         <RankCell rank={row.rank} highlighted={metricHighlightsRank(metric)} />
       </td>
       <td className="px-4 py-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <Avatar url={row.avatarUrl} fallback={(row.handle || row.wallet || '?').slice(0, 2)} />
-          <div className="min-w-0">
-            <p className="font-semibold truncate">
-              {row.handle || short(row.wallet)}
-              {isYou && (
-                <span className="ml-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300 align-middle">
-                  You
-                </span>
-              )}
-            </p>
-            <p className="text-[11px] font-mono text-white/40 truncate">{short(row.wallet)}</p>
-          </div>
-        </div>
+        <PlayerCell row={row} isYou={isYou} />
       </td>
       <td className={`px-4 py-3 text-right font-bold ${pnlClass}`}>{fmtSignedApt(row.pnlApt)}</td>
       <td className="px-4 py-3 text-right">{fmtApt(row.wageredApt, { max: 2 })} SOL · APT</td>
@@ -404,6 +394,17 @@ function LeaderboardRow({ row, metric, isYou }) {
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2 justify-end">
+          {xHandle && (
+            <a
+              href={`https://x.com/${xHandle}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sky-400/70 hover:text-sky-300"
+              title="Open X profile"
+            >
+              <FaXTwitter className="text-xs" />
+            </a>
+          )}
           <Link href={profileHref} className="text-white/40 hover:text-white" title="View profile">
             <FaUserFriends className="text-xs" />
           </Link>
@@ -459,26 +460,50 @@ function RankCell({ rank }) {
   return <span className="text-white/55">#{rank}</span>;
 }
 
-function Avatar({ url, fallback, size = 36 }) {
-  const initials = String(fallback || '?').slice(0, 2).toUpperCase();
+function PlayerCell({ row, isYou, avatarSize = 36, nameClass = 'font-semibold' }) {
+  const xHandle = resolveLinkedTwitterHandle({
+    twitterHandle: row.twitterHandle,
+    avatarUrl: row.avatarUrl,
+  });
+  const displayName = resolvePlayerDisplayName({
+    handle: row.handle,
+    twitterHandle: row.twitterHandle,
+    avatarUrl: row.avatarUrl,
+    wallet: row.wallet,
+  });
+
   return (
-    <div
-      className="rounded-full overflow-hidden border border-white/10 bg-gradient-to-br from-red-magic/30 to-blue-magic/30 flex items-center justify-center shrink-0"
-      style={{ width: size, height: size }}
-    >
-      {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={url}
-          alt={initials}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-      ) : (
-        <span className="text-[11px] font-bold text-white/80">{initials}</span>
-      )}
+    <div className="flex items-center gap-3 min-w-0">
+      <PlayerAvatar
+        avatarUrl={row.avatarUrl}
+        twitterHandle={row.twitterHandle}
+        handle={row.handle}
+        wallet={row.wallet}
+        size={avatarSize}
+      />
+      <div className="min-w-0">
+        <p className={`${nameClass} truncate`}>
+          {displayName}
+          {isYou && (
+            <span className="ml-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300 align-middle">
+              You
+            </span>
+          )}
+        </p>
+        {xHandle && row.handle ? (
+          <a
+            href={`https://x.com/${xHandle}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-sky-400/90 hover:text-sky-300"
+          >
+            <FaXTwitter className="shrink-0 text-[10px]" />
+            <span className="truncate">@{xHandle}</span>
+          </a>
+        ) : (
+          <p className="text-[11px] font-mono text-white/40 truncate">{short(row.wallet)}</p>
+        )}
+      </div>
     </div>
   );
 }

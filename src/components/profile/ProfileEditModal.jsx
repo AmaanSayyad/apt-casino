@@ -1,17 +1,12 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import PlayerAvatar from '@/components/PlayerAvatar';
-import { normalizeTwitterHandle } from '@/lib/xProfile';
 
 export default function ProfileEditModal({ initial, wallet, chain, onClose, onSaved }) {
   const [handle, setHandle] = useState(initial?.handle || '');
   const [bio, setBio] = useState(initial?.bio || '');
-  const [twitterHandle, setTwitterHandle] = useState(initial?.twitter_handle || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-
-  const xLinked = !!normalizeTwitterHandle(twitterHandle);
 
   const submit = useCallback(async () => {
     setSaving(true);
@@ -25,7 +20,6 @@ export default function ProfileEditModal({ initial, wallet, chain, onClose, onSa
           chain,
           handle: handle || null,
           bio: bio || null,
-          twitterHandle: twitterHandle || null,
         }),
       });
       const j = await r.json().catch(() => ({}));
@@ -43,7 +37,7 @@ export default function ProfileEditModal({ initial, wallet, chain, onClose, onSa
     } finally {
       setSaving(false);
     }
-  }, [wallet, chain, handle, bio, twitterHandle, onSaved, onClose]);
+  }, [wallet, chain, handle, bio, onSaved, onClose]);
 
   return (
     <div
@@ -58,33 +52,10 @@ export default function ProfileEditModal({ initial, wallet, chain, onClose, onSa
       >
         <h3 className="font-display text-xl font-bold text-white">Edit profile</h3>
         <p className="mt-1 text-xs text-white/45">
-          Link your X handle — your profile photo is used across the site (navbar, leaderboard, games).
+          Set a display name and bio. Link your X account from the profile card above.
         </p>
 
         <div className="mt-5 space-y-3">
-          <Field label="X handle">
-            <div className="flex items-center gap-3">
-              <PlayerAvatar
-                twitterHandle={twitterHandle}
-                handle={handle}
-                wallet={wallet}
-                size={52}
-                rounded="rounded-xl"
-              />
-              <input
-                value={twitterHandle}
-                onChange={(e) => setTwitterHandle(e.target.value.replace(/^@/, ''))}
-                placeholder="username"
-                className="min-w-0 flex-1 rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-purple-400/60"
-                maxLength={15}
-              />
-            </div>
-            <p className="mt-1.5 text-[11px] text-white/40">
-              {xLinked
-                ? 'Your X profile photo will appear everywhere after you save.'
-                : 'Add your X username to show your profile photo app-wide.'}
-            </p>
-          </Field>
           <Field label="Display handle (2–24 chars)">
             <input
               value={handle}
