@@ -216,7 +216,7 @@ export default function DangerZonePanel({
       <Panel variant="danger" className="p-6 space-y-4">
         <h3 className="text-xs font-bold uppercase tracking-widest text-rose-300">Global wallet ban list</h3>
         <p className="text-sm text-white/50">
-          Blocks deposits, bets, and withdrawals. EVM/Aptos addresses normalized; Solana matched exactly.
+          Blocks deposits, bets, and withdrawals. Erases all house ledger, play history, referrals, and profile data for the wallet.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <input

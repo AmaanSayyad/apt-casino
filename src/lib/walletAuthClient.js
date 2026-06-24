@@ -14,13 +14,16 @@ export async function signWalletAuth({
   signSolanaMessage,
   signAptosMessage,
   aptosPublicKey,
+  fresh = false,
 }) {
   if (!wallet?.trim()) return null;
 
   const cacheKey = `${chain}:${wallet}`;
-  const cached = authCache.get(cacheKey);
-  if (cached && cached.expires > Date.now()) {
-    return cached.auth;
+  if (!fresh) {
+    const cached = authCache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) {
+      return cached.auth;
+    }
   }
 
   const timestamp = Date.now();

@@ -16,7 +16,7 @@ export function useWalletAuth() {
   const { account, signMessage: signAptosMessage } = useAptosWallet();
 
   const getWalletAuth = useCallback(
-    async (wallet, chainOverride) => {
+    async (wallet, chainOverride, options = {}) => {
       const chain = chainOverride || activeChain;
       const resolvedWallet =
         wallet ||
@@ -30,6 +30,7 @@ export function useWalletAuth() {
         signSolanaMessage: chain === 'solana' ? signSolanaMessage : null,
         signAptosMessage: chain === 'aptos' ? signAptosMessage : null,
         aptosPublicKey: account?.publicKey?.toString?.() ?? null,
+        fresh: options.fresh === true,
       });
     },
     [activeChain, publicKey, account, signSolanaMessage, signAptosMessage],

@@ -74,6 +74,15 @@ export function walletMatchesBanSet(wallet: string, banned: Set<string>): boolea
   return banned.has(key);
 }
 
+export function filterBannedWalletRows<T>(
+  rows: T[],
+  banned: Set<string>,
+  getWallet: (row: T) => string | null | undefined,
+): T[] {
+  if (banned.size === 0) return rows;
+  return rows.filter((row) => !walletMatchesBanSet(String(getWallet(row) ?? ''), banned));
+}
+
 export type AccountStatus = 'active' | 'frozen' | 'banned';
 
 export async function getWalletAccountStatus(address: string): Promise<AccountStatus> {

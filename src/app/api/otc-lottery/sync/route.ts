@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
   }
 
   const sender = normalizeSolWallet(body.solSenderWallet || '');
-  const aptcReceive = normalizeSolWallet(body.aptcReceiveWallet || sender);
+  const aptcReceive = sender;
   const explicitSig = String(body.solTxSignature || '').trim();
 
   if (!isValidSolanaAddress(sender)) {

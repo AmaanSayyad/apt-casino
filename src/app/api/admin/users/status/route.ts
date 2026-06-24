@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { requireDashboardAdmin } from '@/lib/admin/requireDashboardAdmin';
-import { normalizeWalletForBanKey, walletAddressSearchVariants } from '@/lib/admin/walletAddressVariants';
+import { normalizeWalletForBanKey } from '@/lib/admin/walletAddressVariants';
+import { purgeWalletPlatformData } from '@/lib/bans/purgeWalletData';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,15 +50,13 @@ export async function POST(request: NextRequest) {
         { wallet_address: key, reason: reason || 'Banned via account status' },
         { onConflict: 'wallet_address' },
       );
+
+    const purge = await purgeWalletPlatformData(db, userAddress);
+    return NextResponse.json({ success: true, status, wallet: key, purge });
   }
 
   if (status === 'active') {
     await db.from('banned_wallets').delete().eq('wallet_address', key);
-  }
-
-  const variants = walletAddressSearchVariants(userAddress);
-  if (variants.length > 0) {
-    await db.from('user_house_balances').select('user_address').in('user_address', variants);
   }
 
   return NextResponse.json({ success: true, status, wallet: key });

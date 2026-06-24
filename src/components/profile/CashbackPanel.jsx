@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaGift, FaCoins, FaInfoCircle } from 'react-icons/fa';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { fmtNative } from './ProfileDashboard';
 
 export default function CashbackPanel({
@@ -16,6 +17,7 @@ export default function CashbackPanel({
   const [claiming, setClaiming] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const { getWalletAuth } = useWalletAuth();
 
   if (!cashback || chain !== 'solana') return null;
 
@@ -40,10 +42,14 @@ export default function CashbackPanel({
     setSuccess(null);
     setClaiming(true);
     try {
+      const walletAuth = await getWalletAuth(wallet, 'solana', { fresh: true });
+      if (!walletAuth) {
+        throw new Error('Sign the wallet ownership prompt to claim cashback.');
+      }
       const res = await fetch('/api/profile/cashback/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wallet, chain: 'solana' }),
+        body: JSON.stringify({ wallet, chain: 'solana', walletAuth }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Claim failed');

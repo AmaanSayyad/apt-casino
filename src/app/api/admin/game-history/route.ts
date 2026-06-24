@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { requireDashboardAdmin } from '@/lib/admin/requireDashboardAdmin';
+import { filterBannedWalletRows, loadBannedWalletKeys } from '@/lib/bans/walletBan';
 import { getPlayChainConfig } from '@/lib/chains/registry';
 
 export const dynamic = 'force-dynamic';
@@ -28,12 +29,15 @@ export async function GET(request: NextRequest) {
     q = q.eq('chain', chainFilter.toLowerCase());
   }
 
-  const { data, error } = await q;
+  const [{ data, error }, bannedWallets] = await Promise.all([
+    q,
+    loadBannedWalletKeys(),
+  ]);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const bets = (data ?? []).map((r) => {
+  const bets = filterBannedWalletRows(data ?? [], bannedWallets, (r) => r.wallet).map((r) => {
     const cfg = getPlayChainConfig(String(r.chain));
     const units = cfg?.units ?? 1e9;
     const bet = Number(r.bet_raw) / units;

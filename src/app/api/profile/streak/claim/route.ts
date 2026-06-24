@@ -24,7 +24,10 @@ export async function POST(req: NextRequest) {
   const guard = await walletGuardResponse(wallet);
   if (guard) return guard;
 
-  const authErr = assertWalletAuth(wallet, chain, readWalletAuthFromBody(body));
+  const authErr = await assertWalletAuth(wallet, chain, readWalletAuthFromBody(body), {
+    consume: true,
+    purpose: 'streak_claim',
+  });
   if (authErr) return authErr;
 
   const result = await claimDailyStreak(wallet, chain);

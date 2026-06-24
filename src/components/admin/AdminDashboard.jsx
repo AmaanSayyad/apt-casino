@@ -151,6 +151,8 @@ export default function AdminDashboard() {
       setSyncing(true);
       setSessionError('');
       try {
+        await adminFetch('/api/admin/banned-wallets/reconcile', t, { method: 'POST' });
+
         const [
           statsJson,
           usersRes,

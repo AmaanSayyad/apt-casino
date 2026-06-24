@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { claimCashback } from '@/lib/server/cashback';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
+import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  let body: { wallet?: string; chain?: string } = {};
+  if (rateLimitRequest(req, { key: 'cashback-claim', limit: 12, windowMs: 60_000 })) {
+    return NextResponse.json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
+  }
+
+  let body: { wallet?: string; chain?: string; walletAuth?: unknown } = {};
   try {
     body = await req.json();
   } catch {
@@ -25,6 +31,12 @@ export async function POST(req: NextRequest) {
 
   const guard = await walletGuardResponse(wallet);
   if (guard) return guard;
+
+  const authErr = await assertWalletAuth(wallet, chain, readWalletAuthFromBody(body), {
+    consume: true,
+    purpose: 'cashback_claim',
+  });
+  if (authErr) return authErr;
 
   const result = await claimCashback(wallet, chain);
   if (!result.ok) {

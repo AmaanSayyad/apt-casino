@@ -30,6 +30,7 @@ import {
 } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
 import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
 import { incrementRefereeVolumeUsd } from '@/lib/server/referralAptc';
@@ -81,7 +82,7 @@ export async function solanaBetPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
     if (authErr) return authErr;
 
     const cfg = getPlayChainConfig(CHAIN)!;
@@ -133,6 +134,9 @@ export async function solanaBetPOST(request: Request) {
 
 export async function solanaDepositPOST(request: Request) {
   try {
+    if (rateLimitRequest(request, { key: 'solana-deposit', limit: 20, windowMs: 60_000 })) {
+      return NextResponse.json({ error: 'Too many deposit requests. Please try again shortly.' }, { status: 429 });
+    }
     const body = await request.json();
     const wallet = normalizeWalletForChain(String(body.wallet || '').trim(), CHAIN);
     if (!wallet) {
@@ -140,7 +144,7 @@ export async function solanaDepositPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
     if (authErr) return authErr;
     const amountNative = parseFloat(body.amountNative ?? body.amountSol);
     const txSignature = String(body.txSignature || '').trim();
@@ -342,6 +346,9 @@ export async function solanaDepositPOST(request: Request) {
 
 export async function solanaWithdrawPOST(request: Request) {
   try {
+    if (rateLimitRequest(request, { key: 'solana-withdraw', limit: 8, windowMs: 60_000 })) {
+      return NextResponse.json({ error: 'Too many withdrawal requests. Please try again shortly.' }, { status: 429 });
+    }
     const body = await request.json();
     const walletRaw = String(body.wallet || '').trim();
     const wallet = normalizeWalletForChain(walletRaw, CHAIN);
@@ -350,7 +357,10 @@ export async function solanaWithdrawPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body), {
+      consume: true,
+      purpose: 'withdraw',
+    });
     if (authErr) return authErr;
     const amountNative = parseFloat(body.amountNative ?? body.amountSol);
     const { minWithdraw } = limits();

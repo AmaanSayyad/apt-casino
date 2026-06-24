@@ -109,13 +109,22 @@ async function main() {
       { onConflict: 'wallet' },
     );
 
-    await db
-      .from('user_house_balances')
-      .update({ balance_raw: '0', updated_at: new Date().toISOString() })
-      .eq('user_address', f.wallet)
-      .eq('chain', f.chain);
+    const tables = [
+      'user_house_balances',
+      'game_play_events',
+      'deposits_log',
+      'withdrawal_requests',
+      'tracked_wallets',
+      'referral_codes',
+      'game_sessions',
+      'play_pending_stakes',
+    ];
+    for (const table of tables) {
+      const col = table === 'user_house_balances' ? 'user_address' : 'wallet';
+      await db.from(table).delete().eq(col, f.wallet);
+    }
 
-    console.log(`Banned + zeroed balance: ${banKey}`);
+    console.log(`Banned + purged: ${banKey}`);
   }
 
   console.log('\nDone.');

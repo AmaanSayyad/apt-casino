@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import PageShell from '@/components/layout/PageShell';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import {
   buildAptcStakeTransaction,
   waitForSolanaSignatureConfirmed,
@@ -66,6 +67,7 @@ function fmtStakeAmount(n) {
 
 export default function StakePage() {
   const { publicKey, connected, sendTransaction } = useWallet();
+  const { getWalletAuth } = useWalletAuth();
   const { connection } = useConnection();
   const address = publicKey?.toBase58() || null;
 
@@ -297,10 +299,14 @@ export default function StakePage() {
       }
       setClaimingId(positionId);
       try {
+        const walletAuth = await getWalletAuth(address, 'solana', { fresh: true });
+        if (!walletAuth) {
+          throw new Error('Sign the wallet ownership prompt in your wallet to claim.');
+        }
         const res = await fetch('/api/staking/claim', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userAddress: address, positionId }),
+          body: JSON.stringify({ userAddress: address, positionId, walletAuth }),
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || 'Failed to claim');
@@ -312,7 +318,7 @@ export default function StakePage() {
         setClaimingId(null);
       }
     },
-    [address, refreshPositions, refreshStats],
+    [address, getWalletAuth, refreshPositions, refreshStats],
   );
 
   const totalStakedByUser = useMemo(

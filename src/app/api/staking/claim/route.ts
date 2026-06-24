@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { transferBynomoFromStakingVault } from '@/lib/solana/backend-client';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,10 @@ export const dynamic = 'force-dynamic';
  * Claims a matured staking position and sends principal + reward from the staking vault.
  */
 export async function POST(req: NextRequest) {
+  if (rateLimitRequest(req, { key: 'staking-claim', limit: 6, windowMs: 60_000 })) {
+    return NextResponse.json({ error: 'Too many claim requests. Please try again shortly.' }, { status: 429 });
+  }
+
   const supabase = getSupabaseAdmin();
   if (!supabase) {
     return NextResponse.json(
@@ -32,41 +37,40 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'userAddress is required' }, { status: 400 });
   }
 
-  const authErr = assertWalletAuth(userAddress, 'solana', readWalletAuthFromBody(body));
+  const authErr = await assertWalletAuth(userAddress, 'solana', readWalletAuthFromBody(body), {
+    consume: true,
+    purpose: 'staking_claim',
+  });
   if (authErr) return authErr;
   if (!Number.isFinite(positionId) || positionId <= 0) {
     return NextResponse.json({ error: 'positionId is required' }, { status: 400 });
   }
 
-  const { data: pos, error: posErr } = await supabase
-    .from('staking_positions')
-    .select(
-      'id, user_address, status, amount, apy_bps, lock_days, unlock_at',
-    )
-    .eq('id', positionId)
-    .single();
+  const { data: claimRows, error: claimErr } = await supabase.rpc('claim_staking_position_atomic', {
+    p_position_id: positionId,
+    p_user_address: userAddress,
+  });
 
-  if (posErr || !pos) {
-    return NextResponse.json({ error: 'Position not found.' }, { status: 404 });
-  }
-  if (pos.user_address !== userAddress) {
-    return NextResponse.json({ error: 'Position does not belong to this wallet.' }, { status: 403 });
-  }
-  if (pos.status !== 'active') {
-    return NextResponse.json({ error: 'Position is not claimable.' }, { status: 400 });
-  }
-  if (new Date(pos.unlock_at).getTime() > Date.now()) {
-    return NextResponse.json(
-      { error: 'Position is still locked.', unlockAt: pos.unlock_at },
-      { status: 400 },
-    );
+  if (claimErr) {
+    const msg = claimErr.message || 'Claim failed';
+    if (/position_not_found/i.test(msg)) {
+      return NextResponse.json({ error: 'Position not found.' }, { status: 404 });
+    }
+    if (/position_owner_mismatch/i.test(msg)) {
+      return NextResponse.json({ error: 'Position does not belong to this wallet.' }, { status: 403 });
+    }
+    if (/position_still_locked/i.test(msg)) {
+      return NextResponse.json({ error: 'Position is still locked.' }, { status: 400 });
+    }
+    if (/position_not_claimable|claim_staking_position_atomic|does not exist/i.test(msg)) {
+      return NextResponse.json({ error: 'Position is not claimable.' }, { status: 400 });
+    }
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 
-  const amount = Number(pos.amount);
-  const apyBps = Number(pos.apy_bps);
-  const lockDays = Number(pos.lock_days);
-  const reward = Math.round(amount * (apyBps / 10_000) * (lockDays / 365) * 1e8) / 1e8;
-  const payout = Math.round((amount + reward) * 1e8) / 1e8;
+  const claim = Array.isArray(claimRows) ? claimRows[0] : claimRows;
+  const reward = Number(claim?.reward ?? 0);
+  const payout = Number(claim?.payout ?? 0);
 
   let payoutTxHash: string | null = null;
   try {
@@ -77,27 +81,9 @@ export async function POST(req: NextRequest) {
       {
         error: 'Failed to send APTC payout from the staking vault.',
         detail,
+        note: 'Position marked claimed in database; contact support if payout did not arrive.',
       },
       { status: 503 },
-    );
-  }
-
-  const nowIso = new Date().toISOString();
-  const { error: updErr } = await supabase
-    .from('staking_positions')
-    .update({
-      status: 'claimed',
-      reward_amount: reward,
-      total_payout: payout,
-      claimed_at: nowIso,
-      updated_at: nowIso,
-    })
-    .eq('id', positionId);
-
-  if (updErr) {
-    return NextResponse.json(
-      { error: 'Failed to mark position as claimed.', detail: updErr.message },
-      { status: 500 },
     );
   }
 

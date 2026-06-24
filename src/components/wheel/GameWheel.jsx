@@ -62,6 +62,8 @@ const GameWheel = ({
   const onColorDetectedRef = useRef(onColorDetected);
   const onSegmentLandedRef = useRef(onSegmentLanded);
   const setWheelPositionRef = useRef(setWheelPosition);
+  const forcedSegmentIndexRef = useRef(forcedSegmentIndex);
+  const wasSpinningRef = useRef(false);
 
   const wheelData = useMemo(
     () => buildExpandedWheelSegments(risk, noOfSegments),
@@ -82,6 +84,7 @@ const GameWheel = ({
   onColorDetectedRef.current = onColorDetected;
   onSegmentLandedRef.current = onSegmentLanded;
   setWheelPositionRef.current = setWheelPosition;
+  forcedSegmentIndexRef.current = forcedSegmentIndex;
 
   const activeIndex =
     landedSegmentIndex != null
@@ -200,16 +203,20 @@ const GameWheel = ({
   }, [drawWheel, isSpinning, wheelPosition]);
 
   useEffect(() => {
-    if (!isSpinning || !canvasRef.current) return;
+    const wasSpinning = wasSpinningRef.current;
+    wasSpinningRef.current = isSpinning;
+
+    if (!isSpinning || wasSpinning || !canvasRef.current) return;
 
     playSpinSound();
 
     let cancelled = false;
     let rafId;
 
+    const forced = forcedSegmentIndexRef.current;
     const selectedIndex =
-      forcedSegmentIndex != null && forcedSegmentIndex >= 0
-        ? forcedSegmentIndex % segments
+      forced != null && forced >= 0
+        ? forced % segments
         : selectSegmentIndexByProbability(wheelData);
     const totalSpins = 5;
     const targetPosition = wheelRotationForSegmentIndex(selectedIndex, segments);
@@ -238,6 +245,7 @@ const GameWheel = ({
         return;
       }
 
+      wheelPositionRef.current = newPosition;
       setWheelPositionRef.current(newPosition);
 
       const landedIndex = segmentIndexUnderPointer(newPosition, segments);
@@ -265,7 +273,7 @@ const GameWheel = ({
       cancelled = true;
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [drawWheel, isSpinning, segments, wheelData, forcedSegmentIndex]);
+  }, [drawWheel, isSpinning, segments, wheelData]);
 
   return (
     <div className="flex flex-col justify-between items-center h-full w-full">

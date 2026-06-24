@@ -29,6 +29,7 @@ import { handlePlayBetAction } from '@/lib/server/play/betSettlement';
 import { assertWithdrawalAllowed } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
 import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 import { isValidReferralCode, normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
 import {
@@ -146,7 +147,7 @@ export async function aptosBetPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
     if (authErr) return authErr;
 
     const cfg = getPlayChainConfig(CHAIN)!;
@@ -198,6 +199,9 @@ export async function aptosBetPOST(request: Request) {
 
 export async function aptosDepositPOST(request: Request) {
   try {
+    if (rateLimitRequest(request, { key: 'aptos-deposit', limit: 20, windowMs: 60_000 })) {
+      return NextResponse.json({ error: 'Too many deposit requests. Please try again shortly.' }, { status: 429 });
+    }
     const body = await request.json();
     const wallet = normalizeWalletForChain(
       String(body.wallet || body.userAddress || '').trim(),
@@ -208,7 +212,7 @@ export async function aptosDepositPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
     if (authErr) return authErr;
 
     const txHash = String(body.txSignature || body.transactionHash || '').trim();
@@ -499,6 +503,9 @@ export async function aptosDepositPOST(request: Request) {
 
 export async function aptosWithdrawPOST(request: Request) {
   try {
+    if (rateLimitRequest(request, { key: 'aptos-withdraw', limit: 8, windowMs: 60_000 })) {
+      return NextResponse.json({ error: 'Too many withdrawal requests. Please try again shortly.' }, { status: 429 });
+    }
     const body = await request.json();
     const wallet = normalizeWalletForChain(String(body.wallet || body.userAddress || '').trim(), CHAIN);
     if (!wallet) {
@@ -506,7 +513,10 @@ export async function aptosWithdrawPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
+    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body), {
+      consume: true,
+      purpose: 'withdraw',
+    });
     if (authErr) return authErr;
 
     const amountNative = parseFloat(body.amountNative ?? body.amount);

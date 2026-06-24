@@ -10,6 +10,10 @@ import {
 import { isDemoPlayWallet } from '@/lib/play/demoPlay';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { rateLimitRequest } from '@/lib/server/requestRateLimit';
+
+const MAX_LOG_BET_NATIVE = 1_000_000;
+const MAX_LOG_PAYOUT_NATIVE = 1_000_000;
 
 const aptos = getAptosForServer();
 
@@ -27,6 +31,9 @@ function aptosOnChainGameLogEnabled(): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    if (rateLimitRequest(request, { key: 'log-game', limit: 60, windowMs: 60_000 })) {
+      return NextResponse.json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
+    }
     const body = await request.json();
     const { gameType, playerAddress, betAmount, result, payout, fairnessProof } = body;
     const chain = (body.chain === 'solana' ? 'solana' : 'aptos') as ChainId;
@@ -35,7 +42,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 });
     }
 
-    const authErr = assertWalletAuth(wallet, chain, readWalletAuthFromBody(body));
+    const authErr = await assertWalletAuth(wallet, chain, readWalletAuthFromBody(body));
     if (authErr) return authErr;
 
     if (!gameType || betAmount == null || !result || payout === undefined) {
@@ -47,6 +54,13 @@ export async function POST(request: NextRequest) {
     }
 
     const betN = Number(betAmount);
+    const payoutN = Number(payout);
+    if (!Number.isFinite(betN) || betN < 0 || betN > MAX_LOG_BET_NATIVE) {
+      return NextResponse.json({ error: 'Invalid bet amount' }, { status: 400 });
+    }
+    if (!Number.isFinite(payoutN) || payoutN < 0 || payoutN > MAX_LOG_PAYOUT_NATIVE) {
+      return NextResponse.json({ error: 'Invalid payout amount' }, { status: 400 });
+    }
     const proof = chain === 'solana' ? (fairnessProof as SolanaFairnessProof | undefined) : undefined;
     const proofReference = proof?.proofReference ?? null;
 
@@ -76,7 +90,7 @@ export async function POST(request: NextRequest) {
       game: gameType,
       wallet,
       betNative: betN,
-      payoutNative: Number(payout),
+      payoutNative: payoutN,
       result: String(result),
       fairnessProof: proof ?? null,
       proofReference,

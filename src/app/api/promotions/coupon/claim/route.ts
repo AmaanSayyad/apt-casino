@@ -4,6 +4,10 @@ import {
   claimCouponPromotion,
   getClientIp,
 } from '@/lib/server/promotions';
+import { normalizeWalletForChain } from '@/lib/server/referrals';
+import { walletGuardResponse } from '@/lib/server/walletGuard';
+import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,9 +16,14 @@ type Body = {
   chain?: ChainId;
   code?: string;
   deviceFingerprint?: string;
+  walletAuth?: unknown;
 };
 
 export async function POST(request: NextRequest) {
+  if (rateLimitRequest(request, { key: 'promo-coupon-claim', limit: 12, windowMs: 60_000 })) {
+    return NextResponse.json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
+  }
+
   let body: Body;
   try {
     body = await request.json();
@@ -22,12 +31,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const wallet = String(body.wallet || '').trim();
-  const code = String(body.code || '').trim();
   const chain = body.chain === 'aptos' ? 'aptos' : 'solana';
+  const wallet = normalizeWalletForChain(String(body.wallet || '').trim(), chain);
+  const code = String(body.code || '').trim();
   if (!wallet || !code) {
     return NextResponse.json({ error: 'wallet and code are required' }, { status: 400 });
   }
+
+  const guard = await walletGuardResponse(wallet);
+  if (guard) return guard;
+
+  const authErr = await assertWalletAuth(wallet, chain, readWalletAuthFromBody(body), {
+    consume: true,
+    purpose: 'coupon_claim',
+  });
+  if (authErr) return authErr;
 
   const result = await claimCouponPromotion({
     wallet,

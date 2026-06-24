@@ -4,7 +4,7 @@ import { creditHouseBalance, getHouseBalance } from '@/lib/server/houseBalance';
 import { fetchDepositsForWallet, walletLookupKeys } from '@/lib/server/profileLedger';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
-import { nativeToRaw, rawToNative } from '@/lib/server/play/amounts';
+import { rawToNative } from '@/lib/server/play/amounts';
 
 /** 1% of lifetime net deposits (basis points). */
 export const CASHBACK_CAP_BPS = 100n;
@@ -284,60 +284,55 @@ export async function claimCashback(
   wallet: string,
   chain: ChainId = 'solana',
 ): Promise<{ ok: true; creditedNative: number; balanceNative: number } | { ok: false; error: string }> {
-  const status = await getCashbackStatus(wallet, chain);
-  if (!status) return { ok: false, error: 'Cashback not available' };
-
-  if (!status.isBusted) {
-    return {
-      ok: false,
-      error:
-        'Cashback can be claimed when your house balance is empty. Keep playing to unlock more, or use your remaining balance first.',
-    };
+  if (!SUPPORTED.includes(chain)) {
+    return { ok: false, error: 'Cashback not available' };
   }
 
-  const claimableRaw = nativeToRaw(chain, status.claimableNative);
-  if (claimableRaw <= 0n) {
-    return { ok: false, error: 'No cashback available to claim' };
-  }
+  const normalized = normalizeWalletForChain(wallet, chain);
+  if (!normalized) return { ok: false, error: 'Invalid wallet' };
+
+  await syncCashbackCap(normalized, chain);
+  await backfillCashbackFromPlayHistory(normalized, chain);
 
   const db = getSupabaseAdmin();
   if (!db) return { ok: false, error: 'Database not configured' };
 
-  const cfg = getPlayChainConfig(chain)!;
-  const normalized = status.wallet;
+  const { data, error } = await db.rpc('claim_cashback_sol_atomic', {
+    p_wallet: normalized,
+  });
 
-  const row = await ensureRow(normalized, chain);
-  if (!row) return { ok: false, error: 'Cashback record not found' };
-
-  const claimedRaw = BigInt(String(row.claimed_raw ?? 0));
-  const newClaimed = claimedRaw + claimableRaw;
-  const now = new Date().toISOString();
-
-  try {
-    const newBalance = await creditHouseBalance({
-      wallet: normalized,
-      chain,
-      currency: cfg.dbCurrency,
-      amountRaw: claimableRaw,
-    });
-
-    await db
-      .from('wallet_cashback')
-      .update({
-        claimed_raw: newClaimed.toString(),
-        last_claim_at: now,
-        updated_at: now,
-      })
-      .eq('wallet', normalized)
-      .eq('chain', chain);
-
-    return {
-      ok: true,
-      creditedNative: rawToNative(chain, claimableRaw),
-      balanceNative: rawToNative(chain, newBalance),
-    };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Claim failed';
+  if (error) {
+    const msg = error.message || 'Claim failed';
+    if (/not_busted/i.test(msg)) {
+      return {
+        ok: false,
+        error:
+          'Cashback can be claimed when your house balance is empty. Keep playing to unlock more, or use your remaining balance first.',
+      };
+    }
+    if (/nothing_to_claim/i.test(msg)) {
+      return { ok: false, error: 'No cashback available to claim' };
+    }
+    if (/no_cashback_record/i.test(msg)) {
+      return { ok: false, error: 'Cashback record not found' };
+    }
+    if (/claim_cashback_sol_atomic|function.*does not exist/i.test(msg)) {
+      return { ok: false, error: 'Cashback claims are temporarily unavailable. Please try again shortly.' };
+    }
     return { ok: false, error: msg };
   }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  const creditedRaw = BigInt(String(row?.credited_raw ?? 0));
+  const balanceRaw = BigInt(String(row?.balance_raw ?? 0));
+
+  if (creditedRaw <= 0n) {
+    return { ok: false, error: 'No cashback available to claim' };
+  }
+
+  return {
+    ok: true,
+    creditedNative: rawToNative(chain, creditedRaw),
+    balanceNative: rawToNative(chain, balanceRaw),
+  };
 }

@@ -10,6 +10,7 @@ import {
 } from '@/lib/server/otcLottery';
 import { fetchAptcDexscreenerStats } from '@/lib/server/dexscreener';
 import { fetchSolUsdPrice, formatOtcEntry } from '@/lib/server/otcLottery';
+import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 import {
   fetchTransactionWithRetries,
   lamportsToSol,
@@ -30,6 +31,10 @@ type EnterBody = {
 };
 
 export async function POST(request: NextRequest) {
+  if (rateLimitRequest(request, { key: 'otc-lottery-enter', limit: 15, windowMs: 60_000 })) {
+    return NextResponse.json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
+  }
+
   const cfg = getOtcLotteryConfig();
   if (!cfg.enabled) {
     return NextResponse.json({ error: 'OTC lottery is not open yet.' }, { status: 403 });
@@ -52,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   const solSenderWallet = normalizeSolWallet(body.solSenderWallet || '');
   const solTxSignature = String(body.solTxSignature || '').trim();
-  const aptcReceiveWallet = normalizeSolWallet(body.aptcReceiveWallet || '');
+  const aptcReceiveWallet = solSenderWallet;
   let solAmount = Number(body.solAmount);
   let sentAtRaw = body.solSentAt ? new Date(body.solSentAt) : new Date();
 
@@ -80,9 +85,6 @@ export async function POST(request: NextRequest) {
 
   if (!isValidSolanaAddress(solSenderWallet)) {
     return NextResponse.json({ error: 'Invalid Solana sender wallet' }, { status: 400 });
-  }
-  if (!isValidSolanaAddress(aptcReceiveWallet)) {
-    return NextResponse.json({ error: 'Invalid APTC receive wallet (Solana)' }, { status: 400 });
   }
   if (!isValidSolTxSignature(solTxSignature)) {
     return NextResponse.json({ error: 'Invalid Solana transaction signature' }, { status: 400 });

@@ -22,6 +22,8 @@ const nextConfig = {
   reactStrictMode: false,
   async redirects() {
     return [
+      { source: '/games', destination: '/game', permanent: true },
+      { source: '/volume-cup', destination: '/competition', permanent: true },
       {
         source: '/Lucas Advisor.JPG',
         destination: '/lucas-advisor.jpg',

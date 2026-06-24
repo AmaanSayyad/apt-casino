@@ -535,3 +535,14 @@ body {
     radial-gradient(ellipse 50% 40% at 20% 20%, rgba(6, 182, 212, 0.08), transparent 55%),
     radial-gradient(ellipse 45% 35% at 80% 30%, rgba(139, 92, 246, 0.1), transparent 50%);
 }
+
+/* Keyboard focus — visible ring on interactive elements */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid rgba(217, 70, 239, 0.85);
+  outline-offset: 2px;
+}

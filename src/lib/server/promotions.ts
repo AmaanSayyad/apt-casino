@@ -1,8 +1,10 @@
 import { createHash } from 'crypto';
 import type { ChainId } from '@/lib/chains/registry';
-import { creditHouseBalance, lamportsToSol, solToLamports } from '@/lib/server/houseBalance';
+import { lamportsToSol, solToLamports } from '@/lib/server/houseBalance';
 import { aptcPriceUsd } from '@/lib/server/referralAptc';
+import { fetchSolUsdPrice } from '@/lib/server/otcLottery';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
+import { getWalletNetDepositedNative } from '@/lib/server/withdrawalGuards';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 
 export type PromotionType = 'coupon' | 'deposit_deal';
@@ -198,62 +200,51 @@ export async function claimCouponPromotion(input: {
   const rewardSol = Number(row.reward_sol || 0);
   if (!(rewardSol > 0)) return { ok: false as const, error: 'Coupon reward is not configured' };
 
-  const ipHash = input.ipAddress ? hashPromotionSignal(`ip:${input.ipAddress}`) : null;
-  const deviceHash = input.deviceFingerprint ? hashPromotionSignal(`dev:${input.deviceFingerprint}`) : null;
-
-  const walletCheck = await db
-    .from('promo_coupon_claims')
-    .select('id', { head: true, count: 'exact' })
-    .eq('campaign_id', row.id)
-    .eq('wallet', wallet)
-    .eq('chain', input.chain);
-  const ipCheck = ipHash
-    ? await db
-        .from('promo_coupon_claims')
-        .select('id', { head: true, count: 'exact' })
-        .eq('campaign_id', row.id)
-        .eq('ip_hash', ipHash)
-    : { count: 0 };
-  const deviceCheck = deviceHash
-    ? await db
-        .from('promo_coupon_claims')
-        .select('id', { head: true, count: 'exact' })
-        .eq('campaign_id', row.id)
-        .eq('device_hash', deviceHash)
-    : { count: 0 };
-  if ((walletCheck?.count ?? 0) > 0) return { ok: false as const, error: 'This wallet already claimed this coupon.' };
-  if ((ipCheck?.count ?? 0) > 0) return { ok: false as const, error: 'This device/network already claimed this coupon.' };
-  if ((deviceCheck?.count ?? 0) > 0) return { ok: false as const, error: 'This device already claimed this coupon.' };
-
-  if (row.max_claims && row.max_claims > 0) {
-    const { count } = await db.from('promo_coupon_claims').select('id', { head: true, count: 'exact' }).eq('campaign_id', row.id);
-    if ((count ?? 0) >= row.max_claims) {
-      return { ok: false as const, error: 'Coupon claim limit reached.' };
+  const minDepositUsd = Number(row.min_deposit_usd ?? 0);
+  if (minDepositUsd > 0) {
+    const netNative = await getWalletNetDepositedNative(wallet, 'solana');
+    const solUsd = await fetchSolUsdPrice();
+    const depositedUsd = solUsd && netNative > 0 ? netNative * solUsd : 0;
+    if (depositedUsd < minDepositUsd) {
+      return {
+        ok: false as const,
+        error: `Minimum deposit of $${minDepositUsd.toFixed(2)} required before claiming this coupon.`,
+      };
     }
   }
 
+  const ipHash = input.ipAddress ? hashPromotionSignal(`ip:${input.ipAddress}`) : null;
+  const deviceHash = input.deviceFingerprint ? hashPromotionSignal(`dev:${input.deviceFingerprint}`) : null;
+
   const rewardRaw = solToLamports(rewardSol);
-  const nextBalance = await creditHouseBalance({
-    wallet,
-    chain: 'solana',
-    currency: 'SOL',
-    amountRaw: rewardRaw,
+
+  const { data: rpcBalance, error: rpcErr } = await db.rpc('claim_promo_coupon_atomic', {
+    p_campaign_id: row.id,
+    p_code: code,
+    p_wallet: wallet,
+    p_chain: input.chain,
+    p_reward_raw: rewardRaw.toString(),
+    p_ip_hash: ipHash,
+    p_device_hash: deviceHash,
+    p_user_agent: input.userAgent || null,
+    p_max_claims: row.max_claims && row.max_claims > 0 ? row.max_claims : null,
   });
 
-  const { error: insErr } = await db.from('promo_coupon_claims').insert({
-    campaign_id: row.id,
-    code,
-    wallet,
-    chain: input.chain,
-    reward_native: rewardSol,
-    reward_raw: rewardRaw.toString(),
-    ip_hash: ipHash,
-    device_hash: deviceHash,
-    user_agent: input.userAgent || null,
-  });
-  if (insErr) {
-    return { ok: false as const, error: insErr.message };
+  if (rpcErr) {
+    const msg = rpcErr.message || 'Claim failed';
+    if (/already_claimed|unique/i.test(msg)) {
+      return { ok: false as const, error: 'This wallet, device, or network already claimed this coupon.' };
+    }
+    if (/coupon_limit_reached/i.test(msg)) {
+      return { ok: false as const, error: 'Coupon claim limit reached.' };
+    }
+    if (/claim_promo_coupon_atomic|function.*does not exist/i.test(msg)) {
+      return { ok: false as const, error: 'Coupon claims are temporarily unavailable. Please try again shortly.' };
+    }
+    return { ok: false as const, error: msg };
   }
+
+  const nextBalance = BigInt(rpcBalance ?? 0);
 
   return {
     ok: true as const,

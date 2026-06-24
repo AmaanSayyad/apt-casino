@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { requireDashboardAdmin } from '@/lib/admin/requireDashboardAdmin';
 import { getPlayChainConfig } from '@/lib/chains/registry';
+import { filterBannedWalletRows, loadBannedWalletKeys } from '@/lib/bans/walletBan';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,13 +15,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase not configured', rows: [] }, { status: 503 });
   }
 
-  const [{ data: deposits }, { data: withdrawals }, { data: balances }, { data: events }, { data: tracked }] =
+  const [{ data: deposits }, { data: withdrawals }, { data: balances }, { data: events }, { data: tracked }, bannedWallets] =
     await Promise.all([
     db.from('deposits_log').select('wallet, chain, amount_native, created_at'),
     db.from('withdrawal_requests').select('wallet, chain, gross_apt, status, created_at'),
     db.from('user_house_balances').select('user_address, chain, currency, balance_raw'),
     db.from('game_play_events').select('wallet, chain, bet_raw, payout_raw'),
     db.from('tracked_wallets').select('wallet, chain, first_seen_at'),
+    loadBannedWalletKeys(),
   ]);
 
   type Row = {
@@ -64,14 +66,14 @@ export async function GET(request: NextRequest) {
     return map.get(k)!;
   };
 
-  for (const t of tracked ?? []) {
+  for (const t of filterBannedWalletRows(tracked ?? [], bannedWallets, (r) => r.wallet)) {
     const row = ensure(t.wallet, t.chain);
     if (!row.joinedAt || t.first_seen_at < row.joinedAt) {
       row.joinedAt = t.first_seen_at;
     }
   }
 
-  for (const d of deposits ?? []) {
+  for (const d of filterBannedWalletRows(deposits ?? [], bannedWallets, (r) => r.wallet)) {
     const row = ensure(d.wallet, d.chain);
     row.deposited += Number(d.amount_native);
     if (!row.firstDepositAt || d.created_at < row.firstDepositAt) {
@@ -82,14 +84,14 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  for (const w of withdrawals ?? []) {
+  for (const w of filterBannedWalletRows(withdrawals ?? [], bannedWallets, (r) => r.wallet)) {
     if (w.status === 'completed') {
       const row = ensure(w.wallet, w.chain);
       row.withdrawn += Number(w.gross_apt);
     }
   }
 
-  for (const b of balances ?? []) {
+  for (const b of filterBannedWalletRows(balances ?? [], bannedWallets, (r) => r.user_address)) {
     const cfg = getPlayChainConfig(String(b.chain));
     const units = cfg?.units ?? 1e9;
     const row = ensure(b.user_address, b.chain);
@@ -97,7 +99,7 @@ export async function GET(request: NextRequest) {
     row.withdrawableNow = row.balance;
   }
 
-  for (const e of events ?? []) {
+  for (const e of filterBannedWalletRows(events ?? [], bannedWallets, (r) => r.wallet)) {
     const cfg = getPlayChainConfig(String(e.chain));
     const units = cfg?.units ?? 1e9;
     const row = ensure(e.wallet, e.chain);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { requireDashboardAdmin } from '@/lib/admin/requireDashboardAdmin';
+import { filterBannedWalletRows, loadBannedWalletKeys } from '@/lib/bans/walletBan';
 import { getPlayChainConfig } from '@/lib/chains/registry';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   const limit = Math.min(200, Math.max(10, Number(new URL(request.url).searchParams.get('limit')) || 80));
 
-  const [{ data: deposits }, { data: withdrawals }] = await Promise.all([
+  const [{ data: deposits }, { data: withdrawals }, bannedWallets] = await Promise.all([
     db
       .from('deposits_log')
       .select('id, chain, wallet, amount_native, fee_octas, net_credited_octas, user_tx_hash, created_at')
@@ -29,6 +30,7 @@ export async function GET(request: NextRequest) {
       )
       .order('created_at', { ascending: false })
       .limit(limit),
+    loadBannedWalletKeys(),
   ]);
 
   const tx: {
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
     createdAt: string;
   }[] = [];
 
-  for (const d of deposits ?? []) {
+  for (const d of filterBannedWalletRows(deposits ?? [], bannedWallets, (r) => r.wallet)) {
     const sym = getPlayChainConfig(String(d.chain))?.nativeSymbol ?? String(d.chain).toUpperCase();
     tx.push({
       id: `dep-${d.id}`,
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  for (const w of withdrawals ?? []) {
+  for (const w of filterBannedWalletRows(withdrawals ?? [], bannedWallets, (r) => r.wallet)) {
     const sym = getPlayChainConfig(String(w.chain))?.nativeSymbol ?? String(w.chain).toUpperCase();
     tx.push({
       id: `wd-${w.id}`,

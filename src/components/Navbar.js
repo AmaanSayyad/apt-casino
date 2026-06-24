@@ -24,6 +24,7 @@ import { usePlayWallet } from '@/hooks/usePlayWallet';
 import { DEFAULT_PLAY_CHAIN, getPlayChainConfig, rawToDisplay, displayToRaw } from '@/lib/chains/registry';
 import { fetchPlayBalance, postPlayWithdraw } from '@/lib/play/clientApi';
 import { OPEN_BALANCE_MODAL_EVENT } from '@/hooks/useWalletStatus';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { LITEPAPER_PATH } from '@/lib/siteMetadata';
 
 export default function Navbar() {
@@ -44,6 +45,7 @@ export default function Navbar() {
   const { connected: isConnected, account, signAndSubmitTransaction, wallet, disconnect: disconnectAptos } = useWallet();
   const { disconnect: disconnectSolana } = useSolanaWallet();
   const playWallet = usePlayWallet();
+  const { getWalletAuth } = useWalletAuth();
   const { deposit: playDeposit, isDepositing: isPlayDepositing } = usePlayDeposit({
     signAndSubmitTransaction,
     isDemo: demoMode,
@@ -241,9 +243,15 @@ export default function Navbar() {
       }
 
       if (playConfig?.balanceMode === 'server') {
+        const walletAuth = await getWalletAuth(playWallet.address, playChain, { fresh: true });
+        if (!walletAuth) {
+          notification.error('Sign the wallet ownership prompt in your wallet to withdraw.');
+          return;
+        }
         const result = await postPlayWithdraw(playChain, {
           wallet: playWallet.address,
           amountNative,
+          walletAuth,
         });
         if (!result.ok) throw new Error(result.error || 'Withdrawal failed');
 
@@ -275,6 +283,12 @@ export default function Navbar() {
         return;
       }
 
+      const walletAuth = await getWalletAuth(account.address, 'aptos', { fresh: true });
+      if (!walletAuth) {
+        notification.error('Sign the wallet ownership prompt in your wallet to withdraw.');
+        return;
+      }
+
       const response = await fetch('/api/withdraw', {
         method: 'POST',
         headers: {
@@ -282,7 +296,10 @@ export default function Navbar() {
         },
         body: JSON.stringify({
           userAddress: account.address,
+          wallet: account.address,
           amount: amountNative,
+          amountNative,
+          walletAuth,
         }),
       });
 

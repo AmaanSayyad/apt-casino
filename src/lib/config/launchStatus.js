@@ -89,7 +89,7 @@ export function getLaunchStyles() {
 export function getHeroImagePath() {
   return isAptcLaunched() 
     ? '/images/APTC-Launched.jpg'
-    : '/22launch.jpg';
+    : '/26junelaunch.jpg';
 }
 
 /**

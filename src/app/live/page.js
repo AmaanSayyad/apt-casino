@@ -428,7 +428,14 @@ export default function LivePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
           {streams.length === 0 && listSource === "loading" && (
-            <div className="col-span-full text-white/60 text-sm">Loading streams…</div>
+            <div className="col-span-full flex flex-col items-center justify-center gap-3 py-16 text-white/60">
+              <div
+                className="h-10 w-10 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin"
+                role="status"
+                aria-label="Loading streams"
+              />
+              <p className="text-sm">Loading streams…</p>
+            </div>
           )}
           {streams.length === 0 && listSource !== "loading" && (
             <div className="col-span-full rounded-xl border border-purple-500/20 bg-white/5 p-8 text-center">

@@ -11,6 +11,8 @@ import {
   type WalletAuthPayload,
 } from '@/lib/walletAuthMessage';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
+import { getAptosForServer } from '@/lib/server/aptTreasury';
+import { consumeWalletAuthSignature } from '@/lib/server/walletAuthConsume';
 
 export function isWalletAuthRequired(): boolean {
   const raw = process.env.WALLET_AUTH_REQUIRED?.trim().toLowerCase();
@@ -35,6 +37,18 @@ function parseChainFromMessage(message: string): string | null {
   return line ? line.slice('chain: '.length).trim() : null;
 }
 
+function normalizeAptosHex(hex: string): string {
+  let s = hex.trim().toLowerCase();
+  if (!s.startsWith('0x')) s = `0x${s}`;
+  return s;
+}
+
+function normalizeAptosAddressHex(addr: string): string {
+  let hex = addr.trim().toLowerCase();
+  hex = hex.startsWith('0x') ? hex.slice(2) : hex;
+  return hex.padStart(64, '0');
+}
+
 function verifySolanaWalletAuth(wallet: string, message: string, signature: string): boolean {
   try {
     const pubkey = new PublicKey(wallet);
@@ -46,7 +60,7 @@ function verifySolanaWalletAuth(wallet: string, message: string, signature: stri
   }
 }
 
-function verifyAptosWalletAuth(message: string, signature: string, publicKey?: string | null): boolean {
+function verifyAptosSignature(message: string, signature: string, publicKey?: string | null): boolean {
   if (!publicKey?.trim()) return false;
   try {
     const pub = new Ed25519PublicKey(publicKey.trim());
@@ -62,36 +76,68 @@ function verifyAptosWalletAuth(message: string, signature: string, publicKey?: s
   }
 }
 
-export function verifyWalletAuthPayload(
+/** Bind signer public key to the claimed Aptos account (standard + rotated keys). */
+async function aptosPublicKeyOwnsWallet(wallet: string, publicKeyHex: string): Promise<boolean> {
+  try {
+    const pub = new Ed25519PublicKey(publicKeyHex.trim());
+    const signerAuthKey = pub.authKey();
+    const walletNorm = normalizeAptosAddressHex(wallet);
+    const derivedNorm = normalizeAptosAddressHex(signerAuthKey.derivedAddress().toString());
+
+    if (walletNorm === derivedNorm) return true;
+
+    const aptos = getAptosForServer();
+    const info = await aptos.getAccountInfo({ accountAddress: wallet });
+    const onChainAuth = normalizeAptosHex(String(info.authentication_key ?? ''));
+    const signerAuth = normalizeAptosHex(signerAuthKey.toString());
+    return onChainAuth === signerAuth;
+  } catch {
+    return false;
+  }
+}
+
+function validateAuthEnvelope(
   wallet: string,
   chain: ChainId,
   auth: WalletAuthPayload | null | undefined,
-): boolean {
-  if (!auth?.message?.trim() || !auth.signature?.trim()) return false;
+): { ok: true; normalized: string; message: string } | { ok: false } {
+  if (!auth?.message?.trim() || !auth.signature?.trim()) return { ok: false };
 
   const message = auth.message.trim();
-  if (!message.includes(`domain: ${WALLET_AUTH_DOMAIN}`)) return false;
+  if (!message.includes(`domain: ${WALLET_AUTH_DOMAIN}`)) return { ok: false };
 
   const msgWallet = parseWalletFromMessage(message);
   const msgChain = parseChainFromMessage(message);
   const normalized = normalizeWalletForChain(wallet, chain);
-  const normalizedMsgWallet = msgWallet
-    ? normalizeWalletForChain(msgWallet, chain)
-    : null;
-  if (!normalized || !normalizedMsgWallet || normalized !== normalizedMsgWallet) return false;
-  if (msgChain !== chain) return false;
+  const normalizedMsgWallet = msgWallet ? normalizeWalletForChain(msgWallet, chain) : null;
+  if (!normalized || !normalizedMsgWallet || normalized !== normalizedMsgWallet) return { ok: false };
+  if (msgChain !== chain) return { ok: false };
 
   const ts = auth.timestamp ?? parseTimestampFromMessage(message);
-  if (ts == null || Math.abs(Date.now() - ts) > WALLET_AUTH_MAX_AGE_MS) return false;
+  if (ts == null || Math.abs(Date.now() - ts) > WALLET_AUTH_MAX_AGE_MS) return { ok: false };
 
   const expected = buildWalletAuthMessage(normalized, chain, ts);
-  if (message !== expected) return false;
+  if (message !== expected) return { ok: false };
+
+  return { ok: true, normalized, message };
+}
+
+export async function verifyWalletAuthPayload(
+  wallet: string,
+  chain: ChainId,
+  auth: WalletAuthPayload | null | undefined,
+): Promise<boolean> {
+  const envelope = validateAuthEnvelope(wallet, chain, auth);
+  if (!envelope.ok) return false;
 
   if (chain === 'solana') {
-    return verifySolanaWalletAuth(normalized, message, auth.signature.trim());
+    return verifySolanaWalletAuth(envelope.normalized, envelope.message, auth!.signature.trim());
   }
   if (chain === 'aptos') {
-    return verifyAptosWalletAuth(message, auth.signature.trim(), auth.publicKey);
+    if (!verifyAptosSignature(envelope.message, auth!.signature.trim(), auth!.publicKey)) {
+      return false;
+    }
+    return aptosPublicKeyOwnsWallet(envelope.normalized, auth!.publicKey!);
   }
   return false;
 }
@@ -114,12 +160,38 @@ export function walletAuthErrorResponse(): NextResponse {
   );
 }
 
-export function assertWalletAuth(
+export function walletAuthReplayResponse(): NextResponse {
+  return NextResponse.json(
+    {
+      error: 'This wallet signature was already used. Sign a fresh auth message and retry.',
+      code: 'wallet_auth_replay',
+    },
+    { status: 401 },
+  );
+}
+
+export async function assertWalletAuth(
   wallet: string,
   chain: ChainId,
   auth: WalletAuthPayload | null | undefined,
-): NextResponse | null {
+  opts?: { consume?: boolean; purpose?: string },
+): Promise<NextResponse | null> {
   if (!isWalletAuthRequired()) return null;
-  if (verifyWalletAuthPayload(wallet, chain, auth)) return null;
-  return walletAuthErrorResponse();
+  if (!(await verifyWalletAuthPayload(wallet, chain, auth))) {
+    return walletAuthErrorResponse();
+  }
+
+  if (opts?.consume && auth) {
+    const normalized = normalizeWalletForChain(wallet, chain) ?? wallet;
+    const consumed = await consumeWalletAuthSignature(auth, normalized, chain, opts.purpose);
+    if (consumed === 'replay') return walletAuthReplayResponse();
+    if (consumed === 'unavailable' && process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'Auth replay protection unavailable. Try again shortly.', code: 'wallet_auth_store' },
+        { status: 503 },
+      );
+    }
+  }
+
+  return null;
 }

@@ -60,6 +60,7 @@ export default function Home() {
   const { address: playAddress, connected: playConnected, chainLabel } = usePlayWallet();
   const { balanceNative, debitNative, creditNative, releaseStake, symbol, chain: playChain } = usePlayBalance();
   const serverRoundIdRef = useRef(null);
+  const spinTimeoutRef = useRef(null);
   const fairness = useProvableFairness('wheel', playAddress);
   const [forcedSegmentIndex, setForcedSegmentIndex] = useState(null);
   const [landedSegmentIndex, setLandedSegmentIndex] = useState(null);
@@ -103,6 +104,15 @@ export default function Home() {
     saveGameBetHistory('wheel', playChain, playAddress, gameHistory);
   }, [gameHistory, playAddress, playChain]);
 
+  const clearSpinTimeout = () => {
+    if (spinTimeoutRef.current) {
+      clearTimeout(spinTimeoutRef.current);
+      spinTimeoutRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearSpinTimeout(), []);
+
   // Scroll to section function
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -111,25 +121,145 @@ export default function Home() {
     }
   };
 
+  const handleSpinComplete = async (result, {
+    bet,
+    segmentOverride,
+    fairnessRound,
+  }) => {
+    clearSpinTimeout();
+    const segmentIndex = result?.segmentIndex ?? segmentOverride ?? 0;
+    setLandedSegmentIndex(segmentIndex);
+    setIsSpinning(false);
+
+    const payout = computeWheelPayoutNative(bet, risk, noOfSegments, segmentIndex);
+    const { rawMultiplier, adjustedMultiplier, payoutNative: winAmount, segment } = payout;
+
+    setDetectedColor(segment.color);
+    setDetectedMultiplier(rawMultiplier);
+    setCurrentMultiplier(adjustedMultiplier);
+
+    const newHistoryItem = {
+      id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+      game: 'Wheel',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      betAmount: bet.toFixed(5),
+      multiplier: `${rawMultiplier.toFixed(2)}x`,
+      payout: winAmount.toFixed(5),
+      result: segmentIndex,
+      color: segment.color,
+      txHash: null,
+      fairnessProof: null,
+    };
+
+    setGameHistory((prev) => [newHistoryItem, ...prev]);
+
+    let fairnessProof = null;
+    if (fairness.enabled && fairnessRound) {
+      fairnessProof = await fairness.reveal(
+        { segmentIndex, multiplier: rawMultiplier },
+        fairnessRound,
+      );
+      fairness.reset();
+    }
+
+    if (playAddress) {
+      const gameResult = `${risk}_${noOfSegments}segments_${rawMultiplier.toFixed(2)}x_${segment.color}`;
+      logGame({
+        gameType: 'wheel',
+        playerAddress: playAddress,
+        betAmount: bet,
+        result: gameResult,
+        payout: winAmount,
+        fairnessProof,
+      })
+        .then((res) => {
+          if (res?.success) {
+            setGameHistory((prev) =>
+              prev.map((item) =>
+                item.id === newHistoryItem.id
+                  ? {
+                      ...item,
+                      txHash: res.transactionHash || res.proofReference || null,
+                      explorerUrl: res.explorerUrl || null,
+                      fairnessProof: fairnessProof || item.fairnessProof,
+                    }
+                  : item,
+              ),
+            );
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to log wheel game:', error);
+        });
+    }
+
+    setHasSpun(true);
+
+    if (adjustedMultiplier > 0) {
+      notification.success(
+        `${segment.color} ${rawMultiplier.toFixed(2)}x → ${winAmount.toFixed(8)} ${symbol} (${adjustedMultiplier.toFixed(2)}x after edge)`,
+      );
+      const credit = await creditNative(
+        winAmount,
+        playAddress,
+        'wheel',
+        {
+          risk,
+          segments: noOfSegments,
+          fairnessProof: fairnessProof || undefined,
+        },
+        serverRoundIdRef.current,
+      );
+      if (!credit.ok) {
+        notification.error(credit.error || 'Could not credit winnings');
+      }
+      serverRoundIdRef.current = null;
+    } else {
+      notification.info(`Game over — landed on ${rawMultiplier.toFixed(2)}x`);
+      await releaseStake(playAddress, 'wheel').catch(() => {});
+      serverRoundIdRef.current = null;
+    }
+
+    window.wheelBetCallback = null;
+  };
+
+  const beginSpinAnimation = (segmentOverride, fairnessRound, bet) => {
+    clearSpinTimeout();
+    window.wheelBetCallback = null;
+
+    window.wheelBetCallback = async (result) => {
+      await handleSpinComplete(result, { bet, segmentOverride, fairnessRound });
+    };
+
+    spinTimeoutRef.current = setTimeout(() => {
+      if (!window.wheelBetCallback) return;
+      window.wheelBetCallback = null;
+      setIsSpinning(false);
+      notification.error('Spin timed out. If your balance changed, refresh the page.');
+      releaseStake(playAddress, 'wheel').catch(() => {});
+      serverRoundIdRef.current = null;
+    }, 12000);
+
+    setForcedSegmentIndex(segmentOverride);
+    setIsSpinning(true);
+  };
+
   // Game modes
   const manulBet = async () => {
     if (betAmount <= 0 || isSpinning) return;
 
-    // Check if wallet is connected first
     if (!playConnected || !playAddress) {
       alert(`Please connect your ${chainLabel} wallet first`);
       return;
     }
 
     const currentBalance = balanceNative;
-
     if (currentBalance < betAmount) {
       alert(`Insufficient balance. You have ${currentBalance.toFixed(8)} ${symbol} but need ${betAmount} ${symbol}`);
       return;
     }
 
     try {
-      setIsSpinning(true);
       setHasSpun(false);
       setLandedSegmentIndex(null);
 
@@ -139,7 +269,6 @@ export default function Home() {
       });
       if (!debit.ok) {
         alert(debit.error || 'Could not place bet');
-        setIsSpinning(false);
         return;
       }
       serverRoundIdRef.current = debit.roundId ?? null;
@@ -153,124 +282,15 @@ export default function Home() {
           risk,
           noOfSegments,
         );
-        setForcedSegmentIndex(segmentOverride);
-      } else {
-        setForcedSegmentIndex(null);
       }
 
-      // Set up callback to handle wheel animation completion
-      window.wheelBetCallback = async (result) => {
-        const segmentIndex =
-          result?.segmentIndex ?? segmentOverride ?? 0;
-        setLandedSegmentIndex(segmentIndex);
-        setIsSpinning(false);
-
-        const payout = computeWheelPayoutNative(
-          betAmount,
-          risk,
-          noOfSegments,
-          segmentIndex,
-        );
-        const { rawMultiplier, adjustedMultiplier, payoutNative: winAmount, segment } = payout;
-
-        setDetectedColor(segment.color);
-        setDetectedMultiplier(rawMultiplier);
-        setCurrentMultiplier(adjustedMultiplier);
-
-        const newHistoryItem = {
-          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-          game: 'Wheel',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          betAmount: betAmount.toFixed(5),
-          multiplier: `${rawMultiplier.toFixed(2)}x`,
-          payout: winAmount.toFixed(5),
-          result: segmentIndex,
-          color: segment.color,
-          txHash: null,
-          fairnessProof: null,
-        };
-
-        setGameHistory((prev) => [newHistoryItem, ...prev]);
-
-        let fairnessProof = null;
-        if (fairness.enabled && fairnessRound) {
-          fairnessProof = await fairness.reveal(
-            {
-              segmentIndex,
-              multiplier: rawMultiplier,
-            },
-            fairnessRound,
-          );
-          fairness.reset();
-        }
-
-        if (playAddress) {
-          const gameResult = `${risk}_${noOfSegments}segments_${rawMultiplier.toFixed(2)}x_${segment.color}`;
-          logGame({
-            gameType: 'wheel',
-            playerAddress: playAddress,
-            betAmount: betAmount,
-            result: gameResult,
-            payout: winAmount,
-            fairnessProof,
-          })
-            .then((res) => {
-              if (res?.success) {
-                setGameHistory((prev) =>
-                  prev.map((item) =>
-                    item.id === newHistoryItem.id
-                      ? {
-                          ...item,
-                          txHash: res.transactionHash || res.proofReference || null,
-                          explorerUrl: res.explorerUrl || null,
-                          fairnessProof: fairnessProof || item.fairnessProof,
-                        }
-                      : item,
-                  ),
-                );
-              }
-            })
-            .catch((error) => {
-              console.error('Failed to log wheel game:', error);
-            });
-        }
-
-        setHasSpun(true);
-
-        if (adjustedMultiplier > 0) {
-          notification.success(
-            `${segment.color} ${rawMultiplier.toFixed(2)}x → ${winAmount.toFixed(8)} ${symbol} (${adjustedMultiplier.toFixed(2)}x after edge)`,
-          );
-          const credit = await creditNative(
-            winAmount,
-            playAddress,
-            'wheel',
-            {
-              risk,
-              segments: noOfSegments,
-              fairnessProof: fairnessProof || undefined,
-            },
-            serverRoundIdRef.current,
-          );
-          if (!credit.ok) {
-            notification.error(credit.error || 'Could not credit winnings');
-          }
-          serverRoundIdRef.current = null;
-        } else {
-          notification.info(`Game over — landed on ${rawMultiplier.toFixed(2)}x`);
-          await releaseStake(playAddress, 'wheel').catch(() => {});
-          serverRoundIdRef.current = null;
-        }
-
-        window.wheelBetCallback = null;
-      };
-
+      beginSpinAnimation(segmentOverride, fairnessRound, betAmount);
     } catch (e) {
       console.error('Bet failed:', e);
       alert(`Bet failed: ${e?.message || e}`);
+      clearSpinTimeout();
+      window.wheelBetCallback = null;
       setIsSpinning(false);
-
-      // Refund the deducted balance on error
       dispatch(setBalance(userBalance));
     }
   };
@@ -331,9 +351,8 @@ export default function Home() {
           risk,
           noOfSegments,
         );
-        setForcedSegmentIndex(segmentOverride);
       } else {
-        setForcedSegmentIndex(null);
+        segmentOverride = null;
       }
 
       setLandedSegmentIndex(null);
@@ -342,9 +361,10 @@ export default function Home() {
         const timeoutId = setTimeout(() => {
           if (window.wheelBetCallback) {
             window.wheelBetCallback = null;
+            setIsSpinning(false);
             resolve(null);
           }
-        }, 10000);
+        }, 12000);
 
         window.wheelBetCallback = async (result) => {
           clearTimeout(timeoutId);
@@ -371,6 +391,7 @@ export default function Home() {
           });
         };
 
+        setForcedSegmentIndex(segmentOverride);
         setIsSpinning(true);
       });
 

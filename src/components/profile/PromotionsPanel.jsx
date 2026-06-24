@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { FaGift, FaTicketAlt } from 'react-icons/fa';
 import { openHouseBalanceModal } from '@/hooks/useWalletStatus';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 function getDeviceFingerprint() {
   try {
@@ -21,6 +22,7 @@ function getDeviceFingerprint() {
 
 export default function PromotionsPanel({ profile, chain, wallet, onClaimed, onBalanceUpdated }) {
   const searchParams = useSearchParams();
+  const { getWalletAuth } = useWalletAuth();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
@@ -59,6 +61,10 @@ export default function PromotionsPanel({ profile, chain, wallet, onClaimed, onB
     setMsg('');
     setLoading(true);
     try {
+      const walletAuth = await getWalletAuth(wallet, chain, { fresh: true });
+      if (!walletAuth) {
+        throw new Error('Sign the wallet ownership prompt to claim this coupon.');
+      }
       const res = await fetch('/api/promotions/coupon/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -67,6 +73,7 @@ export default function PromotionsPanel({ profile, chain, wallet, onClaimed, onB
           chain,
           code,
           deviceFingerprint: getDeviceFingerprint(),
+          walletAuth,
         }),
       });
       const j = await res.json();

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaFire, FaCheckCircle, FaGift } from 'react-icons/fa';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 function fmtAptc(n) {
   const v = Number(n);
   if (!Number.isFinite(v)) return '0';
@@ -24,6 +25,7 @@ export default function DailyStreakPanel({ dailyStreak, chain, wallet, demoMode,
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [solanaPayout, setSolanaPayout] = useState('');
+  const { getWalletAuth } = useWalletAuth();
 
   const streak = dailyStreak;
   const needsSolanaPayout = chain === 'aptos';
@@ -45,7 +47,11 @@ export default function DailyStreakPanel({ dailyStreak, chain, wallet, demoMode,
     setSuccess(null);
     setClaiming(true);
     try {
-      const body = { wallet, chain };
+      const walletAuth = await getWalletAuth(wallet, chain, { fresh: true });
+      if (!walletAuth) {
+        throw new Error('Sign the wallet ownership prompt in your wallet to claim.');
+      }
+      const body = { wallet, chain, walletAuth };
       if (needsSolanaPayout && solanaPayout.trim()) {
         body.solanaPayoutWallet = solanaPayout.trim();
       }

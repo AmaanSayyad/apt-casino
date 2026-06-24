@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { requireDashboardAdmin } from '@/lib/admin/requireDashboardAdmin';
 import { walletAddressSearchVariants, normalizeWalletForBanKey } from '@/lib/admin/walletAddressVariants';
 import { getPlayChainConfig } from '@/lib/chains/registry';
-import { getWalletAccountStatus } from '@/lib/bans/walletBan';
+import { getWalletAccountStatus, loadBannedWalletKeys, walletMatchesBanSet } from '@/lib/bans/walletBan';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,18 +25,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
   }
 
-  const [{ data: allBets }, { data: completedWd }, { data: pendingWd }, { data: deposits }, { data: balances }] =
+  const [{ data: allBets }, { data: completedWd }, { data: pendingWd }, { data: deposits }, { data: balances }, bannedWallets] =
     await Promise.all([
       db.from('game_play_events').select('wallet, chain, bet_raw, payout_raw, created_at').order('created_at', { ascending: false }).limit(PAGE),
       db.from('withdrawal_requests').select('wallet, chain, gross_apt, status, created_at').eq('status', 'completed'),
       db.from('withdrawal_requests').select('id, wallet, chain, gross_apt, usd_estimate, status, created_at').eq('status', 'pending'),
       db.from('deposits_log').select('wallet, chain, amount_native'),
       db.from('user_house_balances').select('user_address, chain, balance_raw'),
+      loadBannedWalletKeys(),
     ]);
 
   const userBets: Record<string, boolean[]> = {};
   for (const b of allBets ?? []) {
     const w = String(b.wallet);
+    if (walletMatchesBanSet(w, bannedWallets)) continue;
     if (!userBets[w]) userBets[w] = [];
     const bet = rawToNative(b.chain, b.bet_raw);
     const payout = rawToNative(b.chain, b.payout_raw);
@@ -91,6 +93,7 @@ export async function GET(request: NextRequest) {
   const norm = (w: string) => normalizeWalletForBanKey(w);
 
   for (const r of completedWd ?? []) {
+    if (walletMatchesBanSet(r.wallet, bannedWallets)) continue;
     const k = norm(r.wallet);
     if (!wdMap[k]) {
       wdMap[k] = { wallet: r.wallet, completed: 0, pending: 0, totalWithdrawn: 0, pendingAmount: 0, pendingRequests: [] };
@@ -100,6 +103,7 @@ export async function GET(request: NextRequest) {
   }
 
   for (const r of pendingWd ?? []) {
+    if (walletMatchesBanSet(r.wallet, bannedWallets)) continue;
     const k = norm(r.wallet);
     if (!wdMap[k]) {
       wdMap[k] = { wallet: r.wallet, completed: 0, pending: 0, totalWithdrawn: 0, pendingAmount: 0, pendingRequests: [] };

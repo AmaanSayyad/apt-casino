@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { requireDashboardAdmin } from '@/lib/admin/requireDashboardAdmin';
 import { normalizeWalletForBanKey } from '@/lib/bans/walletBan';
+import { purgeWalletPlatformData } from '@/lib/bans/purgeWalletData';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,7 +68,9 @@ export async function POST(request: NextRequest) {
     .from('wallet_account_status')
     .upsert({ wallet: key, status: 'banned', reason, updated_at: new Date().toISOString() }, { onConflict: 'wallet' });
 
-  return NextResponse.json({ success: true, ban: data });
+  const purge = await purgeWalletPlatformData(db, walletAddress);
+
+  return NextResponse.json({ success: true, ban: data, purge });
 }
 
 export async function DELETE(request: NextRequest) {

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaCoins, FaClock, FaLock, FaCheckCircle } from 'react-icons/fa';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { fmtNative, fmtDate } from './ProfileDashboard';
 
 function fmtAptc(n) {
@@ -23,6 +24,7 @@ export default function DepositAptcBonusPanel({
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [solanaPayout, setSolanaPayout] = useState('');
+  const { getWalletAuth } = useWalletAuth();
 
   const bonus = depositAptcBonus;
   const needsSolanaPayout = chain === 'aptos';
@@ -50,7 +52,11 @@ export default function DepositAptcBonusPanel({
     setSuccess(null);
     setClaiming(true);
     try {
-      const body = { wallet, chain };
+      const walletAuth = await getWalletAuth(wallet, chain, { fresh: true });
+      if (!walletAuth) {
+        throw new Error('Sign the wallet ownership prompt in your wallet to claim.');
+      }
+      const body = { wallet, chain, walletAuth };
       if (needsSolanaPayout && solanaPayout.trim()) {
         body.solanaPayoutWallet = solanaPayout.trim();
       }

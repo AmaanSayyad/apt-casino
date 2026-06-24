@@ -24,6 +24,8 @@ export type GamePlayEventInput = {
 
 export async function recordGamePlayEvent(input: GamePlayEventInput): Promise<void> {
   if (isDemoPlayWallet(input.wallet)) return;
+  if (!Number.isFinite(input.betNative) || input.betNative < 0) return;
+  if (!Number.isFinite(input.payoutNative) || input.payoutNative < 0) return;
 
   const db = getSupabaseAdmin();
   if (!db) return;
