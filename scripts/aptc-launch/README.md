@@ -7,7 +7,7 @@ This folder contains a **legacy CLI script** for manual SPL mint + distribution.
 ## Bags.fm launch (recommended)
 
 1. Open [bags.fm/launch](https://bags.fm/launch)
-2. Configure: **DEFAULT (Founder) mode**, **$610 / 23%** initial buy, **100% fee share → @aptcasinofun**
+2. Configure: **DEFAULT (Founder) mode**, **$610 / 23%** initial buy, **100% fee share → @aptcasinofun** · listings-first (Tier 1–3 DEX → CEX)
 3. Fund wallet with ≥0.2 SOL + ~8.6 SOL for initial buy
 4. After launch, set in Vercel:
    - `NEXT_PUBLIC_APTC_SOLANA_MINT=<mint from Bags>`

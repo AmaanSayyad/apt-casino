@@ -22,6 +22,10 @@ const GgrRevenueFunnel = dynamic(
   () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.GgrRevenueFunnel),
   { ssr: false, loading: () => <ChartPlaceholder /> },
 );
+const TraderTransparencyPanel = dynamic(
+  () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.TraderTransparencyPanel),
+  { ssr: false, loading: () => <ChartPlaceholder /> },
+);
 
 function ChartPlaceholder() {
   return <div className="h-[220px] animate-pulse rounded-xl bg-white/5" />;
@@ -91,7 +95,8 @@ export default function LitepaperTokenomicsBlock() {
             Full supply allocation
           </p>
           <p className="mb-4 text-xs text-white/40">
-            23% creator (230M) · 77% bonding curve — see creator deployment breakdown below
+            23% creator (listings-first · Tier 1–3 DEX → CEX) · 77% public curve · 0% team / founder · no wash · no
+            fake FDV · no dumps
           </p>
           <AllocationDonut variant="litepaper" />
         </div>
@@ -101,6 +106,10 @@ export default function LitepaperTokenomicsBlock() {
           </p>
           <GgrRevenueFunnel estimates={est} buybackPctOfGgr={cfg?.buybackPctOfGgr ?? 30} />
         </div>
+      </div>
+
+      <div className="mt-5">
+        <TraderTransparencyPanel variant="litepaper" />
       </div>
 
       <div className="mt-5 lp-glass rounded-2xl p-5 sm:p-6 overflow-x-auto">

@@ -91,7 +91,7 @@ export const APTC_LAUNCH_METRICS = {
   },
 };
 
-/** Supply at TGE — creator initial buy + public bonding curve */
+/** Supply at TGE — creator initial buy + public bonding curve (no team / founder / VC slice) */
 export const APTC_ALLOCATION = [
   {
     label: 'Creator initial buy',
@@ -99,7 +99,8 @@ export const APTC_ALLOCATION = [
     tokensShort: '230M',
     fill: '#ec4899',
     color: 'from-fuchsia-500 to-pink-500',
-    detail: '230M APTC · @aptcasinofun ops wallet',
+    detail:
+      '230M APTC · @aptcasinofun ops wallet · largest share → Tier 1–3 listings (DEX → CEX)',
   },
   {
     label: 'Bonding curve (public)',
@@ -107,7 +108,7 @@ export const APTC_ALLOCATION = [
     tokensShort: '770M',
     fill: '#a78bfa',
     color: 'from-violet-500 to-purple-500',
-    detail: 'Meteora DBC on Bags · trades until 85 SOL graduation → DAMM v2',
+    detail: 'Fair Bags / Meteora DBC · organic buyers only · graduates at 85 SOL → DAMM v2',
   },
 ];
 
@@ -115,15 +116,146 @@ export const APTC_ALLOCATION = [
 export const CREATOR_BUY_TOTAL_TOKENS = 230_000_000;
 
 export const CREATOR_BUY_DEPLOYMENT = [
-  { label: 'Community & rewards', pct: 35, tokensShort: '80.5M', fill: '#c084fc' },
-  { label: 'Liquidity & market making', pct: 25, tokensShort: '57.5M', fill: '#60a5fa' },
-  { label: 'Treasury & operations', pct: 20, tokensShort: '46M', fill: '#fbbf24' },
-  { label: 'Staking emissions', pct: 12, tokensShort: '27.6M', fill: '#34d399' },
-  { label: 'Partnerships & grants', pct: 8, tokensShort: '18.4M', fill: '#fb7185' },
+  {
+    label: 'Tier 1, 2 & 3 listings',
+    pct: 42,
+    tokensShort: '96.6M',
+    fill: '#c084fc',
+    detail:
+      'Largest share of the 23% — Tier 1 Listings DEX & trader tools (Bags, Meteora, DexScreener, Jupiter), Tier 2 aggregators (CoinGecko, CMC), Tier 3 CEX roadmap (MEXC, Gate, KuCoin, Bybit, OKX, Binance)',
+    highlight: true,
+  },
+  {
+    label: 'Liquidity & market making',
+    pct: 22,
+    tokensShort: '50.6M',
+    fill: '#60a5fa',
+    detail: 'Post-graduation depth · MM coordination for listings · no surprise LP dumps',
+  },
+  {
+    label: 'Community & player rewards',
+    pct: 18,
+    tokensShort: '41.4M',
+    fill: '#a78bfa',
+    detail: 'Volume Cup, referrals, streaks, cashback — organic players only',
+  },
+  {
+    label: 'Staking emissions',
+    pct: 10,
+    tokensShort: '23M',
+    fill: '#34d399',
+    detail: 'On-chain /stake pools · aligned with GGR buyback flywheel',
+  },
+  {
+    label: 'Treasury & protocol ops',
+    pct: 8,
+    tokensShort: '18.4M',
+    fill: '#fbbf24',
+    detail: 'Infrastructure, audits, runway — not founder extraction',
+  },
 ];
 
 export const CREATOR_BUY_PURPOSE =
-  '$610 creator buy at launch + ongoing Bags fee share — one wallet, no separate team or marketing allocations.';
+  'Every single APTC from the creator wallet — initial buy and 100% of Bags fee share — is deployed only for platform growth. The largest share funds Tier 1, 2 & 3 listings (DEX → aggregators → CEX). No founder allocation. No team allocation. No wash volume. No fake FDV. No dumps.';
+
+export const APTC_TRANSPARENCY = {
+  headline: 'The green flag checklist',
+  subhead:
+    'What snipers, bots, agents, and degens scan before they buy — and how APTC answers each one.',
+  pledge:
+    'We are not hiding supply behind clusters, bundles, or fake metrics. No wash volume. No fake FDV. No dumps. APTC is a live GambleFi product with a fair Bags curve, revoked authorities, one public ops wallet, and on-chain casino revenue. Every creator-wallet token exists to grow the platform — not to extract from it.',
+  opsWalletRule:
+    '230M creator buy + 100% fee share → @aptcasinofun only · listings-first deployment · no wash · no fake FDV · no dumps',
+};
+
+/**
+ * Trader / bot due-diligence terms — explicit green flags (what scanners look for).
+ * status: short label shown on card; detail: plain-language proof.
+ */
+export const APTC_TRADER_GREEN_FLAGS = [
+  {
+    term: 'Mint authority',
+    status: 'Revoked',
+    detail: 'Fixed 1B supply — no hidden inflation or stealth mints.',
+  },
+  {
+    term: 'Freeze authority',
+    status: 'Revoked',
+    detail: 'No wallet freeze rug — holders can always move tokens.',
+  },
+  {
+    term: 'Update authority',
+    status: 'Bags Token Authority',
+    detail: 'Metadata & fee routing on Bags — not a custom honeypot contract.',
+  },
+  {
+    term: 'Team / founder allocation',
+    status: '0%',
+    detail: 'No VC slice, no advisor unlock, no separate “team wallet” line item.',
+  },
+  {
+    term: 'Bundled wallets',
+    status: 'None',
+    detail: 'No launch-day wallet clusters or same-block insider snipes from us.',
+  },
+  {
+    term: 'Supply at TGE',
+    status: '23% / 77%',
+    detail: '$610 creator buy on curve + 77% fair public bonding — not a 90% dev bag.',
+  },
+  {
+    term: 'Creator wallet use',
+    status: 'Growth only',
+    detail: 'Largest slice → Tier 1–3 listings (DEX → CEX). Rest → liquidity, rewards, staking.',
+  },
+  {
+    term: 'Volume & metrics',
+    status: 'Organic',
+    detail: 'Real casino GGR & wallets on-chain — no wash volume, no bot-inflated stats.',
+  },
+  {
+    term: 'FDV / market cap',
+    status: 'No fake FDV',
+    detail: 'Spot pricing from real curve trades — no misleading screenshot math or inflated FDV posts.',
+  },
+  {
+    term: 'Supply dumps',
+    status: 'No dumps',
+    detail: 'No bundled wallets, no hidden multi-wallet sells, no team unlock cliffs.',
+  },
+  {
+    term: 'Liquidity path',
+    status: 'Meteora DBC → DAMM',
+    detail: '85 SOL graduation threshold · public curve until migrate — no opaque presale.',
+  },
+  {
+    term: 'Hidden wallets',
+    status: 'None claimed',
+    detail: 'One disclosed ops wallet (@aptcasinofun) — no shadow treasuries.',
+  },
+  {
+    term: 'Transfer / sell tax',
+    status: 'Standard Bags fees',
+    detail: '2% trade fee on curve (1% creator + 1% protocol) — no custom honeypot tax.',
+  },
+  {
+    term: 'Live product',
+    status: 'Shipping',
+    detail: 'Plinko, Mines, Roulette, Wheel live · GGR → open-market APTC buybacks.',
+  },
+];
+
+/** Red flags we explicitly do not run — call out what scanners punish. */
+export const APTC_RED_FLAGS_WE_AVOID = [
+  'Bundled launch wallets or sniper clusters',
+  'Wash volume or bot-inflated trade stats',
+  'Fake FDV or misleading market-cap screenshots',
+  'Supply dumps from hidden or team wallets',
+  'Unlocked founder or team tranches',
+  'Hidden multi-wallet coordinated sells',
+  'Mint or freeze authority left with deployer',
+  'Empty utility with no shipping product',
+];
 
 /** Single operations wallet — initial buy + 100% fee-share claimer */
 export const APTC_WALLETS = [
@@ -135,8 +267,8 @@ export const APTC_WALLETS = [
     pct: 23,
     address: null,
     purpose:
-      'Initial buy at launch · 100% Bags fee share · ops, buybacks, listings, staking, rewards, marketing, partnerships',
-    purposeShort: 'Creator buy + fee share',
+      'Initial buy at launch + 100% Bags fee share — largest allocation to Tier 1–3 listings (DEX → CEX), then liquidity, rewards, staking. Platform growth only. No wash volume. No fake FDV. No dumps.',
+    purposeShort: 'Creator buy + fee share · growth only',
   },
 ];
 
@@ -212,7 +344,11 @@ export const APTC_LIQUIDITY_PROJECTIONS = [
 ];
 
 export function getAllocationSummary() {
-  return '1,000,000,000 APTC fixed supply · 23% creator initial buy · 77% fair bonding curve on Bags (Meteora DBC).';
+  return '1B APTC fixed supply · 23% creator buy (listings-first) · 77% fair public bonding curve · 0% team/founder · no wash · no fake FDV · no dumps.';
+}
+
+export function getCreatorBuyDeploymentLines() {
+  return CREATOR_BUY_DEPLOYMENT.map((row) => `${row.pct}% — ${row.label} (${row.tokensShort} APTC)`);
 }
 
 export function truncateAddress(addr, chars = 4) {

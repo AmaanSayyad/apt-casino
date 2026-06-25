@@ -2,10 +2,13 @@ import {
   APTC_LAUNCH_METRICS,
   APTC_LAUNCH_PHASES,
   APTC_TOKENOMICS,
+  APTC_TRANSPARENCY,
   APTC_UTILITY,
   APTC_WALLETS,
+  CREATOR_BUY_PURPOSE,
   GGR_FLYWHEEL_STEPS,
   getAllocationSummary,
+  getCreatorBuyDeploymentLines,
   truncateAddress,
 } from '@/lib/config/tokenomics';
 
@@ -17,8 +20,8 @@ export {
   LITEPAPER_PATH,
 } from '@/lib/siteMetadata';
 
-export const LITEPAPER_VERSION = 'v1.0.0';
-export const LITEPAPER_UPDATED = '2026-06-08';
+export const LITEPAPER_VERSION = 'v1.0.1';
+export const LITEPAPER_UPDATED = '2026-06-19';
 export const PROJECT_GITHUB = 'https://github.com/AmaanSayyad/apt-casino';
 
 /**
@@ -225,6 +228,7 @@ export const LITEPAPER_SECTIONS = [
       `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint and freeze authorities revoked at creation — fixed metadata, fixed supply. Token authority: Bags Token Authority (same pattern as other Bags launches).`,
       `Fair launch on ${APTC_TOKENOMICS.launchVenue}: ${APTC_LAUNCH_METRICS.feeModeLabel} · ${APTC_LAUNCH_METRICS.tradeFeePreMigrationPct}% trade fee · ${APTC_LAUNCH_METRICS.initialBuyPct}% creator initial buy ($${APTC_LAUNCH_METRICS.initialBuyUsd}) · graduates at ${APTC_LAUNCH_METRICS.graduationSol} SOL into Meteora DAMM v2.`,
       `Estimated spot FDV after creator buy ~$${(APTC_LAUNCH_METRICS.approxSpotFdvUsd / 1000).toFixed(1)}k (average-cost FDV ~$${(APTC_LAUNCH_METRICS.approxAverageFdvUsd / 1000).toFixed(1)}k). 100% of creator fee share routed to @aptcasinofun via Bags Fee Share V2.`,
+      'Transparency pledge: no wash volume, no fake FDV, no dumps. One public ops wallet — no bundled launch clusters, no team/founder allocation, no hidden treasuries.',
       `Mint: ${APTC_TOKENOMICS.mint}.`,
       utilityText,
       'APTC is not required to place bets in native SOL/APT — it is the rewards, staking, referral, and value-accrual layer on top of core casino play.',
@@ -235,9 +239,12 @@ export const LITEPAPER_SECTIONS = [
     title: '9. APTC Allocation',
     body: [
       `${getAllocationSummary()}`,
-      `${APTC_LAUNCH_METRICS.initialBuyPct}% (${APTC_LAUNCH_METRICS.initialBuyTokensShort}) — creator initial buy at launch for operations, runway, buybacks, listings, staking, rewards, marketing, and partnerships. No separate team or marketing wallets.`,
+      `${APTC_LAUNCH_METRICS.initialBuyPct}% (${APTC_LAUNCH_METRICS.initialBuyTokensShort}) — single @aptcasinofun operations wallet. Listings-first: the largest share funds Tier 1 DEX & trader tools, Tier 2 aggregators (CoinGecko, CoinMarketCap), and Tier 3 CEX roadmap. Remaining allocation → liquidity & market making, community rewards, staking emissions, and protocol ops.`,
+      ...getCreatorBuyDeploymentLines(),
+      CREATOR_BUY_PURPOSE,
       `${100 - APTC_LAUNCH_METRICS.initialBuyPct}% (${APTC_LAUNCH_METRICS.totalSupplyShort} minus creator) — sold on the public Meteora bonding curve via Bags until ${APTC_LAUNCH_METRICS.graduationSol} SOL graduation.`,
       'No Raydium-style LP burn: at graduation, accumulated SOL and remaining curve inventory seed the Meteora DAMM v2 pool automatically. Post-graduation, 25% of trade fees compound back into pool liquidity.',
+      APTC_TRANSPARENCY.opsWalletRule,
       ...APTC_LAUNCH_PHASES.map((p) => `${p.title}: ${p.detail}`),
     ],
     chart: 'allocation-donut',
@@ -328,7 +335,7 @@ export const LITEPAPER_SECTIONS = [
     title: '16. Roadmap',
     body: [
       'Shipped / live: core casino games, Solana + Aptos play, gasless Aptos UX, referrals, Stake UI, GGR dashboard, live streaming shell, ecosystem partners section.',
-      `Near term: APTC TGE on Bags.fm (${APTC_LAUNCH_METRICS.initialBuyPct}% creator buy + Meteora DBC, ${APTC_LAUNCH_METRICS.graduationSol} SOL graduation), Tier 1 listings (Bags · DexScreener · Jupiter · Birdeye · GeckoTerminal), Tier 2 (CoinGecko · CoinMarketCap), staking live.`,
+      `Near term: APTC TGE on Bags.fm (${APTC_LAUNCH_METRICS.initialBuyPct}% listings-first creator buy + Meteora DBC, ${APTC_LAUNCH_METRICS.graduationSol} SOL graduation), Tier 1 listings (Bags · DexScreener · Jupiter · Birdeye · GeckoTerminal), Tier 2 (CoinGecko · CoinMarketCap), staking live.`,
       'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), Meteora LP incentives, Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
       'Long term: largest multichain GambleFi hub — transparent game marketplace, creator revenue share, and community governance over APTC parameters.',
       'The homepage Roadmap section lists 30 curated milestones (Platform, Governance, Community, Security, Tournaments, Partnership) via /api/roadmap — editable in Supabase roadmap_items or src/lib/config/publicRoadmap.js.',

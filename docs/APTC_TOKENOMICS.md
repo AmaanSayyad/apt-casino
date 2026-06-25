@@ -1,6 +1,6 @@
 # APTC tokenomics
 
-Last updated: 2026-06-20
+Last updated: 2026-06-19
 
 Native SPL token for AptCasino.fun — fair launch on **Bags.fm** via **Meteora Dynamic Bonding Curve (DBC)**, graduating at **85 SOL** into **Meteora DAMM v2**.
 
@@ -53,8 +53,26 @@ sequenceDiagram
 
 | Bucket | % | Amount | Notes |
 |--------|---|--------|-------|
-| Creator initial buy | 23% | 230M | Ops, buybacks, listings, rewards, liquidity support |
+| Creator initial buy | 23% | 230M | Single @aptcasinofun ops wallet · listings-first · 0% team/founder |
 | Bonding curve (public) | 77% | 770M | Traded on Meteora DBC until graduation |
+
+### Creator wallet deployment (230M · 23%)
+
+Largest share funds **Tier 1, 2 & 3 listings** (DEX → aggregators → CEX). No wash volume. No fake FDV. No dumps.
+
+| Use | % | Amount |
+|-----|---|--------|
+| Tier 1, 2 & 3 listings | 42% | 96.6M |
+| Liquidity & market making | 22% | 50.6M |
+| Community & player rewards | 18% | 41.4M |
+| Staking emissions | 10% | 23M |
+| Treasury & protocol ops | 8% | 18.4M |
+
+**Tier 1** — Bags, Meteora, DexScreener, Jupiter, Birdeye, GeckoTerminal  
+**Tier 2** — CoinGecko, CoinMarketCap  
+**Tier 3** — CEX roadmap (MEXC, Gate.io, KuCoin, Bybit, OKX, Binance)
+
+100% of Bags fee share also routes to @aptcasinofun for the same growth mandate.
 
 ```mermaid
 pie title APTC supply at TGE (1B)
@@ -71,7 +89,7 @@ There is **no Raydium-style LP burn**. At graduation, accumulated SOL and remain
 | Pre-migration (curve) | 2% | 1% | 1% | — |
 | Post-migration (DAMM v2) | 2% | 0.75% | 0.75% | 0.5% into pool |
 
-With **100% fee share to @aptcasinofun**, creator-side fees fund operations, marketing, buybacks, staking rewards, and partnerships from a **single treasury wallet**. No separate team or marketing wallets.
+With **100% fee share to @aptcasinofun**, creator-side fees fund listings, liquidity, player rewards, staking, and protocol ops from a **single treasury wallet**. No team allocation. No founder allocation. No wash volume. No fake FDV. No dumps.
 
 ## Liquidity projections (post-graduation, illustrative)
 

@@ -1,13 +1,14 @@
 # Mainnet deployment guide
 
-Last updated: 2026-06-20
+Last updated: 2026-06-19
 
 Checklist for launching APT Casino on production infrastructure. Solana is the primary live chain; Aptos modules can run in parallel when `NEXT_PUBLIC_CASINO_MODULE_ADDRESS` is set and Aptos is marked `live` in the chain registry.
 
 ## APTC token (Bags.fm launch)
 
 - [ ] Launch on [bags.fm/launch](https://bags.fm/launch) — Founder (Default) mode, 2% fee
-- [ ] Creator initial buy: **$610 / 23%** · fee share **100% → @aptcasinofun**
+- [ ] Creator initial buy: **$610 / 23%** · fee share **100% → @aptcasinofun** · listings-first (Tier 1–3)
+- [ ] Publish transparency pledge: **no wash volume · no fake FDV · no dumps** on site + litepaper
 - [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production
 - [ ] Set `BAGS_API_KEY` for pool/fee analytics (optional)
 - [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` once DexScreener indexes the pair

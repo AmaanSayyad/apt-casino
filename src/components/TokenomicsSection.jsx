@@ -24,6 +24,10 @@ const BuybackSplitDonut = dynamic(
   () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.BuybackSplitDonut),
   { ssr: false, loading: () => <ChartSkeleton height={220} /> },
 );
+const TraderTransparencyPanel = dynamic(
+  () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.TraderTransparencyPanel),
+  { ssr: false, loading: () => <ChartSkeleton height={320} /> },
+);
 
 const _MINT = 'TBD';
 
@@ -144,8 +148,9 @@ export default function TokenomicsSection() {
             </span>{' '}
             Tokenomics
           </h2>
-          <p className="mt-3 w-full max-w-none text-sm sm:text-base md:text-lg text-white/55 leading-relaxed md:whitespace-nowrap">
-            1B fixed supply · fair bonding curve on Bags (Meteora DBC). Creator fees + casino GGR fund buybacks — not empty emissions.
+          <p className="mt-3 w-full max-w-none text-sm sm:text-base md:text-lg text-white/55 leading-relaxed">
+            1B fixed supply · fair Bags curve · 0% team allocation · 0% VC allocation · 0% founder allocation. Creator wallet is listings-first —
+            Tier 1–3 DEX to CEX.
           </p>
         </div>
 
@@ -268,8 +273,8 @@ export default function TokenomicsSection() {
           <div className="flex flex-col gap-5">
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
               <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
-              <p className="text-xs text-white/45 mb-6">
-                1B APTC · 23% creator (230M) · 77% bonding curve — creator buy funds ops, buybacks, listings, staking & rewards via @aptcasinofun
+              <p className="text-xs text-white/45 mb-5">
+                23% listings-first · 77% public curve · 0% team
               </p>
               <AllocationDonut />
             </div>
@@ -294,6 +299,11 @@ export default function TokenomicsSection() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* ── Transparency / trader due diligence ── */}
+        <div className="mb-6">
+          <TraderTransparencyPanel />
         </div>
 
         {/* ── Why APTC — 4-column row ── */}

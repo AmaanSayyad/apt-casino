@@ -199,6 +199,8 @@ flowchart TB
 
     subgraph CreatorFees["Bags fee share"]
         TRADE[2% trade fee] --> FS[@aptcasinofun 100%]
+        FS --> LIST[Tier 1-3 listings 42%]
+        FS --> LIQ[Liquidity · rewards · staking]
     end
 
     PLAY[Player bets] --> GGR
@@ -206,7 +208,7 @@ flowchart TB
     DAMM --> TRADE
 ```
 
-See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for launch parameters and fee economics.
+See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for launch parameters, creator-wallet deployment (listings-first), and fee economics.
 
 ## Related docs
 

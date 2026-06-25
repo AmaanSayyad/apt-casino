@@ -4,10 +4,13 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import {
   APTC_ALLOCATION,
   APTC_TOKENOMICS,
+  APTC_TRANSPARENCY,
+  APTC_TRADER_GREEN_FLAGS,
+  APTC_RED_FLAGS_WE_AVOID,
   BUYBACK_SPLIT_COLORS,
   CREATOR_BUY_DEPLOYMENT,
-  CREATOR_BUY_PURPOSE,
 } from '@/lib/config/tokenomics';
+import { APTC_LISTING_TIERS } from '@/lib/config/listingTiers';
 
 const CHART_TOOLTIP = {
   contentStyle: {
@@ -134,44 +137,215 @@ export function AllocationDonut({ variant = 'default' }) {
 /** Breakdown of how the 230M creator initial buy is deployed */
 export function CreatorBuyUses({ variant = 'default' }) {
   const isLitepaper = variant === 'litepaper';
+  const featured = CREATOR_BUY_DEPLOYMENT.find((row) => row.highlight) ?? CREATOR_BUY_DEPLOYMENT[0];
+  const rest = CREATOR_BUY_DEPLOYMENT.filter((row) => !row.highlight);
 
   return (
     <div
-      className={`w-full rounded-xl border border-white/10 bg-[#120010] ${
+      className={`relative w-full overflow-hidden rounded-2xl border border-white/10 bg-[#120010] ${
         isLitepaper ? 'p-5 sm:p-6' : 'p-4 md:p-5'
       }`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-fuchsia-200/80">
-            Creator buy · 230M deployment
-          </p>
-          <p className="mt-1 text-sm font-medium text-white/90">How the 23% is used</p>
-        </div>
-        <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-fuchsia-200/90">
-          @aptcasinofun
-        </span>
-      </div>
-      <p className="text-xs text-white/45 leading-relaxed mb-4 max-w-3xl">{CREATOR_BUY_PURPOSE}</p>
-      <div className={`grid gap-3 ${isLitepaper ? 'sm:grid-cols-2 xl:grid-cols-5' : 'grid-cols-2 lg:grid-cols-5'}`}>
-        {CREATOR_BUY_DEPLOYMENT.map((row) => (
-          <div
-            key={row.label}
-            className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-3"
+      <div
+        className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-fuchsia-600/15 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-violet-600/10 blur-3xl"
+        aria-hidden
+      />
+
+      <div className="relative">
+        <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-fuchsia-300/70">
+              230M creator wallet
+            </p>
+            <h4 className="mt-1 text-base sm:text-lg font-semibold text-white">
+              Listings-first deployment
+            </h4>
+          </div>
+          <a
+            href="https://x.com/aptcasinofun"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-fuchsia-200/90 hover:bg-fuchsia-500/20 transition-colors"
           >
-            <div className="flex items-center gap-2 mb-2">
+            @aptcasinofun
+          </a>
+        </div>
+
+        {/* Stacked allocation bar */}
+        <div className="mb-1 flex h-2.5 w-full overflow-hidden rounded-full bg-white/5 ring-1 ring-white/10">
+          {CREATOR_BUY_DEPLOYMENT.map((row) => (
+            <div
+              key={row.label}
+              className="h-full transition-opacity hover:opacity-100 opacity-90"
+              style={{ width: `${row.pct}%`, backgroundColor: row.fill }}
+              title={`${row.label} · ${row.pct}%`}
+            />
+          ))}
+        </div>
+        <div className="mb-5 flex flex-wrap gap-x-3 gap-y-1">
+          {CREATOR_BUY_DEPLOYMENT.map((row) => (
+            <span key={row.label} className="inline-flex items-center gap-1.5 text-[10px] text-white/40">
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: row.fill }} />
+              {row.pct}%
+            </span>
+          ))}
+        </div>
+
+        {/* Featured listings block */}
+        <div className="mb-4 rounded-xl border border-fuchsia-400/30 bg-gradient-to-br from-fuchsia-950/50 via-[#1a0018] to-violet-950/30 p-4 sm:p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+            <div>
+              <p className="text-sm font-semibold text-white">{featured.label}</p>
+              <p className="text-xs text-white/45 mt-0.5">Largest share of the 23%</p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold tabular-nums text-fuchsia-200">{featured.pct}%</p>
+              <p className="font-mono text-[11px] text-white/40 tabular-nums">{featured.tokensShort} APTC</p>
+            </div>
+          </div>
+          <div className="space-y-2.5">
+            {APTC_LISTING_TIERS.map((tier) => (
+              <div
+                key={tier.tier}
+                className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2.5"
+              >
+                <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-fuchsia-300/80 w-28">
+                  Tier {tier.tier}
+                </span>
+                <p className="flex-1 text-xs text-white/55 leading-snug">{tier.summary}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Remaining buckets — clean rows */}
+        <ul className="space-y-2">
+          {rest.map((row) => (
+            <li
+              key={row.label}
+              className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5"
+            >
               <span
-                className="h-2 w-2 shrink-0 rounded-full"
+                className="h-2 w-2 shrink-0 rounded-full ring-2 ring-white/10"
                 style={{ backgroundColor: row.fill }}
               />
-              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/50 tabular-nums">
-                {row.pct}%
+              <span className="flex-1 min-w-0 text-sm text-white/80">{row.label}</span>
+              <span className="font-mono text-sm font-semibold tabular-nums text-white/90">{row.pct}%</span>
+              <span className="hidden sm:inline font-mono text-[11px] text-white/35 tabular-nums w-14 text-right">
+                {row.tokensShort}
               </span>
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-4 text-[11px] leading-relaxed text-white/40 border-t border-white/[0.06] pt-3">
+          {APTC_TRANSPARENCY.opsWalletRule}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+const INTEGRITY_GUARANTEES = [
+  { label: 'No wash volume', sub: 'Organic casino GGR only' },
+  { label: 'No fake FDV', sub: 'Real curve pricing' },
+  { label: 'No dumps', sub: 'One public ops wallet' },
+];
+
+/** Sniper / bot / degen due-diligence — explicit green flags */
+export function TraderTransparencyPanel({ variant = 'default' }) {
+  const isLitepaper = variant === 'litepaper';
+  const t = APTC_TRANSPARENCY;
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-2xl border border-white/10 bg-[#1A0015] ${
+        isLitepaper ? 'p-6 sm:p-8' : 'p-5 md:p-6'
+      }`}
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fuchsia-500/50 to-transparent"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -right-24 top-0 h-64 w-64 rounded-full bg-emerald-500/8 blur-3xl"
+        aria-hidden
+      />
+
+      <div className="relative">
+        <div className="mb-6 max-w-2xl">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40">
+            Trader due diligence
+          </p>
+          <h3 className="mt-1 text-xl sm:text-2xl font-bold text-white tracking-tight">{t.headline}</h3>
+          <p className="mt-2 text-sm text-white/50 leading-relaxed">{t.subhead}</p>
+        </div>
+
+        {/* Hero guarantees */}
+        <div className="grid sm:grid-cols-3 gap-3 mb-6">
+          {INTEGRITY_GUARANTEES.map((g) => (
+            <div
+              key={g.label}
+              className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/40 to-transparent px-4 py-3.5"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300 text-xs">
+                  ✓
+                </span>
+                <p className="text-sm font-semibold text-white">{g.label}</p>
+              </div>
+              <p className="text-[11px] text-white/45 pl-7">{g.sub}</p>
             </div>
-            <p className="text-xs font-medium text-white/80 leading-snug">{row.label}</p>
-            <p className="mt-1 font-mono text-[11px] text-white/40 tabular-nums">{row.tokensShort}</p>
+          ))}
+        </div>
+
+        <p className="text-sm text-white/60 leading-relaxed mb-6 max-w-3xl">{t.pledge}</p>
+
+        {/* Compact checklist */}
+        <div className={`grid gap-x-10 ${isLitepaper ? 'sm:grid-cols-2' : 'lg:grid-cols-2'}`}>
+          {APTC_TRADER_GREEN_FLAGS.map((row) => (
+            <div
+              key={row.term}
+              className="flex gap-3 py-3.5 border-b border-white/[0.06] last:border-b-0"
+            >
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-emerald-500/15 text-[10px] text-emerald-300">
+                ✓
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <p className="text-sm font-medium text-white/90">{row.term}</p>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300/90">
+                    {row.status}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-white/45 leading-snug">{row.detail}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 pt-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-rose-300/60 mb-2.5">
+            We don&apos;t run these
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {APTC_RED_FLAGS_WE_AVOID.map((item) => (
+              <span
+                key={item}
+                className="inline-flex items-center gap-1 rounded-md border border-rose-500/15 bg-rose-950/30 px-2 py-1 text-[10px] text-rose-200/70"
+              >
+                <span className="text-rose-400/80" aria-hidden>
+                  ×
+                </span>
+                {item}
+              </span>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
