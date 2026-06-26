@@ -76,16 +76,16 @@ export default function LitepaperTokenomicsBlock() {
 
       <div className="mb-5 grid gap-3 sm:grid-cols-3">
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Spot FDV (est.)</p>
-          <p className="mt-1 text-xl font-bold text-white">~${(m.approxSpotFdvUsd / 1000).toFixed(1)}k</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Starting MC</p>
+          <p className="mt-1 text-xl font-bold text-white">~${(m.approxMarketCapUsd / 1000).toFixed(0)}k</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
           <p className="text-[10px] uppercase tracking-widest text-white/40">Graduation</p>
-          <p className="mt-1 text-xl font-bold text-white">{m.graduationSol} SOL → DAMM v2</p>
+          <p className="mt-1 text-xl font-bold text-white">~{m.graduationSol} SOL → DAMM v2</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Creator buy</p>
-          <p className="mt-1 text-xl font-bold text-white">{m.initialBuyPct}% · ${m.initialBuyUsd}</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Launch mode</p>
+          <p className="mt-1 text-xl font-bold text-white">SpaceX · {m.floatPct}% float</p>
         </div>
       </div>
 
@@ -95,8 +95,7 @@ export default function LitepaperTokenomicsBlock() {
             Full supply allocation
           </p>
           <p className="mb-4 text-xs text-white/40">
-            23% creator (listings-first · Tier 1–3 DEX → CEX) · 77% public curve · 0% team / founder · no wash · no
-            fake FDV · no dumps
+            4% float · 96% locked · SpaceX Mode · 0% team / founder · no wash · no fake FDV · no dumps
           </p>
           <AllocationDonut variant="litepaper" />
         </div>
@@ -146,7 +145,7 @@ export default function LitepaperTokenomicsBlock() {
         </table>
         ) : (
           <p className="text-xs leading-6 text-white/55">
-            Single operations wallet receives the {m.initialBuyPct}% creator initial buy and 100% Bags fee-share
+            Single operations wallet receives the creator initial buy from the 4% float and 100% Bags fee-share
             claims (@aptcasinofun). Address published at TGE on Solscan and Bags.fm.
           </p>
         )}

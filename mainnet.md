@@ -6,14 +6,15 @@ Checklist for launching APT Casino on production infrastructure. Solana is the p
 
 ## APTC token (Bags.fm launch)
 
-- [ ] Launch on [bags.fm/launch](https://bags.fm/launch) — Founder (Default) mode, 2% fee
-- [ ] Creator initial buy: **$610 / 23%** · fee share **100% → @aptcasinofun** · listings-first (Tier 1–3)
+- [ ] Launch on [bags.fm/launch](https://bags.fm/launch) — **SpaceX Mode** (4% float · 96% locked)
+- [ ] Dynamic fees **2% → 0.5%** · **25% fee compounding** post-migration · fee share **100% → @aptcasinofun**
+- [ ] Target **~$50k starting MC** on circulating float · listings-first creator buy (~$610 from float)
 - [ ] Publish transparency pledge: **no wash volume · no fake FDV · no dumps** on site + litepaper
 - [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production
 - [ ] Set `BAGS_API_KEY` for pool/fee analytics (optional)
 - [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` once DexScreener indexes the pair
 - [ ] Bonding curve live on Meteora DBC (virtual pool)
-- [ ] Graduation at **85 SOL** → Meteora DAMM v2
+- [ ] Graduation at **~55 SOL** → Meteora DAMM v2 (SpaceX Mode)
 - [ ] DexScreener Enhanced Token Info submitted
 - [ ] Jupiter routing visible
 - [ ] CoinGecko & CoinMarketCap applications submitted
@@ -182,7 +183,7 @@ Or use `./deploy.sh -n mainnet` for combined contract + Vercel flow.
 - [ ] Mobile layouts verified on iOS Safari and Android Chrome
 - [ ] Demo mode refill shows 100 native units (or `NEXT_PUBLIC_DEMO_START_NATIVE`)
 - [ ] Error rate and latency in Vercel logs acceptable
-- [ ] Bags bonding curve progress toward 85 SOL graduation
+- [ ] Bags bonding curve progress toward ~55 SOL graduation
 - [ ] Creator fees claimable via Bags fee share
 
 ## Rollback
@@ -209,7 +210,7 @@ flowchart TD
 |------|-------------|
 | Aptos module publish | tens of APT (gas + package size) |
 | Solana program deploy | ~1–3 SOL + rent |
-| Bags token launch | ~0.2 SOL tx fees + initial buy (~$610 / 23%) |
+| Bags token launch | ~0.2 SOL tx fees + creator initial buy (~$610 from float) |
 | Vercel Pro | per plan |
 | Supabase Pro | per plan |
 | Livepeer / RPC | usage-based |

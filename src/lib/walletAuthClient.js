@@ -3,6 +3,30 @@
 import bs58 from 'bs58';
 import { buildWalletAuthMessage } from '@/lib/walletAuthMessage';
 
+function bytesToHex(bytes) {
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Aptos wallets return signature as string, hex, Uint8Array, or nested auth object. */
+function normalizeAptosSignature(raw) {
+  if (raw == null) return '';
+  if (typeof raw === 'string') return raw.trim();
+  if (raw instanceof Uint8Array) return `0x${bytesToHex(raw)}`;
+  if (Array.isArray(raw)) return `0x${bytesToHex(new Uint8Array(raw))}`;
+  if (typeof raw === 'object') {
+    if (typeof raw.signature === 'string') return raw.signature.trim();
+    if (raw.signature instanceof Uint8Array) return `0x${bytesToHex(raw.signature)}`;
+    if (Array.isArray(raw.signature)) return `0x${bytesToHex(new Uint8Array(raw.signature))}`;
+    if (raw.signature?.data?.data && Array.isArray(raw.signature.data.data)) {
+      return `0x${bytesToHex(new Uint8Array(raw.signature.data.data))}`;
+    }
+    if (raw.data?.data && Array.isArray(raw.data.data)) {
+      return `0x${bytesToHex(new Uint8Array(raw.data.data))}`;
+    }
+  }
+  return '';
+}
+
 const authCache = new Map();
 
 /**
@@ -43,8 +67,13 @@ export async function signWalletAuth({
       message,
       nonce: String(timestamp),
     });
-    signature = result?.signature ?? '';
-    publicKey = result?.publicKey ?? aptosPublicKey ?? null;
+    signature = normalizeAptosSignature(result?.signature ?? result);
+    publicKey =
+      result?.publicKey?.toString?.() ??
+      result?.publicKey ??
+      result?.args?.publicKey?.toString?.() ??
+      aptosPublicKey ??
+      null;
   } else {
     return null;
   }

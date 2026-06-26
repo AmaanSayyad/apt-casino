@@ -1,16 +1,16 @@
 /**
  * OTC vs DEX fee model — sourced wallet/platform rates for calculator UI.
- * Pool fee follows Bags Default (Founder) mode: 2% trade fee on bonding curve / DAMM v2.
+ * Pool fee follows Bags SpaceX Mode: 2% on curve, 2%→0.5% post-migration by market cap.
  * @see https://docs.bags.fm/how-to-guides/customize-token-fees
  */
 
-/** Bags Default (Founder) mode — 2% total trade fee pre- and post-migration */
+/** Bags SpaceX Mode — 2% pre-migration; dynamic 2%→0.5% post-migration */
 export const APTC_DEX_POOL_FEE = {
   totalBps: 200,
   totalLabel: '2%',
-  venue: 'Bags · Meteora DBC / DAMM v2',
+  venue: 'Bags · Meteora DBC / DAMM v2 · SpaceX Mode',
   detail:
-    '2% trade fee (1% protocol + 1% creator pre-graduation). Post-graduation: 0.75% + 0.75% + 0.5% compounding into pool liquidity.',
+    '2% trade fee on bonding curve (1% protocol + 1% creator). Post-migration: market-cap-based fee from 2% down to 0.5% floor; 25% of fees compound after migration.',
   sources: [
     {
       label: 'Bags — Customize token fees',
@@ -149,7 +149,7 @@ export const DEX_VALUE_LOSS_SOURCES = [
   {
     id: 'tax',
     label: 'Bags / Meteora trade fee (APTC/SOL)',
-    detail: '2% on APTC DEX swaps via Bags bonding curve or Meteora DAMM v2 — 1% creator + 1% protocol pre-graduation.',
+    detail: '2% on APTC DEX swaps via Bags SpaceX Mode (curve or Meteora DAMM v2). Post-migration fee scales 2%→0.5% as market cap grows.',
   },
   {
     id: 'priceImpact',

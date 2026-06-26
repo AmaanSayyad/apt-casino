@@ -178,7 +178,7 @@ NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL
 
 When you're ready to launch:
 
-- [ ] Launch APTC on [bags.fm/launch](https://bags.fm/launch) — Default (Founder) mode, $610 / 23% listings-first creator buy
+- [ ] Launch APTC on [bags.fm/launch](https://bags.fm/launch) — **SpaceX Mode** · 4% float · ~$50k starting MC · listings-first creator buy
 - [ ] Fee share 100% → @aptcasinofun · no wash · no fake FDV · no dumps
 - [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in Vercel
 - [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` in Vercel (optional, for faster chart)

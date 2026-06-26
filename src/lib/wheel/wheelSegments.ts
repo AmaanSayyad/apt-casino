@@ -140,8 +140,9 @@ export function resolveWheelSegmentIndex(
   noOfSegments: number,
 ): number {
   const segments = Math.max(2, Math.min(50, Math.floor(noOfSegments) || 10));
-  const probs = wheelTemplateProbabilities(risk, segments);
-  return deriveWheelOutcome(seedBytes, probs) % segments;
+  const wheel = buildExpandedWheelSegments(risk, segments);
+  const probs = wheel.map((s) => s.probability);
+  return deriveWheelOutcome(seedBytes, probs);
 }
 
 export function computeWheelPayoutNative(

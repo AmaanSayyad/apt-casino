@@ -13,6 +13,7 @@ import {
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { getAptosForServer } from '@/lib/server/aptTreasury';
 import { consumeWalletAuthSignature } from '@/lib/server/walletAuthConsume';
+import { normalizeWalletAuthSignature } from '@/lib/server/walletAuthSignature';
 import { rateLimitByKey, rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 export function isWalletAuthRequired(): boolean {
@@ -97,12 +98,16 @@ async function aptosPublicKeyOwnsWallet(wallet: string, publicKeyHex: string): P
   }
 }
 
+
 function validateAuthEnvelope(
   wallet: string,
   chain: ChainId,
   auth: WalletAuthPayload | null | undefined,
-): { ok: true; normalized: string; message: string } | { ok: false } {
-  if (!auth?.message?.trim() || !auth.signature?.trim()) return { ok: false };
+): { ok: true; normalized: string; message: string; signature: string } | { ok: false } {
+  if (!auth?.message?.trim()) return { ok: false };
+
+  const signature = normalizeWalletAuthSignature(auth.signature);
+  if (!signature) return { ok: false };
 
   const message = auth.message.trim();
   if (!message.includes(`domain: ${WALLET_AUTH_DOMAIN}`)) return { ok: false };
@@ -120,7 +125,7 @@ function validateAuthEnvelope(
   const expected = buildWalletAuthMessage(normalized, chain, ts);
   if (message !== expected) return { ok: false };
 
-  return { ok: true, normalized, message };
+  return { ok: true, normalized, message, signature };
 }
 
 export async function verifyWalletAuthPayload(
@@ -132,10 +137,10 @@ export async function verifyWalletAuthPayload(
   if (!envelope.ok) return false;
 
   if (chain === 'solana') {
-    return verifySolanaWalletAuth(envelope.normalized, envelope.message, auth!.signature.trim());
+    return verifySolanaWalletAuth(envelope.normalized, envelope.message, envelope.signature);
   }
   if (chain === 'aptos') {
-    if (!verifyAptosSignature(envelope.message, auth!.signature.trim(), auth!.publicKey)) {
+    if (!verifyAptosSignature(envelope.message, envelope.signature, auth!.publicKey)) {
       return false;
     }
     return aptosPublicKeyOwnsWallet(envelope.normalized, auth!.publicKey!);
@@ -146,7 +151,8 @@ export async function verifyWalletAuthPayload(
 export function readWalletAuthFromBody(body: unknown): WalletAuthPayload | null {
   if (!body || typeof body !== 'object') return null;
   const auth = (body as { walletAuth?: WalletAuthPayload }).walletAuth;
-  if (!auth?.message || !auth.signature) return null;
+  if (!auth?.message?.trim()) return null;
+  if (!normalizeWalletAuthSignature(auth.signature)) return null;
   return auth;
 }
 

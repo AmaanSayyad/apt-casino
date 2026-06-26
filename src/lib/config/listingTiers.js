@@ -10,7 +10,7 @@ export const APTC_LISTING_TIERS = [
     status: 'in_progress',
     venues: ['Bags.fm', 'Meteora', 'DexScreener', 'Jupiter', 'Birdeye', 'GeckoTerminal'],
     summary:
-      'Primary Solana liquidity at TGE — Bags bonding curve (Meteora DBC), graduation to DAMM v2, DexScreener enhanced info, Jupiter swap routing, Birdeye & GeckoTerminal tracking.',
+      'Primary Solana launch at TGE — Bags SpaceX Mode (4% float), Meteora DBC graduation to DAMM v2, DexScreener enhanced info, Jupiter swap routing, Birdeye & GeckoTerminal tracking.',
   },
   {
     tier: 2,

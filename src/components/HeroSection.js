@@ -10,6 +10,7 @@ import {
   getLaunchCtaText,
   getHeroImagePath,
   getHeroImageDimensions,
+  getLaunchTeaserEmbedUrl,
 } from "@/lib/config/launchStatus";
 
 export default function HeroSection() {
@@ -20,6 +21,7 @@ export default function HeroSection() {
   const ctaText = getLaunchCtaText();
   const imagePath = getHeroImagePath();
   const imageDimensions = getHeroImageDimensions();
+  const teaserEmbedUrl = getLaunchTeaserEmbedUrl();
 
   useEffect(() => {
     setIsDev(process.env.NODE_ENV === 'development');
@@ -68,15 +70,28 @@ export default function HeroSection() {
       <div className="relative mx-auto mt-12 w-full max-w-4xl sm:mt-16 px-4">
         <div className="absolute -inset-1 bg-gradient-to-r from-red-magic/50 to-blue-magic/50 rounded-2xl blur-md"></div>
         <div className="relative">
-          <Image
-            src={imagePath}
-            width={imageDimensions.width}
-            height={imageDimensions.height}
-            quality={100}
-            priority
-            alt={launched ? "APTC Casino - Token Launched" : "APT-Casino Gaming Platform"}
-            className="rounded-xl z-10 relative w-full h-auto"
-          />
+          {launched ? (
+            <Image
+              src={imagePath}
+              width={imageDimensions.width}
+              height={imageDimensions.height}
+              quality={100}
+              priority
+              alt="APTC Casino - Token Launched"
+              className="rounded-xl z-10 relative w-full h-auto"
+            />
+          ) : (
+            <div className="relative z-10 w-full overflow-hidden rounded-xl aspect-video bg-black ring-1 ring-white/10">
+              <iframe
+                src={teaserEmbedUrl}
+                title="APTC launch teaser"
+                className="absolute inset-0 h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          )}
 
           {isDev && (
             <div className="absolute top-4 right-4 bg-yellow-600/80 text-white text-xs px-2 py-1 rounded-md z-20">

@@ -1,9 +1,11 @@
 import { createHash } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import type { WalletAuthPayload } from '@/lib/walletAuthMessage';
+import { normalizeWalletAuthSignature } from '@/lib/server/walletAuthSignature';
 
-export function hashWalletAuthSignature(signature: string): string {
-  return createHash('sha256').update(signature.trim()).digest('hex');
+export function hashWalletAuthSignature(signature: unknown): string {
+  const normalized = normalizeWalletAuthSignature(signature) ?? String(signature ?? '');
+  return createHash('sha256').update(normalized).digest('hex');
 }
 
 export type ConsumeAuthResult = 'ok' | 'replay' | 'unavailable';

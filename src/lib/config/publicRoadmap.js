@@ -25,7 +25,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000001',
     title: 'APTC TGE on Bags.fm (Meteora DBC)',
     excerpt:
-      'Fair bonding curve launch · Founder (Default) mode · 23% creator buy · 85 SOL graduation → Meteora DAMM v2 · 2% trade fee · 100% fee share to @aptcasinofun.',
+      'SpaceX Mode launch on Bags.fm · 4% float · 96% locked · ~$50k starting MC · dynamic 2%→0.5% trade fees · ~55 SOL graduation → Meteora DAMM v2 · 25% fee compounding post-migration · 100% fee share to @aptcasinofun.',
     category: 'Platform',
     status: 'in_progress',
     link: getLitepaperUrl('aptc-token'),
@@ -103,7 +103,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
   },
   {
     id: 'a1000001-0001-4001-8001-000000000008',
-    title: 'Meteora DAMM v2 liquidity depth',
+    title: 'Meteora DAMM v2 post-graduation trading',
     excerpt:
       'Post-graduation pool depth — fee compounding, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
     category: 'Partnership',

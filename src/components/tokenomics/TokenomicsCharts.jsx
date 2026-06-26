@@ -134,7 +134,7 @@ export function AllocationDonut({ variant = 'default' }) {
   );
 }
 
-/** Breakdown of how the 230M creator initial buy is deployed */
+/** Breakdown of how the creator ops wallet deploys initial buy + fee share */
 export function CreatorBuyUses({ variant = 'default' }) {
   const isLitepaper = variant === 'litepaper';
   const featured = CREATOR_BUY_DEPLOYMENT.find((row) => row.highlight) ?? CREATOR_BUY_DEPLOYMENT[0];
@@ -159,7 +159,7 @@ export function CreatorBuyUses({ variant = 'default' }) {
         <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-fuchsia-300/70">
-              230M creator wallet
+              Creator ops wallet
             </p>
             <h4 className="mt-1 text-base sm:text-lg font-semibold text-white">
               Listings-first deployment
@@ -200,11 +200,10 @@ export function CreatorBuyUses({ variant = 'default' }) {
           <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
             <div>
               <p className="text-sm font-semibold text-white">{featured.label}</p>
-              <p className="text-xs text-white/45 mt-0.5">Largest share of the 23%</p>
+              <p className="text-xs text-white/45 mt-0.5">Largest share of ops wallet deployment</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold tabular-nums text-fuchsia-200">{featured.pct}%</p>
-              <p className="font-mono text-[11px] text-white/40 tabular-nums">{featured.tokensShort} APTC</p>
             </div>
           </div>
           <div className="space-y-2.5">
@@ -235,9 +234,6 @@ export function CreatorBuyUses({ variant = 'default' }) {
               />
               <span className="flex-1 min-w-0 text-sm text-white/80">{row.label}</span>
               <span className="font-mono text-sm font-semibold tabular-nums text-white/90">{row.pct}%</span>
-              <span className="hidden sm:inline font-mono text-[11px] text-white/35 tabular-nums w-14 text-right">
-                {row.tokensShort}
-              </span>
             </li>
           ))}
         </ul>

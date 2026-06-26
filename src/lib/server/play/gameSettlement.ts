@@ -208,7 +208,7 @@ function settleWheel(input: {
   const proofOutcome = (input.gameRound.fairnessProof as SolanaFairnessProof | undefined)?.outcome;
   if (proofOutcome?.segmentIndex != null) {
     const claimed = asNumber(proofOutcome.segmentIndex);
-    if (claimed != null && claimed % segments !== segmentIndex % segments) {
+    if (claimed != null && claimed !== segmentIndex) {
       throw new Error('Wheel segment does not match fairness proof');
     }
   }

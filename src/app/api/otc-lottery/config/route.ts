@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     estimate,
     feeExplanation: {
       tokenTradeTax:
-        '2% Bags Default (Founder) trade fee on APTC/SOL — 1% creator + 1% protocol pre-graduation. See docs.bags.fm.',
+        '2% Bags SpaceX Mode trade fee on APTC/SOL — 2% on curve; post-migration scales down toward 0.5% as market cap grows. See docs.bags.fm.',
       swapPlatformFee:
         'Wallet-specific: Phantom 0.85% on select pairs; Solflare/Glow/Backpack/Jupiter manual often 0% platform fee — network + price impact still apply.',
     },

@@ -8,6 +8,7 @@ import {
   APTC_LAUNCH_STEPS,
   APTC_TOKENOMICS,
   APTC_UTILITY,
+  BAGS_SPACEX_MODE,
   solscanTokenUrl,
   bagsTokenUrl,
   meteoraPoolUrl,
@@ -121,7 +122,6 @@ export default function TokenomicsSection() {
   const hasLiveMarket = market?.priceUsd != null;
   const priceUsd = hasLiveMarket ? market.priceUsd : m.approxTokenPriceUsd;
   const mcapUsd = market?.marketCapUsd ?? market?.fdvUsd ?? m.approxMarketCapUsd;
-  const liqUsd = market?.liquidityUsd ?? m.approxLiquidityUsd;
   const vol24h = market?.volume24hUsd ?? null;
   const priceChange24h = market?.priceChange24h ?? null;
   const marketLabel = hasLiveMarket
@@ -148,10 +148,33 @@ export default function TokenomicsSection() {
             </span>{' '}
             Tokenomics
           </h2>
-          <p className="mt-3 w-full max-w-none text-sm sm:text-base md:text-lg text-white/55 leading-relaxed">
-            1B fixed supply · fair Bags curve · 0% team allocation · 0% VC allocation · 0% founder allocation. Creator wallet is listings-first —
-            Tier 1–3 DEX to CEX.
+          <p className="mt-3 max-w-full overflow-x-auto text-sm sm:text-base text-white/55 leading-relaxed whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            1B fixed supply · creator wallet listings-first (Tier 1–3 DEX → CEX) · 0% team / founder allocation.
           </p>
+        </div>
+
+        {/* SpaceX Mode — single launch-params block */}
+        <div className="mb-6 rounded-2xl border border-sky-500/25 bg-gradient-to-br from-sky-950/40 via-[#120010] to-indigo-950/30 p-5 md:p-6">
+          <div className="flex flex-wrap items-start gap-4">
+            <div className="flex items-center gap-3">
+              <img src={BAGS_LOGO_SRC} alt="Bags.fm" className="h-10 w-10 rounded-xl object-contain bg-white/5" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-sky-300/80">
+                  Launching on @BagsApp
+                </p>
+                <h3 className="text-lg font-semibold text-white">{BAGS_SPACEX_MODE.label}</h3>
+                <p className="text-xs text-white/50">{BAGS_SPACEX_MODE.tagline}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 flex-1 min-w-[200px]">
+              <LaunchStat label="Float" value={`${BAGS_SPACEX_MODE.floatPct}% at TGE`} />
+              <LaunchStat label="Locked" value={`${BAGS_SPACEX_MODE.lockedPct}%`} />
+              <LaunchStat label="Starting MC" value={`~$${(m.approxMarketCapUsd / 1000).toFixed(0)}k`} />
+              <LaunchStat label="Trade fee" value={`${BAGS_SPACEX_MODE.tradeFeeStartPct}% → ${BAGS_SPACEX_MODE.tradeFeeFloorPct}%`} />
+              <LaunchStat label="Compounding" value={`${BAGS_SPACEX_MODE.feeCompoundingPct}% post-migration`} />
+              <LaunchStat label="Graduation" value={`~${m.graduationSol} SOL`} />
+            </div>
+          </div>
         </div>
 
         {/* ── Main 2-column grid ── */}
@@ -194,19 +217,18 @@ export default function TokenomicsSection() {
                   loading={marketLoading}
                 />
                 <TickerStat label="Market cap" value={fmtUsdCompact(mcapUsd)} loading={marketLoading} />
-                <TickerStat label="Liquidity" value={fmtUsdCompact(liqUsd)} sub="DEX pool" loading={marketLoading} />
+                <TickerStat
+                  label="Float"
+                  value={`${m.floatPct}%`}
+                  sub={hasLiveMarket ? 'Circulating' : 'At TGE target'}
+                  loading={marketLoading}
+                />
                 <TickerStat
                   label="24h volume"
                   value={vol24h != null ? fmtUsdCompact(vol24h) : '—'}
                   loading={marketLoading}
                 />
               </div>
-              {!marketLoading && !hasLiveMarket && (
-                <p className="mt-3 text-[10px] text-amber-200/70 leading-relaxed">
-                  Pre-launch targets: ~${(m.approxSpotFdvUsd / 1000).toFixed(1)}k spot FDV after $610 / 23% creator buy ·
-                  graduates at {m.graduationSol} SOL → Meteora DAMM v2.
-                </p>
-              )}
               <div className={`mt-4 flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs ${
                 launched 
                   ? 'border-emerald-500/30 bg-emerald-500/10' 
@@ -234,15 +256,8 @@ export default function TokenomicsSection() {
 
             <BagsAnalyticsPanel bags={market?.bags} loading={marketLoading} compact />
 
-            {/* Launch stats + trade & research grid */}
+            {/* Trade & research grid */}
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6 space-y-5">
-              <div className="flex flex-wrap gap-2">
-                <LaunchStat label="Launch" value="Bags DBC" />
-                <LaunchStat label="Creator buy" value={`${m.initialBuyPct}% · $${m.initialBuyUsd}`} />
-                <LaunchStat label="Graduation" value={`${m.graduationSol} SOL`} />
-                <LaunchStat label="Trade fee" value={`${m.tradeFeePreMigrationPct}%`} />
-                <LaunchStat label="Spot FDV (est.)" value={`~$${(m.approxSpotFdvUsd / 1000).toFixed(1)}k`} />
-              </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35 mb-3">
                   Trade & research
@@ -274,7 +289,7 @@ export default function TokenomicsSection() {
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
               <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
               <p className="text-xs text-white/45 mb-5">
-                23% listings-first · 77% public curve · 0% team
+                4% float · 96% locked · 0% team
               </p>
               <AllocationDonut />
             </div>

@@ -84,12 +84,17 @@ export function getLaunchStyles() {
 }
 
 /**
- * Get hero image path based on launch status
+ * Get hero image path based on launch status (post-launch only)
  */
 export function getHeroImagePath() {
-  return isAptcLaunched() 
-    ? '/images/APTC-Launched.jpg'
-    : '/26junelaunch.jpg';
+  return '/images/APTC-Launched.jpg';
+}
+
+/** YouTube embed for pre-launch teaser */
+export const APTC_LAUNCH_TEASER_VIDEO_ID = 'oWGWqhfEMng';
+
+export function getLaunchTeaserEmbedUrl() {
+  return `https://www.youtube.com/embed/${APTC_LAUNCH_TEASER_VIDEO_ID}?rel=0`;
 }
 
 /**

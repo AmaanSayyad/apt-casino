@@ -224,11 +224,12 @@ All though started as a idea but now we are thinking to carry forward as a busin
 
 ## $APTC token (Bags.fm launch)
 
-APTC is the native GambleFi token — launching on **Solana via Bags.fm** (Meteora bonding curve → DAMM v2).
+APTC is the native GambleFi token — launching on **Solana via Bags.fm** in **SpaceX Mode** (Meteora bonding curve → DAMM v2).
 
-- **23% creator buy** ($610) → single @aptcasinofun wallet, **listings-first** (Tier 1–3 DEX → CEX)
-- **77%** fair public bonding curve · **0%** team / founder / VC allocation
-- **No wash volume · no fake FDV · no dumps**
+- **SpaceX Mode** on @BagsApp — **4% float** · **96% locked** · modeled after the SpaceX IPO
+- **Dynamic fees** — **2% → 0.5%** as market cap grows · **25% fee compounding** post-migration
+- **~$50k starting MC** on circulating float · creator buy + fee share → @aptcasinofun (**listings-first**)
+- **0%** team / founder / VC allocation · **No wash volume · no fake FDV · no dumps**
 
 Full tokenomics: [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) · live charts on [aptcasino.fun/#tokenomics](https://aptcasino.fun/#tokenomics).
 

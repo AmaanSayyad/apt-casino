@@ -2,7 +2,7 @@
 
 Last updated: 2026-06-19
 
-Native SPL token for AptCasino.fun — fair launch on **Bags.fm** via **Meteora Dynamic Bonding Curve (DBC)**, graduating at **85 SOL** into **Meteora DAMM v2**.
+Native SPL token for AptCasino.fun — fair launch on **Bags.fm** in **SpaceX Mode** via **Meteora Dynamic Bonding Curve (DBC)**, graduating at **~55 SOL** into **Meteora DAMM v2**.
 
 ## Token
 
@@ -17,20 +17,25 @@ Native SPL token for AptCasino.fun — fair launch on **Bags.fm** via **Meteora 
 | **Freeze authority** | Revoked at creation |
 | **Token authority** | Bags Token Authority (standard Bags launch) |
 
-## Launch (Bags.fm · Founder / Default mode)
+## Launch (Bags.fm · SpaceX Mode)
+
+SpaceX Mode is Bags’ default launch configuration modeled after the SpaceX IPO: **4% float**, **96% supply locked**, **dynamic fees (2% → 0.5%)**, and **25% post-migration fee compounding**.
 
 | Parameter | Value |
 |-----------|--------|
 | **Platform** | [bags.fm/launch](https://bags.fm/launch) |
-| **Curve** | Meteora DBC (virtual pool pre-graduation) |
-| **Fee mode** | `DEFAULT` — Founder mode ([docs](https://docs.bags.fm/how-to-guides/customize-token-fees)) |
-| **Trade fee** | 2% pre- and post-migration (1% protocol + 1% creator on curve) |
-| **Creator initial buy** | **$610 → 23%** (~230M APTC) |
-| **Public curve** | **77%** (~770M APTC) sold on bonding curve |
-| **Graduation** | **85 SOL** raised → auto-migrate to Meteora DAMM v2 |
+| **Fee mode** | SpaceX Mode — `2% Base with 96% Supply Locked` ([docs](https://docs.bags.fm/how-to-guides/customize-token-fees)) |
+| **Config ID** | `ba28db46-ea6f-4452-8218-5587f6aca0a1` |
+| **Float at TGE** | **4%** (~40M APTC circulating on curve) |
+| **Locked supply** | **96%** (~960M APTC — Bags protocol lock, not a team wallet) |
+| **Trade fee (pre-migration)** | **2%** (1% protocol + 1% creator on curve) |
+| **Trade fee (post-migration)** | **2% → 0.5%** — scales down as market cap grows |
+| **Fee compounding** | **25%** of post-migration fees compound after migration |
+| **Creator initial buy** | **~$610** from the 4% float (listings-first @aptcasinofun) |
+| **Graduation** | **~55 SOL** raised → auto-migrate to Meteora DAMM v2 |
 | **Fee share** | 100% → @aptcasinofun (operations wallet) |
-| **Est. spot FDV at TGE** | ~$10k–$14k (after 23% creator buy) |
-| **Est. average-cost FDV** | ~$2,650 ($610 ÷ 23%) |
+| **Starting market cap (target)** | **~$50k** on circulating float |
+| **Implied FDV at TGE** | **~$1.25M** ($50k MC ÷ 4% float) |
 
 ```mermaid
 sequenceDiagram
@@ -41,11 +46,12 @@ sequenceDiagram
     participant M as Meteora DAMM v2
     participant X as DexScreener / Jupiter
 
-    C->>B: Launch APTC + $610 initial buy (23%)
+    C->>B: Launch APTC · SpaceX Mode (4% float)
     B->>D: Token live on bonding curve
-    Note over D: 2% trade fee · 1% creator share
-    D->>D: Public buys until 85 SOL
-    D->>M: Graduation → real AMM liquidity
+    Note over D: 2% trade fee · 96% locked
+    D->>D: Public buys until ~55 SOL
+    D->>M: Graduation → DAMM v2
+    Note over M: Fees scale 2%→0.5% · 25% compounding
     M->>X: Post-grad trading + indexing
 ```
 
@@ -53,20 +59,19 @@ sequenceDiagram
 
 | Bucket | % | Amount | Notes |
 |--------|---|--------|-------|
-| Creator initial buy | 23% | 230M | Single @aptcasinofun ops wallet · listings-first · 0% team/founder |
-| Bonding curve (public) | 77% | 770M | Traded on Meteora DBC until graduation |
+| Locked supply | 96% | 960M | Bags SpaceX Mode protocol lock — not a team/founder wallet |
+| Float at launch | 4% | 40M | Circulating on Meteora DBC until graduation |
 
-### Creator wallet deployment (230M · 23%)
+### Creator wallet deployment (@aptcasinofun)
 
 Largest share funds **Tier 1, 2 & 3 listings** (DEX → aggregators → CEX). No wash volume. No fake FDV. No dumps.
 
-| Use | % | Amount |
-|-----|---|--------|
-| Tier 1, 2 & 3 listings | 42% | 96.6M |
-| Liquidity & market making | 22% | 50.6M |
-| Community & player rewards | 18% | 41.4M |
-| Staking emissions | 10% | 23M |
-| Treasury & protocol ops | 8% | 18.4M |
+| Use | % of ops deployment |
+|-----|---------------------|
+| Tier 1, 2 & 3 listings | 50% |
+| Community & player rewards | 26% |
+| Staking emissions | 14% |
+| Treasury & protocol ops | 10% |
 
 **Tier 1** — Bags, Meteora, DexScreener, Jupiter, Birdeye, GeckoTerminal  
 **Tier 2** — CoinGecko, CoinMarketCap  
@@ -76,30 +81,19 @@ Largest share funds **Tier 1, 2 & 3 listings** (DEX → aggregators → CEX). No
 
 ```mermaid
 pie title APTC supply at TGE (1B)
-    "Creator initial buy 23%" : 23
-    "Bonding curve 77%" : 77
+    "Locked 96%" : 96
+    "Float 4%" : 4
 ```
 
-There is **no Raydium-style LP burn**. At graduation, accumulated SOL and remaining curve inventory **seed the Meteora DAMM v2 pool**. Post-graduation, **25% of trade fees compound** back into pool liquidity.
+## Fee economics (SpaceX Mode)
 
-## Fee economics (Default mode)
+| Stage | Total fee | Behavior |
+|-------|-----------|----------|
+| Pre-migration (curve) | 2% | 1% creator + 1% protocol |
+| Post-migration (DAMM v2) | 2% → 0.5% | Market-cap-based decay toward 0.5% floor |
+| Post-migration compounding | 25% of fees | Reinvested per Bags SpaceX Mode after migration |
 
-| Stage | Total fee | Creator (you) | Protocol | Compounding |
-|-------|-----------|---------------|----------|-------------|
-| Pre-migration (curve) | 2% | 1% | 1% | — |
-| Post-migration (DAMM v2) | 2% | 0.75% | 0.75% | 0.5% into pool |
-
-With **100% fee share to @aptcasinofun**, creator-side fees fund listings, liquidity, player rewards, staking, and protocol ops from a **single treasury wallet**. No team allocation. No founder allocation. No wash volume. No fake FDV. No dumps.
-
-## Liquidity projections (post-graduation, illustrative)
-
-| FDV | Est. DEX liquidity |
-|-----|-------------------|
-| $50k | ~$8k–$15k |
-| $100k | ~$15k–$28k |
-| $200k | ~$28k–$55k |
-
-Liquidity grows with volume, price, and fee compounding — not fixed at TGE.
+With **100% fee share to @aptcasinofun**, creator-side fees fund listings, player rewards, staking, and protocol ops from a **single treasury wallet**. No team allocation. No founder allocation. No wash volume. No fake FDV. No dumps.
 
 ## GGR flywheel
 
@@ -123,7 +117,7 @@ See `/api/ggr/buyback` and litepaper § GGR.
 
 - **Bags API:** [docs.bags.fm/api-reference/introduction](https://docs.bags.fm/api-reference/introduction) — pools, lifetime fees, claim stats (homepage + tokenomics widget via `/api/staking/aptc-stats`)
 - **Meteora DBC (on-chain):** bonding-curve SOL reserve + graduation progress (works without Bags API key)
-- **DexScreener:** holders, MC, liquidity, volume, price changes
+- **DexScreener:** holders, MC, volume, price changes
 - **Env:** `BAGS_API_KEY` (from [dev.bags.fm](https://dev.bags.fm)) — optional but enables lifetime fees + claim stats
 
 ## Links
@@ -132,4 +126,4 @@ See `/api/ggr/buyback` and litepaper § GGR.
 - **Launch:** https://bags.fm/launch
 - **Stake:** https://aptcasino.fun/stake
 - **Litepaper:** https://aptcasino.fun/litepaper
-- **Reference Bags token:** [Bynomo on Solscan](https://solscan.io/token/Faw8wwB6MnyAm9xG3qeXgN1isk9agXBoaRZX9Ma8BAGS)
+- **Bags fee modes:** https://docs.bags.fm/how-to-guides/customize-token-fees

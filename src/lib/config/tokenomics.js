@@ -1,17 +1,33 @@
 /**
  * APTC tokenomics — public-facing constants for landing + litepaper + docs.
- * Launch: Bags.fm fair bonding curve (Founder / Default mode) → Meteora DAMM v2.
+ * Launch: Bags.fm SpaceX Mode (96% locked · 4% float) → Meteora DBC → DAMM v2.
  * @see https://docs.bags.fm/how-to-guides/customize-token-fees
  * @see https://docs.bags.fm/how-to-guides/initial-buy-math
  */
 
 import { getAptcMint, isAptcLaunched, getAptcPairAddress } from './launchStatus';
 
-/** Bags Default config — 2% pre/post migration, 25% fee compounding post-migration, ~85 SOL graduation */
-export const BAGS_DEFAULT_CONFIG_ID = 'fa29606e-5e48-4c37-827f-4b03d58ee23d';
+/** Bags SpaceX Mode — 4% float, 96% locked, dynamic 2%→0.5% fees, 25% fee compounding post-migration, ~55 SOL graduation */
+export const BAGS_SPACEX_CONFIG_ID = 'ba28db46-ea6f-4452-8218-5587f6aca0a1';
+
+/** @deprecated Use BAGS_SPACEX_CONFIG_ID */
+export const BAGS_DEFAULT_CONFIG_ID = BAGS_SPACEX_CONFIG_ID;
 
 /** Public Bags.fm brand mark */
 export const BAGS_LOGO_SRC = '/bagsapp.png';
+
+/** Bags SpaceX Mode — modeled after the SpaceX IPO (4% float, dynamic fees, compounding). */
+export const BAGS_SPACEX_MODE = {
+  label: 'SpaceX Mode',
+  tagline: 'Modeled after the SpaceX IPO',
+  floatPct: 4,
+  lockedPct: 96,
+  tradeFeeStartPct: 2,
+  tradeFeeFloorPct: 0.5,
+  feeCompoundingPct: 25,
+  docsUrl: 'https://docs.bags.fm/how-to-guides/customize-token-fees',
+  bagsAppUrl: 'https://bags.fm/launch',
+};
 
 export const APTC_TOKENOMICS = {
   name: 'AptCasino.fun',
@@ -24,11 +40,11 @@ export const APTC_TOKENOMICS = {
   },
   launchVenue: 'Bags.fm · Meteora DBC → DAMM v2',
   launchPlatformUrl: 'https://bags.fm/launch',
-  feeMode: 'DEFAULT',
-  feeModeLabel: 'Founder mode (Default)',
-  bagsConfigId: BAGS_DEFAULT_CONFIG_ID,
+  feeMode: 'SPACEX',
+  feeModeLabel: 'SpaceX Mode',
+  bagsConfigId: BAGS_SPACEX_CONFIG_ID,
   launch:
-    '100% fair bonding curve on Bags · Founder (Default) mode · 2% trade fee · Meteora DBC graduates at 85 SOL into DAMM v2.',
+    'Bags SpaceX Mode · 4% float at TGE · 96% supply locked · dynamic 2%→0.5% trade fees · 25% post-migration fee compounding · Meteora DBC graduates at ~55 SOL into DAMM v2.',
   authorities: {
     mintRevoked: true,
     freezeRevoked: true,
@@ -54,33 +70,23 @@ export const APTC_LAUNCH_METRICS = {
     bagsFeeShareV2: 'FEE2tBhCKAt7shrod19QttSVREUYPiyMzoku1mL1gqVK',
   },
   totalSupplyShort: '1B',
-  graduationSol: 85,
-  migrationQuoteLamports: 85_000_000_000,
+  floatPct: BAGS_SPACEX_MODE.floatPct,
+  lockedPct: BAGS_SPACEX_MODE.lockedPct,
+  graduationSol: 55,
+  migrationQuoteLamports: 55_000_000_000,
+  /** Creator kickstart buy from the 4% float (listings-first ops) */
   initialBuyUsd: 610,
-  initialBuyPct: 23,
-  initialBuyTokensShort: '230M',
   initialBuySolApprox: 8.6,
-  tradeFeePreMigrationPct: 2,
-  tradeFeePostMigrationPct: 2,
-  creatorFeePreMigrationPct: 1,
-  creatorFeePostMigrationPct: 0.75,
-  protocolFeePreMigrationPct: 1,
-  protocolFeePostMigrationPct: 0.75,
-  feeCompoundingPostMigrationPct: 0.5,
-  /** Average-cost FDV implied by $610 for 23% of supply */
-  approxAverageFdvUsd: 2_650,
-  /** Typical spot FDV on indexers right after a ~23% creator buy (curve marginal price) */
-  approxSpotFdvUsd: 11_500,
-  approxMarketCapUsd: 11_500,
-  /** Pre-graduation: virtual curve — no standalone Raydium-style LP */
-  approxLiquidityUsd: 610,
-  approxLiquidityUsdPreGrad: null,
-  /** ~85 SOL side at graduation threshold (real DAMM v2 seed) */
-  approxLiquidityUsdAtGraduation: 6_060,
-  approxTokenPriceUsd: 0.0000115,
-  lpBurnPct: null,
-  lockedAptc: null,
-  lockedSol: null,
+  tradeFeePreMigrationPct: BAGS_SPACEX_MODE.tradeFeeStartPct,
+  tradeFeePostMigrationStartPct: BAGS_SPACEX_MODE.tradeFeeStartPct,
+  tradeFeePostMigrationFloorPct: BAGS_SPACEX_MODE.tradeFeeFloorPct,
+  feeCompoundingPostMigrationPct: BAGS_SPACEX_MODE.feeCompoundingPct,
+  /** Target circulating market cap at TGE (4% float) */
+  approxMarketCapUsd: 50_000,
+  /** FDV implied by $50k MC on 4% float ($50k ÷ 0.04) */
+  approxSpotFdvUsd: 1_250_000,
+  approxAverageFdvUsd: 1_250_000,
+  approxTokenPriceUsd: 0.00125,
   get bagsPoolUrl() {
     const mint = getAptcMint();
     return isAptcLaunched() ? `https://bags.fm/${mint}` : 'https://bags.fm/launch';
@@ -91,87 +97,71 @@ export const APTC_LAUNCH_METRICS = {
   },
 };
 
-/** Supply at TGE — creator initial buy + public bonding curve (no team / founder / VC slice) */
+/** Supply at TGE — SpaceX Mode float vs locked (no team / founder / VC slice) */
 export const APTC_ALLOCATION = [
   {
-    label: 'Creator initial buy',
-    pct: 23,
-    tokensShort: '230M',
+    label: 'Locked supply',
+    pct: 96,
+    tokensShort: '960M',
+    fill: '#6366f1',
+    color: 'from-indigo-500 to-violet-600',
+    detail:
+      '96% locked at launch per Bags SpaceX Mode — protocol lock, not a hidden team wallet. Unlocks follow Bags rules.',
+  },
+  {
+    label: 'Float at launch',
+    pct: 4,
+    tokensShort: '40M',
     fill: '#ec4899',
     color: 'from-fuchsia-500 to-pink-500',
     detail:
-      '230M APTC · @aptcasinofun ops wallet · largest share → Tier 1–3 listings (DEX → CEX)',
-  },
-  {
-    label: 'Bonding curve (public)',
-    pct: 77,
-    tokensShort: '770M',
-    fill: '#a78bfa',
-    color: 'from-violet-500 to-purple-500',
-    detail: 'Fair Bags / Meteora DBC · organic buyers only · graduates at 85 SOL → DAMM v2',
+      '4% circulating on Bags bonding curve at TGE — modeled after SpaceX IPO scarcity · organic buyers on Meteora DBC until ~55 SOL graduation',
   },
 ];
 
-/** How the 23% creator initial buy (230M APTC) is deployed — 100% of one ops wallet */
-export const CREATOR_BUY_TOTAL_TOKENS = 230_000_000;
-
+/** How @aptcasinofun deploys creator initial buy + 100% Bags fee share */
 export const CREATOR_BUY_DEPLOYMENT = [
   {
     label: 'Tier 1, 2 & 3 listings',
-    pct: 42,
-    tokensShort: '96.6M',
+    pct: 50,
     fill: '#c084fc',
     detail:
-      'Largest share of the 23% — Tier 1 Listings DEX & trader tools (Bags, Meteora, DexScreener, Jupiter), Tier 2 aggregators (CoinGecko, CMC), Tier 3 CEX roadmap (MEXC, Gate, KuCoin, Bybit, OKX, Binance)',
+      'Largest share — Tier 1 DEX & trader tools (Bags, Meteora, DexScreener, Jupiter), Tier 2 aggregators (CoinGecko, CMC), Tier 3 CEX roadmap (MEXC, Gate, KuCoin, Bybit, OKX, Binance)',
     highlight: true,
   },
   {
-    label: 'Liquidity & market making',
-    pct: 22,
-    tokensShort: '50.6M',
-    fill: '#60a5fa',
-    detail: 'Post-graduation depth · MM coordination for listings · no surprise LP dumps',
-  },
-  {
     label: 'Community & player rewards',
-    pct: 18,
-    tokensShort: '41.4M',
+    pct: 26,
     fill: '#a78bfa',
     detail: 'Volume Cup, referrals, streaks, cashback — organic players only',
   },
   {
     label: 'Staking emissions',
-    pct: 10,
-    tokensShort: '23M',
+    pct: 14,
     fill: '#34d399',
     detail: 'On-chain /stake pools · aligned with GGR buyback flywheel',
   },
   {
     label: 'Treasury & protocol ops',
-    pct: 8,
-    tokensShort: '18.4M',
+    pct: 10,
     fill: '#fbbf24',
     detail: 'Infrastructure, audits, runway — not founder extraction',
   },
 ];
 
 export const CREATOR_BUY_PURPOSE =
-  'Every single APTC from the creator wallet — initial buy and 100% of Bags fee share — is deployed only for platform growth. The largest share funds Tier 1, 2 & 3 listings (DEX → aggregators → CEX). No founder allocation. No team allocation. No wash volume. No fake FDV. No dumps.';
+  'Every APTC from the creator initial buy and 100% of Bags fee share is deployed only for platform growth. The largest share funds Tier 1, 2 & 3 listings (DEX → aggregators → CEX). No founder allocation. No team allocation. No wash volume. No fake FDV. No dumps.';
 
 export const APTC_TRANSPARENCY = {
   headline: 'The green flag checklist',
   subhead:
     'What snipers, bots, agents, and degens scan before they buy — and how APTC answers each one.',
   pledge:
-    'We are not hiding supply behind clusters, bundles, or fake metrics. No wash volume. No fake FDV. No dumps. APTC is a live GambleFi product with a fair Bags curve, revoked authorities, one public ops wallet, and on-chain casino revenue. Every creator-wallet token exists to grow the platform — not to extract from it.',
+    'We are not hiding supply behind clusters, bundles, or fake metrics. No wash volume. No fake FDV. No dumps. APTC is a live GambleFi product with Bags SpaceX Mode (4% float), revoked authorities, one public ops wallet, and on-chain casino revenue. Every creator-wallet token exists to grow the platform — not to extract from it.',
   opsWalletRule:
-    '230M creator buy + 100% fee share → @aptcasinofun only · listings-first deployment · no wash · no fake FDV · no dumps',
+    'Creator initial buy + 100% fee share → @aptcasinofun only · listings-first deployment · no wash · no fake FDV · no dumps',
 };
 
-/**
- * Trader / bot due-diligence terms — explicit green flags (what scanners look for).
- * status: short label shown on card; detail: plain-language proof.
- */
 export const APTC_TRADER_GREEN_FLAGS = [
   {
     term: 'Mint authority',
@@ -200,13 +190,13 @@ export const APTC_TRADER_GREEN_FLAGS = [
   },
   {
     term: 'Supply at TGE',
-    status: '23% / 77%',
-    detail: '$610 creator buy on curve + 77% fair public bonding — not a 90% dev bag.',
+    status: '4% float',
+    detail: 'Only 4% circulating at launch (SpaceX Mode) — 96% locked by Bags, not a dev bag.',
   },
   {
     term: 'Creator wallet use',
     status: 'Growth only',
-    detail: 'Largest slice → Tier 1–3 listings (DEX → CEX). Rest → liquidity, rewards, staking.',
+    detail: 'Largest slice → Tier 1–3 listings (DEX → CEX). Rest → rewards, staking, ops.',
   },
   {
     term: 'Volume & metrics',
@@ -216,7 +206,7 @@ export const APTC_TRADER_GREEN_FLAGS = [
   {
     term: 'FDV / market cap',
     status: 'No fake FDV',
-    detail: 'Spot pricing from real curve trades — no misleading screenshot math or inflated FDV posts.',
+    detail: 'Starting ~$50k MC on 4% float — pricing from real curve trades, not inflated posts.',
   },
   {
     term: 'Supply dumps',
@@ -224,9 +214,9 @@ export const APTC_TRADER_GREEN_FLAGS = [
     detail: 'No bundled wallets, no hidden multi-wallet sells, no team unlock cliffs.',
   },
   {
-    term: 'Liquidity path',
-    status: 'Meteora DBC → DAMM',
-    detail: '85 SOL graduation threshold · public curve until migrate — no opaque presale.',
+    term: 'Launch mode',
+    status: 'SpaceX Mode',
+    detail: 'Bags default · 4% float · dynamic 2%→0.5% fees · 25% fee compounding after migration.',
   },
   {
     term: 'Hidden wallets',
@@ -235,8 +225,8 @@ export const APTC_TRADER_GREEN_FLAGS = [
   },
   {
     term: 'Transfer / sell tax',
-    status: 'Standard Bags fees',
-    detail: '2% trade fee on curve (1% creator + 1% protocol) — no custom honeypot tax.',
+    status: 'Bags SpaceX fees',
+    detail: '2% on curve; post-migration fee scales down from 2% toward 0.5% as market cap grows.',
   },
   {
     term: 'Live product',
@@ -245,7 +235,6 @@ export const APTC_TRADER_GREEN_FLAGS = [
   },
 ];
 
-/** Red flags we explicitly do not run — call out what scanners punish. */
 export const APTC_RED_FLAGS_WE_AVOID = [
   'Bundled launch wallets or sniper clusters',
   'Wash volume or bot-inflated trade stats',
@@ -257,25 +246,24 @@ export const APTC_RED_FLAGS_WE_AVOID = [
   'Empty utility with no shipping product',
 ];
 
-/** Single operations wallet — initial buy + 100% fee-share claimer */
 export const APTC_WALLETS = [
   {
     id: 1,
     label: 'Operations & treasury',
-    amount: '230,000,000',
-    amountShort: '230M',
-    pct: 23,
+    amount: 'TGE',
+    amountShort: 'Ops',
+    pct: null,
     address: null,
     purpose:
-      'Initial buy at launch + 100% Bags fee share — largest allocation to Tier 1–3 listings (DEX → CEX), then liquidity, rewards, staking. Platform growth only. No wash volume. No fake FDV. No dumps.',
+      'Creator initial buy from the 4% float + 100% Bags fee share — largest allocation to Tier 1–3 listings (DEX → CEX), then community rewards, staking, and protocol ops. Platform growth only.',
     purposeShort: 'Creator buy + fee share · growth only',
   },
 ];
 
 export const APTC_LAUNCH_STEPS = [
   'Token live',
-  'Bonding curve',
-  'Graduate (85 SOL)',
+  '4% float curve',
+  'Graduate (~55 SOL)',
   'DexScreener',
 ];
 
@@ -283,26 +271,25 @@ export const APTC_LAUNCH_PHASES = [
   {
     step: '1',
     title: 'Token live',
-    detail: '1B supply · Bags Token Authority · fee share to @aptcasinofun',
+    detail: '1B supply · Bags SpaceX Mode · 96% locked · fee share to @aptcasinofun',
   },
   {
     step: '2',
-    title: 'Bonding curve',
-    detail: 'Meteora DBC · 2% trade fee · 23% creator buy · 77% on curve',
+    title: '4% float curve',
+    detail: 'Meteora DBC · 2% trade fee · ~$50k starting MC target on circulating float',
   },
   {
     step: '3',
     title: 'Graduation',
-    detail: '85 SOL raised → auto-migrate to Meteora DAMM v2 pool',
+    detail: '~55 SOL raised → auto-migrate to Meteora DAMM v2 · fees begin scaling 2%→0.5%',
   },
   {
     step: '4',
     title: 'Flywheel on',
-    detail: 'Creator fees + GGR buybacks · staking · listings',
+    detail: '25% of post-migration fees compound · creator fees + GGR buybacks · staking · listings',
   },
 ];
 
-/** Buyback split palette (matches GGR buyback engine UI) */
 export const BUYBACK_SPLIT_COLORS = {
   burn: '#fb7185',
   stakers: '#a78bfa',
@@ -317,7 +304,7 @@ export const APTC_UTILITY = [
   },
   {
     title: 'Creator fee stream',
-    body: '1% of bonding-curve volume (0.75% post-graduation) via Bags fee share — funds ops, rewards, and liquidity support.',
+    body: '100% Bags fee share to @aptcasinofun — dynamic 2%→0.5% trading fees fund listings, rewards, and ops.',
   },
   {
     title: 'Staking',
@@ -336,19 +323,12 @@ export const GGR_FLYWHEEL_STEPS = [
   { step: '4', title: 'Distribute', desc: 'Burn · stake · treasury' },
 ];
 
-/** Illustrative post-graduation liquidity vs FDV (grows with volume + fee compounding) */
-export const APTC_LIQUIDITY_PROJECTIONS = [
-  { fdvUsd: 50_000, liquidityUsdLow: 8_000, liquidityUsdHigh: 15_000 },
-  { fdvUsd: 100_000, liquidityUsdLow: 15_000, liquidityUsdHigh: 28_000 },
-  { fdvUsd: 200_000, liquidityUsdLow: 28_000, liquidityUsdHigh: 55_000 },
-];
-
 export function getAllocationSummary() {
-  return '1B APTC fixed supply · 23% creator buy (listings-first) · 77% fair public bonding curve · 0% team/founder · no wash · no fake FDV · no dumps.';
+  return '1B APTC fixed supply · Bags SpaceX Mode · 4% float at TGE · 96% locked · ~$50k starting MC · dynamic 2%→0.5% fees · 0% team/founder · no wash · no fake FDV · no dumps.';
 }
 
 export function getCreatorBuyDeploymentLines() {
-  return CREATOR_BUY_DEPLOYMENT.map((row) => `${row.pct}% — ${row.label} (${row.tokensShort} APTC)`);
+  return CREATOR_BUY_DEPLOYMENT.map((row) => `${row.pct}% — ${row.label}`);
 }
 
 export function truncateAddress(addr, chars = 4) {
@@ -386,7 +366,6 @@ export function meteoraPoolUrl(mint = APTC_TOKENOMICS.mint) {
   return `https://app.meteora.ag/pools?search=${mint}`;
 }
 
-/** External + on-site trade / research links */
 export function getAptcTradeLinks(options = {}) {
   const launched = isAptcLaunched();
   const mint = APTC_TOKENOMICS.mint;

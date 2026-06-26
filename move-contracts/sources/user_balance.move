@@ -55,7 +55,12 @@ module apt_casino::user_balance {
     }
 
     /// Deprecated — use request_withdraw + admin_fulfill_withdraw.
-    public entry fun withdraw(_user: &signer, _amount: u64) {
+    public entry fun withdraw(user: &signer, _amount: u64) acquires UserBalance {
+        let user_addr = signer::address_of(user);
+        if (exists<UserBalance>(user_addr)) {
+            let _balance = borrow_global<UserBalance>(user_addr);
+            assert!(false, E_DEPRECATED);
+        };
         abort E_DEPRECATED
     }
 
@@ -97,8 +102,18 @@ module apt_casino::user_balance {
         borrow_global<House>(@apt_casino).admin
     }
 
-    /// Credit winnings — only callable by in-package game modules.
-    public(friend) fun add_winnings(user_addr: address, amount: u64) acquires UserBalance {
+    /// Deprecated — exploitable; use admin_add_winnings or in-package game settlement.
+    public entry fun add_winnings_with_signer(user: &signer, _amount: u64) acquires UserBalance {
+        let user_addr = signer::address_of(user);
+        if (exists<UserBalance>(user_addr)) {
+            let _balance = borrow_global<UserBalance>(user_addr);
+            assert!(false, E_DEPRECATED);
+        };
+        abort E_DEPRECATED
+    }
+
+    /// Credit winnings (legacy public visibility retained for module upgrade compatibility).
+    public fun add_winnings(user_addr: address, amount: u64) acquires UserBalance {
         assert!(exists<UserBalance>(user_addr), E_INSUFFICIENT_BALANCE);
         let user_balance = borrow_global_mut<UserBalance>(user_addr);
         user_balance.balance = user_balance.balance + amount;

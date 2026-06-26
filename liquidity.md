@@ -178,17 +178,18 @@ timeline
 - Solana program pause instruction
 - Platform fee wallets separate from player payout treasury where possible
 
-## APTC on Bags / Meteora (token liquidity)
+## APTC on Bags / Meteora (token trading)
 
-APTC/SOL trades on **Bags.fm → Meteora DBC → DAMM v2** — separate from player SOL/APT casino treasury balances.
+APTC/SOL trades on **Bags.fm SpaceX Mode → Meteora DBC → DAMM v2** — separate from player SOL/APT casino treasury balances.
 
 ```mermaid
 flowchart TB
-    subgraph Launch["APTC launch (Bags)"]
-        CRE[Creator buy 23% · $610] --> DBC[Meteora DBC virtual pool]
-        PUB[Public buys 77%] --> DBC
-        DBC -->|85 SOL raised| DAMM[Meteora DAMM v2 real pool]
-        DAMM --> FEE[25% fees compound into LP]
+    subgraph Launch["APTC launch (Bags SpaceX Mode)"]
+        LOCK[96% supply locked] --> DBC[Meteora DBC · 4% float]
+        CRE[Creator buy ~$610 from float] --> DBC
+        PUB[Public buys on curve] --> DBC
+        DBC -->|~55 SOL raised| DAMM[Meteora DAMM v2]
+        DAMM --> FEE[25% fees compound post-migration]
     end
 
     subgraph Flywheel["GGR flywheel"]
@@ -198,9 +199,9 @@ flowchart TB
     end
 
     subgraph CreatorFees["Bags fee share"]
-        TRADE[2% trade fee] --> FS[@aptcasinofun 100%]
-        FS --> LIST[Tier 1-3 listings 42%]
-        FS --> LIQ[Liquidity · rewards · staking]
+        TRADE[2%→0.5% dynamic fee] --> FS[@aptcasinofun 100%]
+        FS --> LIST[Tier 1-3 listings 50%]
+        FS --> OPS[Rewards · staking · ops]
     end
 
     PLAY[Player bets] --> GGR
@@ -208,7 +209,7 @@ flowchart TB
     DAMM --> TRADE
 ```
 
-See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for launch parameters, creator-wallet deployment (listings-first), and fee economics.
+See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for SpaceX Mode parameters, creator-wallet deployment (listings-first), and fee economics.
 
 ## Related docs
 

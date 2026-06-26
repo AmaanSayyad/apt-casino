@@ -83,6 +83,7 @@ module apt_casino::plinko {
     const E_BET_TOO_LARGE: u64 = 8;
     const E_SESSION_NOT_FOUND: u64 = 9;
     const E_SESSION_ALREADY_COMPLETED: u64 = 10;
+    const E_INVALID_HOUSE_EDGE: u64 = 11;
     const E_DEPRECATED: u64 = 12;
 
     const MIN_ROWS: u8 = 8;

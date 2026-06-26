@@ -127,7 +127,8 @@ export default function Home() {
     fairnessRound,
   }) => {
     clearSpinTimeout();
-    const segmentIndex = result?.segmentIndex ?? segmentOverride ?? 0;
+    const segmentIndex =
+      segmentOverride != null ? segmentOverride : (result?.segmentIndex ?? 0);
     setLandedSegmentIndex(segmentIndex);
     setIsSpinning(false);
 
@@ -370,7 +371,8 @@ export default function Home() {
           clearTimeout(timeoutId);
           window.wheelBetCallback = null;
 
-          const segmentIndex = result?.segmentIndex ?? segmentOverride ?? 0;
+          const segmentIndex =
+      segmentOverride != null ? segmentOverride : (result?.segmentIndex ?? 0);
           setLandedSegmentIndex(segmentIndex);
 
           const payout = computeWheelPayoutNative(
