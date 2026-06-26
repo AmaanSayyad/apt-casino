@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
-import { rateLimitRequest } from '@/lib/server/requestRateLimit';
+import { rateLimitByKey, rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 const SESSION_TIMEOUT_SECONDS = 90;
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
-  if (rateLimitRequest(req, { key: 'session-ping', limit: 30, windowMs: 60_000 })) {
+  if (rateLimitRequest(req, { key: 'session-ping', limit: 20, windowMs: 60_000 })) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
   try {
@@ -28,6 +28,9 @@ export async function POST(req: NextRequest) {
     const w = normalizeWalletForChain(wallet_address, chainKey);
     if (!w) {
       return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 });
+    }
+    if (rateLimitByKey(`session-ping:${w}`, { limit: 12, windowMs: 60_000 })) {
+      return NextResponse.json({ error: 'Too many requests for this wallet' }, { status: 429 });
     }
 
     const db = getSupabaseAdmin();

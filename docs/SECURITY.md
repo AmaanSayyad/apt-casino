@@ -1,6 +1,6 @@
 # Security Policy
 
-Last updated: 2026-05-27
+Last updated: 2026-06-19
 
 ## Supported scope
 
@@ -43,7 +43,15 @@ Include:
 - Treasury key handling and server-only signing routes
 - **If `TREASURY_PRIVATE_KEY` was ever committed to git:** treat that Aptos account as compromised. Generate a new key, migrate funds/modules, update Vercel env, and never reuse the exposed key. Git history and forks remain public.
 - Admin auth token protection and route gating
-- Wallet-auth on user-scoped writes (`WALLET_AUTH_REQUIRED`)
+- Wallet-auth on user-scoped writes (`WALLET_AUTH_REQUIRED`) + replay table (`wallet_auth_consumed`)
+- Server-side payout verification (`GAME_PAYOUT_VERIFICATION_REQUIRED`) — never trust client payout amounts
 - Deposit/withdraw race conditions and replay protections (atomic balance RPCs)
+- RLS on sensitive Supabase tables (balances, deposits, withdrawals, play events)
 - Promotions abuse resistance (wallet, IP hash, device hash, max claims)
 - KOL auth/session and password update routes
+- **Move modules on Aptos mainnet:** republish after 2026-06-19 security hardening or keep disabled for play (see `move-contracts/README-DEPLOY.md`)
+- **Solana Anchor program:** not deployed to mainnet; live play is custodial house balance — see `solana-programs/README-DEPLOY.md`
+
+## Architecture (custodial play)
+
+Production Solana/Aptos gameplay uses **custodial house balances** in Supabase. Deposits and withdrawals are verified on-chain against treasury wallets; bet outcomes are computed server-side. This is not non-custodial smart-contract escrow per bet. Marketing and litepaper copy must reflect this.

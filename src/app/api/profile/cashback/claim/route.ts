@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { claimCashback } from '@/lib/server/cashback';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
-import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { assertWalletAuth, readWalletAuthFromBody, walletAuthRateLimitResponse } from '@/lib/server/walletAuth';
 import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -28,6 +28,8 @@ export async function POST(req: NextRequest) {
   if (!wallet) {
     return NextResponse.json({ error: 'wallet is required' }, { status: 400 });
   }
+  const rateErr = walletAuthRateLimitResponse(req, wallet);
+  if (rateErr) return rateErr;
 
   const guard = await walletGuardResponse(wallet);
   if (guard) return guard;

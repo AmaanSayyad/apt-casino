@@ -14,12 +14,10 @@ export function clientIp(request: Request): string {
 }
 
 /** In-memory fixed-window limiter (per serverless instance). */
-export function rateLimitRequest(
-  request: Request,
-  opts: { key: string; limit: number; windowMs: number },
+export function rateLimitByKey(
+  bucketKey: string,
+  opts: { limit: number; windowMs: number },
 ): boolean {
-  const ip = clientIp(request);
-  const bucketKey = `${opts.key}:${ip}`;
   const now = Date.now();
 
   if (buckets.size > 10_000) {
@@ -36,4 +34,12 @@ export function rateLimitRequest(
 
   cur.count += 1;
   return cur.count > opts.limit;
+}
+
+export function rateLimitRequest(
+  request: Request,
+  opts: { key: string; limit: number; windowMs: number },
+): boolean {
+  const ip = clientIp(request);
+  return rateLimitByKey(`${opts.key}:${ip}`, opts);
 }

@@ -5,7 +5,6 @@ module apt_casino::wheel {
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_framework::coin;
     use aptos_framework::randomness;
-    use apt_casino::user_balance;
 
     struct House has key { admin: address }
     struct Balance has key { amount: u64 }
@@ -110,11 +109,7 @@ module apt_casino::wheel {
             0 // Player loses, no payout
         };
         
-        if (payout > 0) { 
-            // Transfer winnings to main user_balance system
-            user_balance::add_winnings_with_signer(user, payout);
-            
-            // Also add to wheel balance for immediate use
+        if (payout > 0) {
             let b = borrow_global_mut<Balance>(player);
             b.amount = b.amount + payout;
         };

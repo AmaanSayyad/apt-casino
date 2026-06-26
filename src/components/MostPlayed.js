@@ -318,8 +318,8 @@ export default function MostPlayed() {
                     </div>
 
                     <p className="text-white/80 mb-6 max-w-2xl">
-                      Experience the thrill of {currentFeatured.name} — fully on-chain, provably fair, and tracked
-                      every round on-chain (Solana · Aptos).
+                      Experience {currentFeatured.name} — server-verified outcomes, commit/reveal fairness proofs, and
+                      on-chain deposit/withdraw rails (Solana · Aptos).
                     </p>
 
                     <Link href={currentFeatured.link}>

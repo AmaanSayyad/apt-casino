@@ -2,13 +2,26 @@ module apt_casino::user_balance {
     use std::signer;
     use aptos_framework::aptos_coin::AptosCoin;
     use aptos_framework::coin;
+    use aptos_framework::event;
+
+    friend apt_casino::wheel;
+    friend apt_casino::plinko;
+    friend apt_casino::mines;
+    friend apt_casino::roulette;
 
     struct House has key { admin: address }
     struct UserBalance has key { balance: u64 }
 
+    #[event]
+    struct WithdrawRequested has drop, store, copy {
+        user: address,
+        amount: u64,
+    }
+
     const E_NOT_ADMIN: u64 = 1;
     const E_INSUFFICIENT_BALANCE: u64 = 2;
     const E_ALREADY_INIT: u64 = 3;
+    const E_DEPRECATED: u64 = 4;
 
     public entry fun init(admin: &signer) {
         assert!(!exists<House>(signer::address_of(admin)), E_ALREADY_INIT);
@@ -31,18 +44,26 @@ module apt_casino::user_balance {
         }
     }
 
-    public entry fun withdraw(user: &signer, amount: u64) acquires UserBalance {
+    /// User requests withdrawal — debits ledger; admin must call admin_fulfill_withdraw to send APT.
+    public entry fun request_withdraw(user: &signer, amount: u64) acquires UserBalance {
         let user_addr = signer::address_of(user);
-        
-        // Check if user has sufficient balance
         assert!(exists<UserBalance>(user_addr), E_INSUFFICIENT_BALANCE);
         let user_balance = borrow_global_mut<UserBalance>(user_addr);
         assert!(user_balance.balance >= amount, E_INSUFFICIENT_BALANCE);
-        
-        // Update user balance
         user_balance.balance = user_balance.balance - amount;
-        
-        // Note: Actual transfer will be handled by admin later
+        event::emit(WithdrawRequested { user: user_addr, amount });
+    }
+
+    /// Deprecated — use request_withdraw + admin_fulfill_withdraw.
+    public entry fun withdraw(_user: &signer, _amount: u64) {
+        abort E_DEPRECATED
+    }
+
+    /// Admin sends APT after request_withdraw (or manual payout).
+    public entry fun admin_fulfill_withdraw(admin: &signer, to: address, amount: u64) acquires House {
+        let house = borrow_global<House>(@apt_casino);
+        assert!(signer::address_of(admin) == house.admin, E_NOT_ADMIN);
+        coin::transfer<AptosCoin>(admin, to, amount);
     }
 
     // Admin function to update user balance after verifying external transfer
@@ -76,26 +97,19 @@ module apt_casino::user_balance {
         borrow_global<House>(@apt_casino).admin
     }
 
-    // Add winnings from games (can be called by other modules)
-    public fun add_winnings(user_addr: address, amount: u64) acquires UserBalance {
-        if (exists<UserBalance>(user_addr)) {
-            let user_balance = borrow_global_mut<UserBalance>(user_addr);
-            user_balance.balance = user_balance.balance + amount;
-        } else {
-            // Create new balance if it doesn't exist
-            // Note: This requires the user to have called deposit at least once
-        };
+    /// Credit winnings — only callable by in-package game modules.
+    public(friend) fun add_winnings(user_addr: address, amount: u64) acquires UserBalance {
+        assert!(exists<UserBalance>(user_addr), E_INSUFFICIENT_BALANCE);
+        let user_balance = borrow_global_mut<UserBalance>(user_addr);
+        user_balance.balance = user_balance.balance + amount;
     }
 
-    // Add winnings with signer (can create new balance if needed)
-    public entry fun add_winnings_with_signer(user: &signer, amount: u64) acquires UserBalance {
-        let user_addr = signer::address_of(user);
-        if (exists<UserBalance>(user_addr)) {
-            let user_balance = borrow_global_mut<UserBalance>(user_addr);
-            user_balance.balance = user_balance.balance + amount;
-        } else {
-            // Create new balance if it doesn't exist
-            move_to(user, UserBalance { balance: amount });
-        };
+    /// Admin-only balance credit (manual reconciliation / legacy ops).
+    public entry fun admin_add_winnings(admin: &signer, user_addr: address, amount: u64) acquires House, UserBalance {
+        let house = borrow_global<House>(@apt_casino);
+        assert!(signer::address_of(admin) == house.admin, E_NOT_ADMIN);
+        assert!(exists<UserBalance>(user_addr), E_INSUFFICIENT_BALANCE);
+        let user_balance = borrow_global_mut<UserBalance>(user_addr);
+        user_balance.balance = user_balance.balance + amount;
     }
 }

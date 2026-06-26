@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 import { transferBynomoFromStakingVault } from '@/lib/solana/backend-client';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
-import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { assertWalletAuth, readWalletAuthFromBody, walletAuthRateLimitResponse } from '@/lib/server/walletAuth';
 import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -36,6 +36,9 @@ export async function POST(req: NextRequest) {
   if (!userAddress) {
     return NextResponse.json({ error: 'userAddress is required' }, { status: 400 });
   }
+
+  const rateErr = walletAuthRateLimitResponse(req, userAddress);
+  if (rateErr) return rateErr;
 
   const authErr = await assertWalletAuth(userAddress, 'solana', readWalletAuthFromBody(body), {
     consume: true,

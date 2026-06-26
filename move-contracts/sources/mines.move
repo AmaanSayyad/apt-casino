@@ -78,22 +78,30 @@ module apt_casino::mines {
         event::emit<MinesBetResult>(MinesBetResult { player: user_addr, win: false, mine: 0, payout });
     }
 
-    // Cashout function for mines game
-    public entry fun cashout(user: &signer, payout: u64, multiplier: u64, revealed_count: u64) {
-        let user_addr = signer::address_of(user);
+    const E_DEPRECATED: u64 = 5;
+
+    // Cashout removed — client-supplied payout was unsafe. Use admin_settle_mines or off-chain settlement.
+    public entry fun cashout(_user: &signer, _payout: u64, _multiplier: u64, _revealed_count: u64) {
+        abort E_DEPRECATED
+    }
+
+    /// Admin-only mines settlement after server-side outcome verification.
+    public entry fun admin_settle_mines(
+        admin: &signer,
+        player: address,
+        payout: u64,
+        multiplier: u64,
+        revealed_count: u64,
+    ) acquires House {
+        assert!(signer::address_of(admin) == get_admin_addr(), error::permission_denied(E_NOT_ADMIN));
         assert!(payout > 0, error::invalid_argument(E_INVALID_BET));
         assert!(multiplier > 0, error::invalid_argument(E_INVALID_BET));
         assert!(revealed_count > 0, error::invalid_argument(E_INVALID_BET));
-
-        // For now, we'll just emit the cashout event
-        // In a real implementation, this would need admin signature for payout
-        // The payout will be handled by the admin manually
-        
-        event::emit<MinesBetResult>(MinesBetResult { 
-            player: user_addr, 
-            win: true, 
-            mine: 0, 
-            payout 
+        event::emit<MinesBetResult>(MinesBetResult {
+            player,
+            win: true,
+            mine: 0,
+            payout,
         });
     }
 

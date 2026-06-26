@@ -2,7 +2,9 @@
 
 Last updated: 2026-05-27
 
-Anchor program alongside `move-contracts/`. Mirrors Aptos **`user_balance`** (vault + per-player ledger) and **`game_logger`** (on-chain audit events). Game math and UI remain in the Next.js app + Supabase ledger for the current production path.
+Anchor program alongside `move-contracts/`. Mirrors Aptos **`user_balance`** (vault + per-player ledger) and **`game_logger`** (on-chain audit events).
+
+**Production status (2026-06):** The Anchor program is **not deployed to Solana mainnet**. Live play uses **custodial house balances** in Supabase: deposits/withdrawals hit treasury EOAs; bets settle server-side with `GAME_PAYOUT_VERIFICATION_REQUIRED`. Deploy this program only when migrating custody on-chain — do not market “on-chain Solana games” until then.
 
 ## Account layout (PDAs)
 

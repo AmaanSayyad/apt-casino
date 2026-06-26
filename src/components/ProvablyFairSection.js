@@ -65,10 +65,10 @@ const CODE_FILES = {
 };
 
 const WHY_IT_MATTERS = [
-  'Results cannot be manipulated after you bet',
-  'Every outcome is independently verifiable',
-  'No trust required — verify with chain data',
-  'Cryptographic algorithms determine results',
+  'Server recomputes payouts — client amounts cannot inflate wins',
+  'Commit/reveal proofs are stored with each play event',
+  'Deposits and withdrawals settle on-chain to treasury wallets',
+  'House edge and max multipliers are published in config',
 ];
 
 const STEP_ICONS = [Hash, Sparkles, Calculator, ScanSearch];
@@ -203,21 +203,21 @@ const ProvablyFairSection = () => {
       short: 'Generate',
       title: 'Draw the outcome',
       description:
-        'Solana derives the result deterministically from the committed seed. Aptos uses aptos_framework::randomness for on-chain VRF.',
+        'Solana: commit/reveal seed in the browser; the server recomputes the outcome and payout before crediting balance. Aptos: aptos_framework::randomness on future on-chain modules; live play uses server-verified settlement today.',
     },
     {
       id: 3,
       short: 'Settle',
       title: 'Calculate payout',
       description:
-        'Solana publishes a commit/reveal proof with the play event. Aptos settles wins and losses entirely in the smart contract.',
+        'Solana publishes a commit/reveal proof with the play log. Aptos Move modules are being hardened; production Aptos play uses the same custodial house balance + server verification path as Solana.',
     },
     {
       id: 4,
       short: 'Verify',
       title: 'Check the proof',
       description:
-        'Verify Solana fairness records and play logs on Solscan. Verify Aptos transactions and module events on Aptos Explorer.',
+        'Verify fairness proofs in play history. Confirm deposit and withdraw transactions on Solscan or Aptos Explorer.',
     },
   ];
 

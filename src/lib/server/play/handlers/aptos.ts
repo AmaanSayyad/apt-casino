@@ -28,7 +28,7 @@ import {
 import { handlePlayBetAction } from '@/lib/server/play/betSettlement';
 import { assertWithdrawalAllowed } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
-import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { assertWalletAuth, readWalletAuthFromBody, walletAuthRateLimitResponse } from '@/lib/server/walletAuth';
 import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 import { isValidReferralCode, normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
@@ -145,6 +145,8 @@ export async function aptosBetPOST(request: Request) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Aptos wallet address' }, { status: 400 });
     }
+    const rateErr = walletAuthRateLimitResponse(request, wallet);
+    if (rateErr) return rateErr;
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
     const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
@@ -210,6 +212,8 @@ export async function aptosDepositPOST(request: Request) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Aptos wallet address' }, { status: 400 });
     }
+    const rateErr = walletAuthRateLimitResponse(request, wallet);
+    if (rateErr) return rateErr;
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
     const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
@@ -511,6 +515,8 @@ export async function aptosWithdrawPOST(request: Request) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Aptos wallet address' }, { status: 400 });
     }
+    const rateErr = walletAuthRateLimitResponse(request, wallet);
+    if (rateErr) return rateErr;
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
     const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body), {

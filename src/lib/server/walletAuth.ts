@@ -13,6 +13,7 @@ import {
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { getAptosForServer } from '@/lib/server/aptTreasury';
 import { consumeWalletAuthSignature } from '@/lib/server/walletAuthConsume';
+import { rateLimitByKey, rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 export function isWalletAuthRequired(): boolean {
   const raw = process.env.WALLET_AUTH_REQUIRED?.trim().toLowerCase();
@@ -168,6 +169,23 @@ export function walletAuthReplayResponse(): NextResponse {
     },
     { status: 401 },
   );
+}
+
+export function walletAuthRateLimitResponse(request: Request, wallet?: string | null): NextResponse | null {
+  if (rateLimitRequest(request, { key: 'wallet-auth-ip', limit: 15, windowMs: 60_000 })) {
+    return NextResponse.json(
+      { error: 'Too many wallet auth attempts. Please try again shortly.', code: 'rate_limited' },
+      { status: 429 },
+    );
+  }
+  const normalized = wallet?.trim();
+  if (normalized && rateLimitByKey(`wallet-auth:${normalized}`, { limit: 8, windowMs: 60_000 })) {
+    return NextResponse.json(
+      { error: 'Too many requests for this wallet. Please try again shortly.', code: 'rate_limited' },
+      { status: 429 },
+    );
+  }
+  return null;
 }
 
 export async function assertWalletAuth(

@@ -687,6 +687,10 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
 
       {/* Plinko Board Container */}
       <div className="relative bg-[#2A0025] rounded-lg p-3 sm:p-6 min-h-0 flex flex-col items-center">
+        <p className="mb-3 w-full max-w-[800px] rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-center text-[10px] leading-snug text-amber-100/90 sm:text-xs">
+          Max landing multiplier: <strong>{PLINKO_MAX_LANDING_MULTIPLIER}×</strong>. Bins above {PLINKO_MAX_LANDING_MULTIPLIER}× are
+          visual only — the ball cannot land there. Payouts are verified server-side.
+        </p>
         {/* Audio elements */}
         <audio ref={ballDropAudioRef} src="/sounds/chip-put.mp3" preload="auto" />
         <audio ref={binLandAudioRef} src="/sounds/win-chips.mp3" preload="auto" />
@@ -725,7 +729,7 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
                   <div
                     key={index}
                     className={`absolute flex flex-col items-center text-center transition-all duration-300 ${
-                      isDisplayOnly ? 'opacity-45' : ''
+                      isDisplayOnly ? 'opacity-40 grayscale' : ''
                     } ${ballPosition === index ? 'font-bold text-yellow-400' : 'text-white'}`}
                     style={{
                       left: `${layout.leftPct}%`,
@@ -743,9 +747,14 @@ const PlinkoGame = forwardRef(({ rowCount = 16, riskLevel = "High", onRowChange,
                       }`}
                     >
                       <span className="max-w-full truncate px-0.5 text-[7px] font-bold leading-none text-white sm:text-[9px] md:text-[10px]">
-                        {multiplier}
+                        {isDisplayOnly ? '—' : multiplier}
                       </span>
                     </div>
+                    {isDisplayOnly ? (
+                      <span className="mt-0.5 text-[6px] uppercase tracking-wide text-amber-300/80 sm:text-[7px]">
+                        Display
+                      </span>
+                    ) : null}
                     <div
                       className={`mt-0.5 h-0.5 w-full rounded-full sm:mt-1 sm:h-1 ${
                         ballPosition === index

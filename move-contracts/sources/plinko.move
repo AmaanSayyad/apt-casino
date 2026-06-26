@@ -83,7 +83,7 @@ module apt_casino::plinko {
     const E_BET_TOO_LARGE: u64 = 8;
     const E_SESSION_NOT_FOUND: u64 = 9;
     const E_SESSION_ALREADY_COMPLETED: u64 = 10;
-    const E_INVALID_HOUSE_EDGE: u64 = 11;
+    const E_DEPRECATED: u64 = 12;
 
     const MIN_ROWS: u8 = 8;
     const MAX_ROWS: u8 = 16;
@@ -218,8 +218,13 @@ module apt_casino::plinko {
 
         let session_id = timestamp::now_microseconds();
         let current_time = timestamp::now_seconds();
-        
-        // Create game session
+
+        // Remove prior session so repeat plays do not brick (EALREADY_EXISTS).
+        if (exists<GameSession>(player)) {
+            let GameSession { player: _, bet_amount: _, risk_level: _, rows: _, start_time: _, completed: _ } =
+                move_from<GameSession>(player);
+        };
+
         move_to(user, GameSession {
             player,
             bet_amount: amount,
@@ -257,10 +262,10 @@ module apt_casino::plinko {
             b.last_activity = current_time;
         };
         
-        // Mark session as completed
-        let session = borrow_global_mut<GameSession>(player);
-        session.completed = true;
-        
+        // Mark session complete and remove resource (allows next play).
+        let GameSession { player: _, bet_amount: _, risk_level: _, rows: _, start_time: _, completed: _ } =
+            move_from<GameSession>(player);
+
         event::emit<PlinkoBetResult>(PlinkoBetResult { 
             player, 
             win, 

@@ -73,9 +73,9 @@ export const LITEPAPER_SECTIONS = [
     id: 'thesis',
     title: '1. Protocol Thesis',
     body: [
-      'APT-Casino is a multichain GambleFi platform that treats casino play as verifiable, on-chain probabilistic compute — not opaque server-side RNG.',
-      'The product combines provably fair games, gasless UX, house ledgers per chain, and an APTC token layer that routes protocol revenue back to players through buyback, burn, and staking.',
-      'Live chains today: Solana and Aptos (Move contracts + aptos_framework::randomness on Aptos). Sui, EVM, and Starknet are registered as coming soon in the chain registry.',
+      'APT-Casino is a multichain GambleFi platform with transparent fee economics and auditable play logs.',
+      'Live Solana play uses custodial house balances (Supabase) with server-verified outcomes and on-chain deposit/withdraw settlement to treasury wallets. Aptos Move modules exist for future on-chain expansion; production gameplay is not fully on-chain today.',
+      'Live chains today: Solana and Aptos. Solana: custodial house balance + server-verified games. Aptos: same production path; Move modules on mainnet are legacy/experimental until redeployed with admin guards.',
       'Design objective: Web2-grade onboarding (keyless Google/Apple + Petra) with Web3-grade transparency — every bet, deposit, and withdrawal is auditable.',
     ],
   },
@@ -85,7 +85,7 @@ export const LITEPAPER_SECTIONS = [
     body: [
       'APT-Casino was born after a firsthand experience with legacy online casinos: misleading bonus terms, hidden wager limits, and custodial balances that trap users.',
       'The founder deposited into a major Web2 platform, received a 200% bonus, then discovered bets were capped at $1 and withdrawals required tens of thousands in play-through — classic opaque house rules.',
-      'That frustration became a product mandate: no hidden wager traps, no rigged outcomes, and no custodial lock-in. Players own their assets and can verify fairness on-chain.',
+      'That frustration became a product mandate: no hidden wager traps, no rigged outcomes, and published fee rules. Play balances are custodial house ledgers with on-chain deposit/withdraw rails — not non-custodial smart-contract escrow for every bet.',
       'The platform evolved from an Aptos hackathon project into a multichain product — 15× global hackathon winner with grants from Aptos Foundation and Movement Labs. Live play on Solana and Aptos, APTC economics, live streaming, and community programs (referrals, volume cups, OTC lottery).',
     ],
   },

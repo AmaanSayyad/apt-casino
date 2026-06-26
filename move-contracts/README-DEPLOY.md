@@ -1,8 +1,19 @@
 # Aptos Move — compile & publish
 
-Last updated: 2026-05-27
+Last updated: 2026-06-19
 
 Move package for roulette, mines, plinko, wheel, and shared `user_balance` / `game_logger` modules.
+
+## Security — redeploy required (2026-06)
+
+Mainnet modules published **before 2026-06-19** may expose:
+
+- `user_balance::add_winnings_with_signer` (no auth) — **removed**; use `admin_add_winnings` or friend `add_winnings` only
+- `mines::cashout` (caller-supplied payout) — **deprecated**; use `admin_settle_mines`
+- `user_balance::withdraw` without APT transfer — replaced by `request_withdraw` + `admin_fulfill_withdraw`
+- `plinko::GameSession` leak on repeat play — fixed via `move_from` cleanup
+
+**Action:** Republish this package to Aptos mainnet after review. Until then, **do not route production play through Move modules** — the live app uses Supabase house balances + server payout verification.
 
 ## Deploy sequence
 

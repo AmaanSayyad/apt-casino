@@ -3,7 +3,7 @@ import type { ChainId } from '@/lib/chains/registry';
 import { claimDepositAptcBonus } from '@/lib/server/depositAptcBonus';
 import { normalizeWalletForChain, resolveReferralChain } from '@/lib/server/referrals';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
-import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { assertWalletAuth, readWalletAuthFromBody, walletAuthRateLimitResponse } from '@/lib/server/walletAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
   if (!wallet) {
     return NextResponse.json({ error: 'wallet is required' }, { status: 400 });
   }
+
+  const rateErr = walletAuthRateLimitResponse(req, wallet);
+  if (rateErr) return rateErr;
 
   const guard = await walletGuardResponse(wallet);
   if (guard) return guard;

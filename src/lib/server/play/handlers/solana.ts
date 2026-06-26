@@ -29,7 +29,7 @@ import {
   assertWithdrawalAllowed,
 } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
-import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
+import { assertWalletAuth, readWalletAuthFromBody, walletAuthRateLimitResponse } from '@/lib/server/walletAuth';
 import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
@@ -80,6 +80,8 @@ export async function solanaBetPOST(request: Request) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Solana wallet address' }, { status: 400 });
     }
+    const rateErr = walletAuthRateLimitResponse(request, wallet);
+    if (rateErr) return rateErr;
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
     const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
@@ -142,6 +144,8 @@ export async function solanaDepositPOST(request: Request) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Solana wallet address' }, { status: 400 });
     }
+    const rateErr = walletAuthRateLimitResponse(request, wallet);
+    if (rateErr) return rateErr;
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
     const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
@@ -355,6 +359,8 @@ export async function solanaWithdrawPOST(request: Request) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Solana wallet address' }, { status: 400 });
     }
+    const rateErr = walletAuthRateLimitResponse(request, wallet);
+    if (rateErr) return rateErr;
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
     const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body), {
