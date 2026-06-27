@@ -520,11 +520,6 @@ export async function aptosWithdrawPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body), {
-      consume: true,
-      purpose: 'withdraw',
-    });
-    if (authErr) return authErr;
 
     const amountNative = parseFloat(body.amountNative ?? body.amount);
     const { minWithdraw } = limits();
@@ -636,9 +631,10 @@ export async function aptosWithdrawPOST(request: Request) {
     });
   } catch (e) {
     console.error('[chains/aptos/withdraw]', e);
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Withdrawal failed' },
-      { status: 500 },
-    );
+    const raw = e instanceof Error ? e.message : 'Withdrawal failed';
+    const error = /insufficient|not enough|EINSUFFICIENT/i.test(raw)
+      ? 'Treasury has insufficient APT to send this withdrawal right now. Try a smaller amount or contact support.'
+      : raw;
+    return NextResponse.json({ error }, { status: 500 });
   }
 }

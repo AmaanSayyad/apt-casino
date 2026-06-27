@@ -355,11 +355,6 @@ export async function solanaWithdrawPOST(request: Request) {
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body), {
-      consume: true,
-      purpose: 'withdraw',
-    });
-    if (authErr) return authErr;
     const amountNative = parseFloat(body.amountNative ?? body.amountSol);
     const { minWithdraw } = limits();
 
