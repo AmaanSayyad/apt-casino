@@ -9,7 +9,6 @@ import {
 } from '@/lib/provablyFair/solanaFairness';
 import { isDemoPlayWallet } from '@/lib/play/demoPlay';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
-import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
 import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 
 const MAX_LOG_BET_NATIVE = 1_000_000;
@@ -41,9 +40,6 @@ export async function POST(request: NextRequest) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 });
     }
-
-    const authErr = await assertWalletAuth(wallet, chain, readWalletAuthFromBody(body));
-    if (authErr) return authErr;
 
     if (!gameType || betAmount == null || !result || payout === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

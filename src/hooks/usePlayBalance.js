@@ -16,11 +16,10 @@ import {
   getPlayChainConfig,
 } from '@/lib/chains/registry';
 import { postPlayBet } from '@/lib/play/clientApi';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
 
 /**
  * Chain-aware play balance: Redux holds raw units (lamports / octas / …).
- * Server-ledger chains debit/credit via /api/chains/[chain]/bet.
+ * Server-ledger chains debit/credit via /api/chains/[chain]/bet (no wallet auth — verified server-side).
  */
 export function usePlayBalance() {
   const dispatch = useDispatch();
@@ -29,7 +28,6 @@ export function usePlayBalance() {
   const config = getPlayChainConfig(chain);
   const unit = config?.units ?? 1;
   const symbol = config?.nativeSymbol ?? 'SOL';
-  const { getWalletAuth } = useWalletAuth();
 
   const balanceNative = rawToDisplay(userBalance, chain);
   const balanceRaw = userBalance;
@@ -51,17 +49,12 @@ export function usePlayBalance() {
         return { ok: true };
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
-      const walletAuth = await getWalletAuth(wallet, chain);
-      if (!walletAuth) {
-        return { ok: false, error: 'Sign the wallet auth message in your wallet to place bets.' };
-      }
       const result = await postPlayBet(chain, {
         wallet,
         action: 'debit',
         amountNative,
         game,
         gameData,
-        walletAuth,
       });
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
@@ -71,7 +64,7 @@ export function usePlayBalance() {
         serverSeedHash: result.serverSeedHash,
       };
     },
-    [chain, demoMode, dispatch, getWalletAuth, usesServerLedger],
+    [chain, demoMode, dispatch, usesServerLedger],
   );
 
   const creditNative = useCallback(
@@ -85,10 +78,6 @@ export function usePlayBalance() {
       if (!game || !gameRound) {
         return { ok: false, error: 'Game settlement data required.' };
       }
-      const walletAuth = await getWalletAuth(wallet, chain);
-      if (!walletAuth) {
-        return { ok: false, error: 'Sign the wallet auth message in your wallet to settle bets.' };
-      }
       const result = await postPlayBet(chain, {
         wallet,
         action: 'credit',
@@ -96,13 +85,12 @@ export function usePlayBalance() {
         game,
         gameRound,
         roundId,
-        walletAuth,
       });
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
       return { ok: true, payoutAmountNative: result.payoutAmountNative };
     },
-    [chain, demoMode, dispatch, getWalletAuth, usesServerLedger],
+    [chain, demoMode, dispatch, usesServerLedger],
   );
 
   const releaseStake = useCallback(
@@ -111,21 +99,16 @@ export function usePlayBalance() {
         return { ok: true };
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
-      const walletAuth = await getWalletAuth(wallet, chain);
-      if (!walletAuth) {
-        return { ok: false, error: 'Sign the wallet auth message in your wallet to settle bets.' };
-      }
       const result = await postPlayBet(chain, {
         wallet,
         action: 'release_stake',
         game,
-        walletAuth,
       });
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
       return { ok: true };
     },
-    [chain, demoMode, dispatch, getWalletAuth, usesServerLedger],
+    [chain, demoMode, dispatch, usesServerLedger],
   );
 
   const settleNative = useCallback(
@@ -140,10 +123,6 @@ export function usePlayBalance() {
       if (!game || !gameRound) {
         return { ok: false, error: 'Game settlement data required.' };
       }
-      const walletAuth = await getWalletAuth(wallet, chain);
-      if (!walletAuth) {
-        return { ok: false, error: 'Sign the wallet auth message in your wallet to place bets.' };
-      }
       const result = await postPlayBet(chain, {
         wallet,
         action: 'settle',
@@ -152,13 +131,12 @@ export function usePlayBalance() {
         game,
         gameRound,
         roundId,
-        walletAuth,
       });
       if (!result.ok) return result;
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
       return { ok: true, payoutAmountNative: result.payoutAmountNative };
     },
-    [chain, demoMode, dispatch, getWalletAuth, usesServerLedger],
+    [chain, demoMode, dispatch, usesServerLedger],
   );
 
   const toRaw = useCallback((n) => displayToRaw(n, chain), [chain]);

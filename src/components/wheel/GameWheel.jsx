@@ -245,10 +245,13 @@ const GameWheel = ({
         return;
       }
 
-      wheelPositionRef.current = newPosition;
-      setWheelPositionRef.current(newPosition);
+      wheelPositionRef.current = startRotation + finalRotation;
+      setWheelPositionRef.current(startRotation + finalRotation);
 
-      const landedIndex = segmentIndexUnderPointer(newPosition, segments);
+      const landedIndex =
+        forced != null && forced >= 0
+          ? forced % segments
+          : segmentIndexUnderPointer(startRotation + finalRotation, segments);
       const landed = wheelData[landedIndex];
       handleSelectMultiplierRef.current?.(landed.multiplier);
 

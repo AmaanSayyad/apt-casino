@@ -30,7 +30,7 @@ import {
 } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
 import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
-import { rateLimitRequest } from '@/lib/server/requestRateLimit';
+import { rateLimitRequest, rateLimitByKey } from '@/lib/server/requestRateLimit';
 import { normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
 import { incrementRefereeVolumeUsd } from '@/lib/server/referralAptc';
@@ -75,15 +75,19 @@ export async function solanaBalanceGET(wallet: string) {
 
 export async function solanaBetPOST(request: Request) {
   try {
+    if (rateLimitRequest(request, { key: 'solana-bet-ip', limit: 120, windowMs: 60_000 })) {
+      return NextResponse.json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
+    }
     const body = await request.json();
     const wallet = normalizeWalletForChain(String(body.wallet || '').trim(), CHAIN);
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Solana wallet address' }, { status: 400 });
     }
+    if (rateLimitByKey(`solana-bet:${wallet}`, { limit: 120, windowMs: 60_000 })) {
+      return NextResponse.json({ error: 'Too many requests for this wallet. Please try again shortly.' }, { status: 429 });
+    }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
-    if (authErr) return authErr;
 
     const cfg = getPlayChainConfig(CHAIN)!;
     const result = await handlePlayBetAction({

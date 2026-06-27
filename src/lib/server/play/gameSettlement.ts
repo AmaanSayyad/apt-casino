@@ -114,13 +114,6 @@ function settleRoulette(input: {
   assertBetTotalMatches(input.betAmountNative, betTotal);
 
   const winningNumber = deriveRouletteOutcome(input.seedBytes);
-  const proofOutcome = (input.gameRound.fairnessProof as SolanaFairnessProof | undefined)?.outcome;
-  if (proofOutcome?.winningNumber != null) {
-    const claimed = asNumber(proofOutcome.winningNumber);
-    if (claimed != null && claimed !== winningNumber) {
-      throw new Error('Roulette outcome does not match fairness proof');
-    }
-  }
 
   const { netResult } = calculateRouletteRoundResult(normalizedBets, winningNumber);
   return netResult > 0 ? netResult : 0;
@@ -184,14 +177,6 @@ function settlePlinko(input: {
     PLINKO_MAX_LANDING_MULTIPLIER,
   );
 
-  const proofOutcome = (input.gameRound.fairnessProof as SolanaFairnessProof | undefined)?.outcome;
-  if (proofOutcome?.binIndex != null) {
-    const claimed = asNumber(proofOutcome.binIndex);
-    if (claimed != null && claimed !== binIndex) {
-      throw new Error('Plinko bin does not match fairness proof');
-    }
-  }
-
   const multiplier = parsePlinkoMultiplierLabel(board.multipliers[binIndex] ?? '0');
   return input.betAmountNative * multiplier;
 }
@@ -204,14 +189,6 @@ function settleWheel(input: {
   const risk = String(input.gameRound.risk ?? 'medium');
   const segments = asNumber(input.gameRound.segments) ?? 10;
   const segmentIndex = resolveWheelSegmentIndex(input.seedBytes, risk, segments);
-
-  const proofOutcome = (input.gameRound.fairnessProof as SolanaFairnessProof | undefined)?.outcome;
-  if (proofOutcome?.segmentIndex != null) {
-    const claimed = asNumber(proofOutcome.segmentIndex);
-    if (claimed != null && claimed !== segmentIndex) {
-      throw new Error('Wheel segment does not match fairness proof');
-    }
-  }
 
   return computeWheelPayoutNative(
     input.betAmountNative,

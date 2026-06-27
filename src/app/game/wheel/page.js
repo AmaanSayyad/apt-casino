@@ -60,8 +60,7 @@ export default function Home() {
   const notification = useNotification();
   const { logGame } = useGameLogger();
   const { address: playAddress, connected: playConnected, chainLabel } = usePlayWallet();
-  const { balanceNative, debitNative, creditNative, releaseStake, symbol, chain: playChain } = usePlayBalance();
-  const serverRoundIdRef = useRef(null);
+  const { balanceNative, settleNative, symbol, chain: playChain } = usePlayBalance();
   const spinTimeoutRef = useRef(null);
   const fairness = useProvableFairness('wheel', playAddress);
   const [forcedSegmentIndex, setForcedSegmentIndex] = useState(null);
@@ -146,10 +145,10 @@ export default function Home() {
   }) => {
     clearSpinTimeout();
     const segmentIndex = syncWheelToSegment(
-      result?.segmentIndex != null
-        ? result.segmentIndex
-        : segmentOverride != null
-          ? segmentOverride
+      segmentOverride != null
+        ? segmentOverride
+        : result?.segmentIndex != null
+          ? result.segmentIndex
           : 0,
     );
     setIsSpinning(false);
@@ -218,29 +217,26 @@ export default function Home() {
 
     setHasSpun(true);
 
-    if (adjustedMultiplier > 0) {
+    const settled = await settleNative(
+      bet,
+      adjustedMultiplier > 0 ? winAmount : 0,
+      playAddress,
+      'wheel',
+      {
+        risk,
+        segments: noOfSegments,
+        fairnessProof: fairnessProof || undefined,
+      },
+    );
+
+    if (!settled.ok) {
+      notification.error(settled.error || 'Could not update balance');
+    } else if (adjustedMultiplier > 0) {
       notification.success(
         `${segment.color} ${rawMultiplier.toFixed(2)}x → ${winAmount.toFixed(8)} ${symbol} (${adjustedMultiplier.toFixed(2)}x after edge)`,
       );
-      const credit = await creditNative(
-        winAmount,
-        playAddress,
-        'wheel',
-        {
-          risk,
-          segments: noOfSegments,
-          fairnessProof: fairnessProof || undefined,
-        },
-        serverRoundIdRef.current,
-      );
-      if (!credit.ok) {
-        notification.error(credit.error || 'Could not credit winnings');
-      }
-      serverRoundIdRef.current = null;
     } else {
       notification.info(`Game over — landed on ${rawMultiplier.toFixed(2)}x`);
-      await releaseStake(playAddress, 'wheel').catch(() => {});
-      serverRoundIdRef.current = null;
     }
 
     window.wheelBetCallback = null;
@@ -258,9 +254,7 @@ export default function Home() {
       if (!window.wheelBetCallback) return;
       window.wheelBetCallback = null;
       setIsSpinning(false);
-      notification.error('Spin timed out. If your balance changed, refresh the page.');
-      releaseStake(playAddress, 'wheel').catch(() => {});
-      serverRoundIdRef.current = null;
+      notification.error('Spin timed out. Please try again.');
     }, 12000);
 
     setForcedSegmentIndex(segmentOverride);
@@ -272,29 +266,21 @@ export default function Home() {
     if (betAmount <= 0 || isSpinning) return;
 
     if (!playConnected || !playAddress) {
-      alert(`Please connect your ${chainLabel} wallet first`);
+      notification.warning(`Connect your ${chainLabel} wallet first`);
       return;
     }
 
     const currentBalance = balanceNative;
     if (currentBalance < betAmount) {
-      alert(`Insufficient balance. You have ${currentBalance.toFixed(8)} ${symbol} but need ${betAmount} ${symbol}`);
+      notification.warning(
+        `Insufficient balance. You have ${currentBalance.toFixed(8)} ${symbol} but need ${betAmount} ${symbol}`,
+      );
       return;
     }
 
     try {
       setHasSpun(false);
       setLandedSegmentIndex(null);
-
-      const debit = await debitNative(betAmount, playAddress, 'wheel', {
-        risk,
-        segments: noOfSegments,
-      });
-      if (!debit.ok) {
-        alert(debit.error || 'Could not place bet');
-        return;
-      }
-      serverRoundIdRef.current = debit.roundId ?? null;
 
       let segmentOverride = null;
       let fairnessRound = null;
@@ -310,11 +296,10 @@ export default function Home() {
       beginSpinAnimation(segmentOverride, fairnessRound, betAmount);
     } catch (e) {
       console.error('Bet failed:', e);
-      alert(`Bet failed: ${e?.message || e}`);
+      notification.error(`Bet failed: ${e?.message || e}`);
       clearSpinTimeout();
       window.wheelBetCallback = null;
       setIsSpinning(false);
-      dispatch(setBalance(userBalance));
     }
   };
 
@@ -329,7 +314,7 @@ export default function Home() {
     noOfSegments,
   }) => {
     if (!playConnected || !playAddress) {
-      alert(`Please connect your ${chainLabel} wallet first`);
+      notification.warning(`Connect your ${chainLabel} wallet first`);
       return;
     }
 
@@ -348,22 +333,13 @@ export default function Home() {
 
     for (let i = 0; i < totalRounds; i++) {
       if (runningBalance < currentBet) {
-        alert(`Insufficient balance for bet ${i + 1}. Need ${currentBet} ${symbol} but have ${runningBalance.toFixed(8)} ${symbol}`);
+        notification.warning(
+          `Insufficient balance for bet ${i + 1}. Need ${currentBet} ${symbol} but have ${runningBalance.toFixed(8)} ${symbol}`,
+        );
         break;
       }
 
       setHasSpun(false);
-
-      const debit = await debitNative(currentBet, playAddress, 'wheel', {
-        risk,
-        segments: noOfSegments,
-      });
-      if (!debit.ok) {
-        alert(debit.error || 'Could not place bet');
-        break;
-      }
-      const roundId = debit.roundId ?? null;
-      runningBalance -= currentBet;
 
       let segmentOverride = null;
       let fairnessRound = null;
@@ -374,8 +350,6 @@ export default function Home() {
           risk,
           noOfSegments,
         );
-      } else {
-        segmentOverride = null;
       }
 
       setLandedSegmentIndex(null);
@@ -394,10 +368,10 @@ export default function Home() {
           window.wheelBetCallback = null;
 
           const segmentIndex = syncWheelToSegment(
-            result?.segmentIndex != null
-              ? result.segmentIndex
-              : segmentOverride != null
-                ? segmentOverride
+            segmentOverride != null
+              ? segmentOverride
+              : result?.segmentIndex != null
+                ? result.segmentIndex
                 : 0,
           );
 
@@ -426,7 +400,7 @@ export default function Home() {
       setIsSpinning(false);
 
       if (!roundResult) {
-        alert('Auto bet stopped — spin did not complete.');
+        notification.error('Auto bet stopped — spin did not complete.');
         break;
       }
 
@@ -452,21 +426,26 @@ export default function Home() {
         fairness.reset();
       }
 
+      const settled = await settleNative(
+        currentBet,
+        actualMultiplier > 0 ? winAmount : 0,
+        playAddress,
+        'wheel',
+        {
+          risk,
+          segments: noOfSegments,
+          fairnessProof: fairnessProof || undefined,
+        },
+      );
+
+      if (!settled.ok) {
+        notification.error(settled.error || 'Could not update balance');
+        break;
+      }
+
+      runningBalance -= currentBet;
       if (actualMultiplier > 0) {
-        const credit = await creditNative(
-          winAmount,
-          playAddress,
-          'wheel',
-          {
-            risk,
-            segments: noOfSegments,
-            fairnessProof: fairnessProof || undefined,
-          },
-          roundId,
-        );
-        if (credit.ok) runningBalance += winAmount;
-      } else {
-        await releaseStake(playAddress, 'wheel').catch(() => {});
+        runningBalance += settled.payoutAmountNative ?? winAmount;
       }
 
       totalProfit += profit;

@@ -1,7 +1,11 @@
 'use client';
 
 import bs58 from 'bs58';
-import { buildWalletAuthMessage, normalizeAuthWallet } from '@/lib/walletAuthMessage';
+import {
+  WALLET_AUTH_MAX_AGE_MS,
+  buildWalletAuthMessage,
+  normalizeAuthWallet,
+} from '@/lib/walletAuthMessage';
 
 function bytesToHex(bytes) {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
@@ -29,6 +33,15 @@ function normalizeAptosSignature(raw) {
 
 const authCache = new Map();
 
+/** Keep cache below server max age so stale signatures are never reused. */
+const AUTH_CACHE_TTL_MS = WALLET_AUTH_MAX_AGE_MS - 45_000;
+
+function authStillValid(auth) {
+  const ts = auth?.timestamp;
+  if (ts == null || !Number.isFinite(ts)) return false;
+  return Date.now() - ts < AUTH_CACHE_TTL_MS;
+}
+
 /**
  * Sign a short-lived wallet ownership proof for API requests.
  */
@@ -46,7 +59,7 @@ export async function signWalletAuth({
   const cacheKey = `${chain}:${canonicalWallet}`;
   if (!fresh) {
     const cached = authCache.get(cacheKey);
-    if (cached && cached.expires > Date.now()) {
+    if (cached && cached.expires > Date.now() && authStillValid(cached.auth)) {
       return cached.auth;
     }
   }
@@ -88,7 +101,7 @@ export async function signWalletAuth({
     timestamp,
   };
 
-  authCache.set(cacheKey, { auth, expires: Date.now() + 15 * 60 * 1000 });
+  authCache.set(cacheKey, { auth, expires: Date.now() + AUTH_CACHE_TTL_MS });
   return auth;
 }
 
