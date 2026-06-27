@@ -72,6 +72,7 @@ export default function HouseBalanceModal({
   }, [withdrawGross]);
   const depositDisabled =
     !isPlayWalletReady ||
+    demoMode ||
     !depositAmount ||
     parseFloat(depositAmount) < minimumDeposit ||
     depositBusy;

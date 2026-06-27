@@ -20,6 +20,7 @@ const LiveChat = dynamic(() => import('./LiveChat'), { ssr: false });
 import { useNotification } from './NotificationSystem';
 import { UserBalanceSystem } from '@/lib/aptos';
 import { usePlayDeposit } from '@/hooks/usePlayDeposit';
+import { recoverPendingAptDeposit } from '@/hooks/useBackendDeposit';
 import { usePlayWallet } from '@/hooks/usePlayWallet';
 import { DEFAULT_PLAY_CHAIN, getPlayChainConfig, rawToDisplay, displayToRaw } from '@/lib/chains/registry';
 import { fetchPlayBalance, postPlayWithdraw } from '@/lib/play/clientApi';
@@ -48,7 +49,6 @@ export default function Navbar() {
   const { getWalletAuth } = useWalletAuth();
   const { deposit: playDeposit, isDepositing: isPlayDepositing } = usePlayDeposit({
     signAndSubmitTransaction,
-    isDemo: demoMode,
   });
   const [walletNetworkName, setWalletNetworkName] = useState("");
 
@@ -133,6 +133,25 @@ export default function Navbar() {
       loadUserBalance();
     }
   }, [isWalletReady, address, demoMode, playChain, playConfig?.balanceMode, playConfig?.walletProvider]);
+
+  // Recover a prior Aptos deposit if on-chain tx succeeded but server credit lagged.
+  useEffect(() => {
+    if (!showBalanceModal || demoMode || playChain !== 'aptos' || !playWallet.address) return;
+    let cancelled = false;
+    (async () => {
+      const result = await recoverPendingAptDeposit(playWallet.address);
+      if (cancelled || !result?.success) return;
+      if (result.balanceRaw != null) {
+        dispatch(setBalance(String(result.balanceRaw)));
+      } else if (result.netCreditedOctas != null) {
+        const currentBalance = BigInt(String(userBalance || '0'));
+        dispatch(setBalance((currentBalance + BigInt(String(result.netCreditedOctas))).toString()));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [showBalanceModal, demoMode, playChain, playWallet.address, dispatch, userBalance]);
 
   // Check if wallet was previously connected on page load
   useEffect(() => {
@@ -350,6 +369,11 @@ export default function Navbar() {
   const handleDeposit = async () => {
     if (!isPlayWalletReady) {
       notification.error('Please connect your wallet first');
+      return;
+    }
+
+    if (demoMode) {
+      notification.error('Turn off Demo mode to deposit real funds. Use Refill for demo credits.');
       return;
     }
 

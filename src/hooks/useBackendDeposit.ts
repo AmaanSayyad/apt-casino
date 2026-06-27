@@ -22,6 +22,50 @@ interface UseBackendDepositProps {
 
 const PENDING_APT_DEPOSIT_KEY = 'aptcasino_pending_apt_deposit';
 
+export async function recoverPendingAptDeposit(
+  wallet: string,
+  referralCode: string | null = readReferralCode(),
+): Promise<DepositResult | null> {
+  if (typeof window === 'undefined') return null;
+  try {
+    const rawPending = window.sessionStorage.getItem(PENDING_APT_DEPOSIT_KEY);
+    if (!rawPending) return null;
+    const pending = JSON.parse(rawPending);
+    if (
+      !pending?.txSignature ||
+      normalizeAuthWallet(String(pending?.wallet || ''), 'aptos') !== wallet
+    ) {
+      return null;
+    }
+    const recovered = await creditAptDepositOnServer(
+      wallet,
+      pending.amountNative,
+      pending.txSignature,
+      referralCode,
+      null,
+    );
+    if (!recovered.success) return null;
+    window.sessionStorage.removeItem(PENDING_APT_DEPOSIT_KEY);
+    const credited =
+      recovered.netCreditedNative ??
+      recovered.creditedNative ??
+      recovered.balanceNative ??
+      pending.amountNative;
+    toast.success(`Previous deposit credited — ${Number(credited).toFixed(4)} APT in play balance`);
+    return {
+      success: true,
+      transactionHash: pending.txSignature,
+      balanceRaw: recovered.balanceRaw,
+      balanceNative: recovered.balanceNative,
+      netCreditedOctas: recovered.netCreditedOctas,
+      grossApt: pending.amountNative,
+      message: recovered.alreadyProcessed ? 'Deposit already credited' : 'Deposit recovered',
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function creditAptDepositOnServer(
   wallet: string,
   amountNative: number,
@@ -100,21 +144,8 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
     }
 
     if (props?.isDemo) {
-      const feeBps = Number(process.env.NEXT_PUBLIC_PLATFORM_FEE_BPS_DEPOSIT || 1000);
-      const grossOct = Math.floor(amount * 100_000_000);
-      const feeOct = Math.floor((grossOct * feeBps) / 10000);
-      const net = Math.max(0, grossOct - feeOct);
-      toast.success(
-        `Demo deposit: +${(net / 100_000_000).toFixed(4)} APT to house balance (simulated ${feeBps / 100}% fee).`,
-      );
-      return {
-        success: true,
-        message: 'Demo deposit',
-        netCreditedOctas: String(net),
-        balanceRaw: String(net),
-        grossApt: amount,
-        platformFeeApt: feeOct / 100_000_000,
-      };
+      toast.error('Turn off Demo mode in the navbar to deposit real APT.');
+      return { success: false, message: 'Demo mode active — use Refill demo credits instead.' };
     }
 
     setIsDepositing(true);
@@ -129,46 +160,6 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
 
       const wallet = normalizeAuthWallet(String(account.address), 'aptos');
       const referralCode = readReferralCode();
-
-      if (typeof window !== 'undefined') {
-        try {
-          const rawPending = window.sessionStorage.getItem(PENDING_APT_DEPOSIT_KEY);
-          if (rawPending) {
-            const pending = JSON.parse(rawPending);
-            if (
-              pending?.txSignature &&
-              normalizeAuthWallet(String(pending?.wallet || ''), 'aptos') === wallet
-            ) {
-              const recovered = await creditAptDepositOnServer(
-                wallet,
-                pending.amountNative,
-                pending.txSignature,
-                referralCode,
-                null,
-              );
-              if (recovered.success) {
-                window.sessionStorage.removeItem(PENDING_APT_DEPOSIT_KEY);
-                const credited =
-                  recovered.netCreditedNative ??
-                  recovered.creditedNative ??
-                  recovered.balanceNative ??
-                  pending.amountNative;
-                toast.success(`Deposit credited — ${Number(credited).toFixed(4)} APT in play balance`);
-                return {
-                  success: true,
-                  transactionHash: pending.txSignature,
-                  balanceRaw: recovered.balanceRaw,
-                  balanceNative: recovered.balanceNative,
-                  netCreditedOctas: recovered.netCreditedOctas,
-                  grossApt: amount,
-                };
-              }
-            }
-          }
-        } catch {
-          /* ignore stale pending state */
-        }
-      }
 
       const amountOctas = Math.floor(amount * 100_000_000);
       let transferResponse: { hash?: string };
