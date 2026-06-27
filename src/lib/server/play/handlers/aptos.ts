@@ -28,7 +28,7 @@ import {
 import { handlePlayBetAction } from '@/lib/server/play/betSettlement';
 import { assertWithdrawalAllowed } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
-import { assertWalletAuth, readWalletAuthFromBody, walletAuthRateLimitResponse } from '@/lib/server/walletAuth';
+import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
 import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 import { isValidReferralCode, normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
@@ -87,35 +87,45 @@ async function verifyAptosDepositTx(
   const treasury = normalizeTreasuryAddress(treasuryAddress);
   const senderExpected = normalizeTreasuryAddress(expectedSender);
 
-  const transaction = (await aptos.getTransactionByHash({ transactionHash })) as {
+  let transaction: {
     success?: boolean;
-    sender?: string;
+    sender?: string | { data?: string };
     payload?: {
       type?: string;
       function?: string;
       arguments?: unknown[];
       type_arguments?: string[];
     };
-  };
-  if (!transaction.success) return null;
+  } | null = null;
 
-  const txSender = normalizeTreasuryAddress(String(transaction.sender ?? ''));
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      transaction = (await aptos.getTransactionByHash({ transactionHash })) as typeof transaction;
+      if (transaction?.success != null) break;
+    } catch {
+      /* tx may not be indexed yet */
+    }
+    await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+  }
+  if (!transaction?.success) return null;
+
+  const senderRaw = transaction.sender;
+  const senderStr =
+    typeof senderRaw === 'object' && senderRaw !== null && 'data' in senderRaw
+      ? String((senderRaw as { data?: string }).data ?? '')
+      : String(senderRaw ?? '');
+  const txSender = normalizeTreasuryAddress(senderStr);
   if (txSender !== senderExpected) return null;
 
   const payload = transaction.payload;
   if (!payload || payload.type !== 'entry_function_payload') return null;
 
-  if (payload.function === '0x1::aptos_account::transfer') {
-    const recipient = normalizeTreasuryAddress(String(payload.arguments?.[0] ?? ''));
-    if (recipient !== treasury) return null;
-    const amountOctas = BigInt(String(payload.arguments?.[1] ?? '0'));
-    if (amountOctas <= 0n) return null;
-    return { sender: txSender, amountOctas };
-  }
+  const fn = String(payload.function ?? '').toLowerCase();
+  const isCoinTransfer =
+    fn === '0x1::aptos_account::transfer' || fn === '0x1::coin::transfer';
+  const isFaTransfer = fn.includes('primary_fungible_store') && fn.includes('transfer');
 
-  if (payload.function === '0x1::coin::transfer') {
-    const coinType = String(payload.type_arguments?.[0] ?? '').toLowerCase();
-    if (!coinType.includes('aptos_coin::aptoscoin')) return null;
+  if (isCoinTransfer || isFaTransfer) {
     const recipient = normalizeTreasuryAddress(String(payload.arguments?.[0] ?? ''));
     if (recipient !== treasury) return null;
     const amountOctas = BigInt(String(payload.arguments?.[1] ?? '0'));
@@ -145,8 +155,6 @@ export async function aptosBetPOST(request: Request) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Aptos wallet address' }, { status: 400 });
     }
-    const rateErr = walletAuthRateLimitResponse(request, wallet);
-    if (rateErr) return rateErr;
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
     const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
@@ -212,12 +220,9 @@ export async function aptosDepositPOST(request: Request) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Aptos wallet address' }, { status: 400 });
     }
-    const rateErr = walletAuthRateLimitResponse(request, wallet);
-    if (rateErr) return rateErr;
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
-    const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body));
-    if (authErr) return authErr;
+    // On-chain tx verification proves sender — no separate wallet-auth sign required for deposit.
 
     const txHash = String(body.txSignature || body.transactionHash || '').trim();
     const referralCode =
@@ -515,8 +520,6 @@ export async function aptosWithdrawPOST(request: Request) {
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Aptos wallet address' }, { status: 400 });
     }
-    const rateErr = walletAuthRateLimitResponse(request, wallet);
-    if (rateErr) return rateErr;
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;
     const authErr = await assertWalletAuth(wallet, CHAIN, readWalletAuthFromBody(body), {

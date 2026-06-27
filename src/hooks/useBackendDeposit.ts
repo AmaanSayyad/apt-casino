@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { toast } from 'react-toastify';
-import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { normalizeAuthWallet } from '@/lib/walletAuthMessage';
 
 export interface DepositResult {
   success: boolean;
@@ -79,7 +79,6 @@ function readReferralCode(): string | null {
 export const useBackendDeposit = (props?: UseBackendDepositProps) => {
   const [isDepositing, setIsDepositing] = useState(false);
   const { account, signAndSubmitTransaction: walletSignAndSubmit } = useWallet();
-  const { getWalletAuth } = useWalletAuth();
 
   const signAndSubmitTransaction = props?.signAndSubmitTransaction || walletSignAndSubmit;
 
@@ -128,7 +127,7 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
         return { success: false, message: 'Treasury not configured' };
       }
 
-      const wallet = String(account.address);
+      const wallet = normalizeAuthWallet(String(account.address), 'aptos');
       const referralCode = readReferralCode();
 
       if (typeof window !== 'undefined') {
@@ -136,14 +135,16 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
           const rawPending = window.sessionStorage.getItem(PENDING_APT_DEPOSIT_KEY);
           if (rawPending) {
             const pending = JSON.parse(rawPending);
-            if (pending?.wallet === wallet && pending?.txSignature) {
-              const walletAuth = await getWalletAuth(wallet, 'aptos');
+            if (
+              pending?.txSignature &&
+              normalizeAuthWallet(String(pending?.wallet || ''), 'aptos') === wallet
+            ) {
               const recovered = await creditAptDepositOnServer(
                 wallet,
                 pending.amountNative,
                 pending.txSignature,
                 referralCode,
-                walletAuth,
+                null,
               );
               if (recovered.success) {
                 window.sessionStorage.removeItem(PENDING_APT_DEPOSIT_KEY);
@@ -209,17 +210,12 @@ export const useBackendDeposit = (props?: UseBackendDepositProps) => {
         );
       }
 
-      const walletAuth = await getWalletAuth(wallet, 'aptos');
-      if (!walletAuth) {
-        throw new Error('Sign the wallet auth message to credit your deposit.');
-      }
-
       const backendData = await creditAptDepositOnServer(
         wallet,
         amount,
         transferResponse.hash,
         referralCode,
-        walletAuth,
+        null,
       );
 
       if (!backendData.success) {

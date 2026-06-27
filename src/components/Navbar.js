@@ -371,6 +371,9 @@ export default function Navbar() {
           const netOct = BigInt(String(result.netCreditedOctas));
           dispatch(setBalance((currentBalance + netOct).toString()));
         }
+        if (playConfig?.balanceMode === 'server' && playWallet.address) {
+          await loadServerPlayBalance(playWallet.address, playChain);
+        }
         setDepositAmount('');
       } else {
         throw new Error(result.message || 'Deposit failed');

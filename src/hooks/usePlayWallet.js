@@ -9,6 +9,7 @@ import {
   resolveActiveChain,
 } from '@/lib/chains/registry';
 import { DEMO_PLAY_WALLET } from '@/lib/play/demoPlay';
+import { normalizeAuthWallet } from '@/lib/walletAuthMessage';
 
 /** Wallet connected for the active play chain. Demo mode uses a synthetic address so games can run without signing. */
 export function usePlayWallet() {
@@ -46,7 +47,8 @@ export function usePlayWallet() {
   }
 
   if (config?.walletProvider === 'aptos') {
-    const addr = aptos.account?.address ? String(aptos.account.address) : null;
+    const raw = aptos.account?.address ? String(aptos.account.address) : null;
+    const addr = raw ? normalizeAuthWallet(raw, 'aptos') : null;
     return {
       chain: activeChain,
       chainLabel: config.label,

@@ -131,27 +131,43 @@ const balanceSlice = createSlice({
       }
     },
     addToBalance(state, action) {
-      const amountToAdd = parseFloat(action.payload);
-      const currentBalance = parseFloat(state.userBalance);
-      const newBalance = Math.max(0, currentBalance + amountToAdd).toFixed(0);
-      state.userBalance = newBalance;
+      const amountToAdd = BigInt(String(action.payload || '0'));
+      const currentBalance = BigInt(String(state.userBalance || '0'));
+      const newBalanceStr = (currentBalance + amountToAdd).toString();
+      state.userBalance = newBalanceStr;
       if (typeof window !== 'undefined') {
         if (shouldPersistUserBalance(state)) {
-          localStorage.setItem('userBalance', newBalance);
+          localStorage.setItem('userBalance', newBalanceStr);
         }
-        if (state.demoMode) persistDemoBalance(state.activeChain, newBalance);
+        if (state.demoMode) persistDemoBalance(state.activeChain, newBalanceStr);
       }
     },
     subtractFromBalance(state, action) {
-      const amountToSubtract = parseFloat(action.payload);
-      const currentBalance = parseFloat(state.userBalance);
-      const newBalance = Math.max(0, currentBalance - amountToSubtract).toFixed(0);
-      state.userBalance = newBalance;
+      const amountToSubtract = BigInt(String(action.payload || '0'));
+      const currentBalance = BigInt(String(state.userBalance || '0'));
+      const newBalance = currentBalance > amountToSubtract ? currentBalance - amountToSubtract : 0n;
+      const newBalanceStr = newBalance.toString();
+      state.userBalance = newBalanceStr;
       if (typeof window !== 'undefined') {
         if (shouldPersistUserBalance(state)) {
-          localStorage.setItem('userBalance', newBalance);
+          localStorage.setItem('userBalance', newBalanceStr);
         }
-        if (state.demoMode) persistDemoBalance(state.activeChain, newBalance);
+        if (state.demoMode) persistDemoBalance(state.activeChain, newBalanceStr);
+      }
+    },
+    /** Atomic bet settlement: balance -= betRaw + payoutRaw (raw chain units). */
+    applyPlaySettlement(state, action) {
+      const betRaw = BigInt(String(action.payload?.betRaw ?? '0'));
+      const payoutRaw = BigInt(String(action.payload?.payoutRaw ?? '0'));
+      const current = BigInt(String(state.userBalance || '0'));
+      const next = current - betRaw + payoutRaw;
+      const newBalanceStr = (next < 0n ? 0n : next).toString();
+      state.userBalance = newBalanceStr;
+      if (typeof window !== 'undefined') {
+        if (shouldPersistUserBalance(state)) {
+          localStorage.setItem('userBalance', newBalanceStr);
+        }
+        if (state.demoMode) persistDemoBalance(state.activeChain, newBalanceStr);
       }
     },
     setLoading(state, action) {
@@ -200,6 +216,7 @@ export const {
   setBalance,
   addToBalance,
   subtractFromBalance,
+  applyPlaySettlement,
   setLoading,
   setDemoMode,
   setActiveChain,

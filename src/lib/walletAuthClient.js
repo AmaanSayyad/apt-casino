@@ -1,7 +1,7 @@
 'use client';
 
 import bs58 from 'bs58';
-import { buildWalletAuthMessage } from '@/lib/walletAuthMessage';
+import { buildWalletAuthMessage, normalizeAuthWallet } from '@/lib/walletAuthMessage';
 
 function bytesToHex(bytes) {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
@@ -42,7 +42,8 @@ export async function signWalletAuth({
 }) {
   if (!wallet?.trim()) return null;
 
-  const cacheKey = `${chain}:${wallet}`;
+  const canonicalWallet = normalizeAuthWallet(wallet, chain);
+  const cacheKey = `${chain}:${canonicalWallet}`;
   if (!fresh) {
     const cached = authCache.get(cacheKey);
     if (cached && cached.expires > Date.now()) {
@@ -51,7 +52,7 @@ export async function signWalletAuth({
   }
 
   const timestamp = Date.now();
-  const message = buildWalletAuthMessage(wallet, chain, timestamp);
+  const message = buildWalletAuthMessage(canonicalWallet, chain, timestamp);
 
   let signature = '';
   let publicKey = null;
@@ -87,7 +88,7 @@ export async function signWalletAuth({
     timestamp,
   };
 
-  authCache.set(cacheKey, { auth, expires: Date.now() + 4 * 60 * 1000 });
+  authCache.set(cacheKey, { auth, expires: Date.now() + 15 * 60 * 1000 });
   return auth;
 }
 

@@ -18,7 +18,7 @@ import { usePlayBalance } from '@/hooks/usePlayBalance';
 import { houseEdgePercent } from '@/lib/houseEdge';
 import { useGameStats } from '@/hooks/useGameStats';
 import { useProvableFairness } from '@/hooks/useProvableFairness';
-import { computeWheelPayoutNative, resolveWheelSegmentIndex } from '@/lib/wheel/wheelSegments';
+import { computeWheelPayoutNative, resolveWheelSegmentIndex, buildExpandedWheelSegments, wheelRotationForSegmentIndex } from '@/lib/wheel/wheelSegments';
 
 // Import new components
 import WheelVideo from "./components/WheelVideo";
@@ -44,7 +44,9 @@ export default function Home() {
   const [gameHistory, setGameHistory] = useState([]);
   const historyReadyRef = useRef(false);
   const [targetMultiplier, setTargetMultiplier] = useState(null);
-  const [wheelPosition, setWheelPosition] = useState(0);
+  const [wheelPosition, setWheelPosition] = useState(() =>
+    wheelRotationForSegmentIndex(0, buildExpandedWheelSegments('medium', 10).length),
+  );
   const [hasSpun, setHasSpun] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
@@ -65,6 +67,22 @@ export default function Home() {
   const [forcedSegmentIndex, setForcedSegmentIndex] = useState(null);
   const [landedSegmentIndex, setLandedSegmentIndex] = useState(null);
   // symbol drives bet labels in BettingPanel (SOL vs APT)
+
+  const syncWheelToSegment = (segmentIndex) => {
+    const wheel = buildExpandedWheelSegments(risk, noOfSegments);
+    const count = wheel.length;
+    const idx = ((segmentIndex % count) + count) % count;
+    setWheelPosition(wheelRotationForSegmentIndex(idx, count));
+    setLandedSegmentIndex(idx);
+    return idx;
+  };
+
+  useEffect(() => {
+    const wheel = buildExpandedWheelSegments(risk, noOfSegments);
+    setWheelPosition(wheelRotationForSegmentIndex(0, wheel.length));
+    setLandedSegmentIndex(null);
+    setHasSpun(false);
+  }, [risk, noOfSegments]);
 
   useEffect(() => {
     historyReadyRef.current = false;
@@ -127,9 +145,13 @@ export default function Home() {
     fairnessRound,
   }) => {
     clearSpinTimeout();
-    const segmentIndex =
-      segmentOverride != null ? segmentOverride : (result?.segmentIndex ?? 0);
-    setLandedSegmentIndex(segmentIndex);
+    const segmentIndex = syncWheelToSegment(
+      result?.segmentIndex != null
+        ? result.segmentIndex
+        : segmentOverride != null
+          ? segmentOverride
+          : 0,
+    );
     setIsSpinning(false);
 
     const payout = computeWheelPayoutNative(bet, risk, noOfSegments, segmentIndex);
@@ -371,9 +393,13 @@ export default function Home() {
           clearTimeout(timeoutId);
           window.wheelBetCallback = null;
 
-          const segmentIndex =
-      segmentOverride != null ? segmentOverride : (result?.segmentIndex ?? 0);
-          setLandedSegmentIndex(segmentIndex);
+          const segmentIndex = syncWheelToSegment(
+            result?.segmentIndex != null
+              ? result.segmentIndex
+              : segmentOverride != null
+                ? segmentOverride
+                : 0,
+          );
 
           const payout = computeWheelPayoutNative(
             currentBet,

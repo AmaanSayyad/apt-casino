@@ -29,11 +29,16 @@ export const useGameLogger = () => {
   const [isLogging, setIsLogging] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const activeChain = useSelector((s: { balance: { activeChain?: string } }) => s.balance.activeChain) || DEFAULT_PLAY_CHAIN;
+  const demoMode = useSelector((s: { balance: { demoMode?: boolean } }) => s.balance.demoMode);
   const { getWalletAuth } = useWalletAuth();
 
   const logGame = async (
     params: LogGameParams,
   ): Promise<{ success: boolean; transactionHash?: string; explorerUrl?: string; error?: string }> => {
+    if (demoMode) {
+      return { success: true };
+    }
+
     setIsLogging(true);
     const chain = params.chain || activeChain;
     try {

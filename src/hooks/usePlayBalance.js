@@ -6,6 +6,7 @@ import {
   setBalance,
   addToBalance,
   subtractFromBalance,
+  applyPlaySettlement,
   setActiveChain,
 } from '@/store/balanceSlice';
 import {
@@ -132,9 +133,7 @@ export function usePlayBalance() {
       const betRaw = displayToRaw(betAmountNative, chain);
       const payoutRaw = displayToRaw(payoutAmountNative || 0, chain);
       if (demoMode || !usesServerLedger) {
-        const current = BigInt(String(userBalance || '0'));
-        const next = current - BigInt(betRaw) + BigInt(payoutRaw);
-        dispatch(setBalance(String(next < 0n ? 0n : next)));
+        dispatch(applyPlaySettlement({ betRaw, payoutRaw }));
         return { ok: true };
       }
       if (!wallet) return { ok: false, error: 'Wallet required' };
@@ -159,7 +158,7 @@ export function usePlayBalance() {
       dispatch(setBalance(String(result.balanceRaw ?? '0')));
       return { ok: true, payoutAmountNative: result.payoutAmountNative };
     },
-    [chain, demoMode, dispatch, getWalletAuth, usesServerLedger, userBalance],
+    [chain, demoMode, dispatch, getWalletAuth, usesServerLedger],
   );
 
   const toRaw = useCallback((n) => displayToRaw(n, chain), [chain]);

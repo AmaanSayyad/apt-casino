@@ -86,15 +86,15 @@ const GameWheel = ({
   setWheelPositionRef.current = setWheelPosition;
   forcedSegmentIndexRef.current = forcedSegmentIndex;
 
-  const activeIndex =
-    landedSegmentIndex != null
-      ? landedSegmentIndex % segments
-      : hasSpun && !isSpinning
-        ? segmentIndexUnderPointer(wheelPosition, segments)
-        : null;
+  const pointerIndex =
+    !isSpinning && segments > 0
+      ? segmentIndexUnderPointer(wheelPosition, segments)
+      : null;
+
+  const activeIndex = isSpinning ? null : pointerIndex;
 
   const currentSegment =
-    activeIndex != null ? wheelData[activeIndex] : wheelData[0];
+    activeIndex != null ? wheelData[activeIndex] : wheelData[pointerIndex ?? 0];
 
   const playSpinSound = () => {
     const audio = spinSoundRef.current;

@@ -1,6 +1,12 @@
 'use client';
 
 import { playApiPath, isPlayableChainId, getPlayChainConfig } from '@/lib/chains/registry';
+import { normalizeAuthWallet } from '@/lib/walletAuthMessage';
+
+function canonicalPlayWallet(chainId, wallet) {
+  if (!wallet) return wallet;
+  return chainId === 'aptos' ? normalizeAuthWallet(wallet, 'aptos') : wallet;
+}
 
 /**
  * Client helpers for multichain play balance APIs (/api/chains/[chain]/…).
@@ -14,7 +20,8 @@ export async function fetchPlayBalance(chainId, wallet) {
   if (config?.balanceMode !== 'server') {
     return { ok: false, error: 'Chain uses local balance only' };
   }
-  const res = await fetch(`${playApiPath(chainId, 'balance')}?wallet=${encodeURIComponent(wallet)}`);
+  const w = canonicalPlayWallet(chainId, wallet);
+  const res = await fetch(`${playApiPath(chainId, 'balance')}?wallet=${encodeURIComponent(w)}`);
   const data = await res.json();
   if (!res.ok) return { ok: false, error: data.error || 'Failed to load balance' };
   return { ok: true, balanceRaw: data.balanceRaw, balanceNative: data.balanceNative };
@@ -35,11 +42,12 @@ export async function postPlayBet(
     walletAuth,
   },
 ) {
+  const w = canonicalPlayWallet(chainId, wallet);
   const res = await fetch(playApiPath(chainId, 'bet'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      wallet,
+      wallet: w,
       action,
       amountNative,
       betAmountNative,
@@ -75,10 +83,11 @@ export async function postPlayDeposit(chainId, body) {
 }
 
 export async function postPlayWithdraw(chainId, { wallet, amountNative, walletAuth }) {
+  const w = canonicalPlayWallet(chainId, wallet);
   const res = await fetch(playApiPath(chainId, 'withdraw'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ wallet, amountNative, walletAuth }),
+    body: JSON.stringify({ wallet: w, amountNative, walletAuth }),
   });
   const data = await res.json();
   if (!res.ok) return { ok: false, error: data.error || 'Withdrawal failed' };

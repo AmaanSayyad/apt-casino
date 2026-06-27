@@ -14,8 +14,9 @@ import {
  */
 export function useProvableFairness(game, wallet) {
   const activeChain = useSelector((s) => s.balance.activeChain) || DEFAULT_PLAY_CHAIN;
+  const demoMode = useSelector((s) => s.balance.demoMode);
   const chainConfig = getPlayChainConfig(activeChain);
-  const fairnessEnabled = chainConfig?.balanceMode === 'server';
+  const fairnessEnabled = chainConfig?.balanceMode === 'server' && !demoMode;
 
   const [phase, setPhase] = useState('idle');
   const [round, setRound] = useState(null);

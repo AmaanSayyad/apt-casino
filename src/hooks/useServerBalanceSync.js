@@ -39,8 +39,19 @@ export function useServerBalanceSync() {
       }
     })();
 
+    const onFocus = () => {
+      if (cancelled || demoMode) return;
+      void fetchPlayBalance(activeChain, playWallet.address).then((result) => {
+        if (!cancelled && result.ok && result.balanceRaw != null) {
+          dispatch(setBalance(String(result.balanceRaw)));
+        }
+      });
+    };
+    window.addEventListener('focus', onFocus);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('focus', onFocus);
     };
   }, [
     activeChain,

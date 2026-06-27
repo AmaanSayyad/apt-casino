@@ -185,7 +185,7 @@ export function walletAuthRateLimitResponse(request: Request, wallet?: string | 
     );
   }
   const normalized = wallet?.trim();
-  if (normalized && rateLimitByKey(`wallet-auth:${normalized}`, { limit: 8, windowMs: 60_000 })) {
+  if (normalized && rateLimitByKey(`wallet-auth:${normalized}`, { limit: 120, windowMs: 60_000 })) {
     return NextResponse.json(
       { error: 'Too many requests for this wallet. Please try again shortly.', code: 'rate_limited' },
       { status: 429 },

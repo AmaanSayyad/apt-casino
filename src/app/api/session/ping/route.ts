@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     if (!w) {
       return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 });
     }
-    if (rateLimitByKey(`session-ping:${w}`, { limit: 12, windowMs: 60_000 })) {
+    if (rateLimitByKey(`session-ping:${w}`, { limit: 30, windowMs: 60_000 })) {
       return NextResponse.json({ error: 'Too many requests for this wallet' }, { status: 429 });
     }
 
