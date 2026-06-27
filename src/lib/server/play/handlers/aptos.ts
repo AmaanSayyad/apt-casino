@@ -29,7 +29,7 @@ import { handlePlayBetAction } from '@/lib/server/play/betSettlement';
 import { assertWithdrawalAllowed } from '@/lib/server/withdrawalGuards';
 import { walletGuardResponse } from '@/lib/server/walletGuard';
 import { assertWalletAuth, readWalletAuthFromBody } from '@/lib/server/walletAuth';
-import { rateLimitRequest, rateLimitByKey } from '@/lib/server/requestRateLimit';
+import { rateLimitRequest } from '@/lib/server/requestRateLimit';
 import { isValidReferralCode, normalizeWalletForChain } from '@/lib/server/referrals';
 import { syncCashbackCap } from '@/lib/server/cashback';
 import {
@@ -150,16 +150,10 @@ export async function aptosBalanceGET(wallet: string) {
 
 export async function aptosBetPOST(request: Request) {
   try {
-    if (rateLimitRequest(request, { key: 'aptos-bet-ip', limit: 120, windowMs: 60_000 })) {
-      return NextResponse.json({ error: 'Too many requests. Please try again shortly.' }, { status: 429 });
-    }
     const body = await request.json();
     const wallet = normalizeWalletForChain(String(body.wallet || '').trim(), CHAIN);
     if (!wallet) {
       return NextResponse.json({ error: 'Invalid Aptos wallet address' }, { status: 400 });
-    }
-    if (rateLimitByKey(`aptos-bet:${wallet}`, { limit: 120, windowMs: 60_000 })) {
-      return NextResponse.json({ error: 'Too many requests for this wallet. Please try again shortly.' }, { status: 429 });
     }
     const guard = await walletGuardResponse(wallet);
     if (guard) return guard;

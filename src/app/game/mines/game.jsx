@@ -55,7 +55,7 @@ const Game = ({
 
   // Wallet integration
   const { address: playAddress, connected: playConnected, chainLabel } = usePlayWallet();
-  const { balanceNative, debitNative, creditNative, releaseStake, symbol } = usePlayBalance();
+  const { balanceNative, settleNative, symbol } = usePlayBalance();
 
   // Game Settings
   const defaultSettings = {
@@ -80,8 +80,45 @@ const Game = ({
   const autoRevealRunIdRef = useRef(0);
   const startAutoRevealRef = useRef(() => {});
   const cashoutInProgressRef = useRef(false);
-  const serverRoundIdRef = useRef(null);
   const revealedIndicesRef = useRef([]);
+
+  const settleMinesRound = async ({
+    betAmount,
+    payoutAmount,
+    hitMine,
+    revealedTiles,
+    revealedIndices,
+  }) => {
+    if (!playAddress) return { ok: false, error: 'Wallet required' };
+
+    let fairnessProof = null;
+    if (fairnessEnabled && fairnessRoundRef?.current && fairnessReveal) {
+      fairnessProof = await fairnessReveal(
+        {
+          mines: minesCount,
+          revealedTiles,
+          hitMine,
+          multiplier: hitMine ? 0 : multiplierRef.current,
+        },
+        fairnessRoundRef.current,
+      );
+    }
+
+    return settleNative(
+      betAmount,
+      payoutAmount,
+      playAddress,
+      'mines',
+      {
+        minesCount,
+        gridSize,
+        revealedTiles,
+        hitMine,
+        revealedIndices: revealedIndices ?? revealedIndicesRef.current,
+        fairnessProof: fairnessProof || undefined,
+      },
+    );
+  };
 
   // Game State
   const [grid, setGrid] = useState([]);
@@ -367,42 +404,11 @@ const Game = ({
         setIsPlaying(true);
         setHasPlacedBet(true);
         playSound('bet');
-        serverRoundIdRef.current = null;
         revealedIndicesRef.current = [];
 
-        void (async () => {
-          try {
-            const debit = await debitNative(stake, playAddress, 'mines', {
-              minesCount,
-              gridSize,
-            });
-            if (!debit.ok) {
-              isPlayingRef.current = false;
-              setIsPlaying(false);
-              setHasPlacedBet(false);
-              toast.error(debit.error || 'Could not place bet');
-              if (shouldAutoReveal && onAutoRoundFailed) {
-                onAutoRoundFailed(debit.error || 'Could not place bet');
-              }
-              return;
-            }
-            serverRoundIdRef.current = debit.roundId ?? null;
-
-            if (shouldAutoReveal) {
-              startAutoRevealRef.current(tilesToAutoReveal);
-            }
-          } catch (error) {
-            console.error('Error placing bet:', error);
-            isPlayingRef.current = false;
-            setIsPlaying(false);
-            setHasPlacedBet(false);
-            toast.error(`Bet placement failed: ${error.message}`);
-            dispatch(setBalance(userBalance));
-            if (shouldAutoReveal && onAutoRoundFailed) {
-              onAutoRoundFailed(error.message);
-            }
-          }
-        })();
+        if (shouldAutoReveal) {
+          startAutoRevealRef.current(tilesToAutoReveal);
+        }
       };
 
       startGameWithBet();
@@ -438,7 +444,13 @@ const Game = ({
         setIsPlaying(false);
         setHasPlacedBet(false);
 
-        void releaseStake(playAddress, 'mines').catch(() => {});
+        const stakeAmount = settings.betAmount || betAmount || 0.1;
+        void settleMinesRound({
+          betAmount: stakeAmount,
+          payoutAmount: 0,
+          hitMine: true,
+          revealedTiles: revealedIndicesRef.current.length,
+        }).catch(() => {});
 
         // Reset game state for mine hit
         const resetAfterMine = () => {
@@ -562,41 +574,21 @@ const Game = ({
     }
 
     try {
-      toast.success(`Cashed out: ${payout.toFixed(4)} ${symbol} (${activeMultiplier.toFixed(2)}x)`);
       playSound('cashout');
 
-      let fairnessProof = null;
-      if (fairnessEnabled && fairnessRoundRef?.current && fairnessReveal) {
-        fairnessProof = await fairnessReveal(
-          {
-            mines: minesCount,
-            revealedTiles: activeRevealed,
-            hitMine: false,
-            multiplier: activeMultiplier,
-          },
-          fairnessRoundRef.current,
-        );
-      }
+      const settled = await settleMinesRound({
+        betAmount: currentBetAmount,
+        payoutAmount: payout,
+        hitMine: false,
+        revealedTiles: activeRevealed,
+      });
 
-      const credit = await creditNative(
-        payout,
-        playAddress,
-        'mines',
-        {
-          minesCount,
-          gridSize,
-          revealedTiles: activeRevealed,
-          hitMine: false,
-          revealedIndices: revealedIndicesRef.current,
-          fairnessProof: fairnessProof || undefined,
-        },
-        serverRoundIdRef.current,
-      );
-      if (!credit.ok) {
-        toast.error(credit.error || 'Could not credit winnings');
+      if (!settled.ok) {
+        toast.error(settled.error || 'Could not credit winnings');
+      } else {
+        const credited = settled.payoutAmountNative ?? payout;
+        toast.success(`Cashed out: ${Number(credited).toFixed(4)} ${symbol} (${activeMultiplier.toFixed(2)}x)`);
       }
-
-      serverRoundIdRef.current = null;
 
       if (activeMultiplier > 1.5) {
         setShowConfetti(true);
@@ -737,6 +729,13 @@ const Game = ({
       multiplierRef.current = 1;
       setMultiplier(1.0);
       setProfit(0);
+
+      void settleMinesRound({
+        betAmount: stakeAmount,
+        payoutAmount: 0,
+        hitMine: true,
+        revealedTiles: revealedCountRef.current,
+      }).catch(() => {});
 
       const allRevealed = gridRef.current.map((row) =>
         row.map((cell) => ({ ...cell, isRevealed: true })),

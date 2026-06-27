@@ -63,7 +63,6 @@ const GameWheel = ({
   const onSegmentLandedRef = useRef(onSegmentLanded);
   const setWheelPositionRef = useRef(setWheelPosition);
   const forcedSegmentIndexRef = useRef(forcedSegmentIndex);
-  const wasSpinningRef = useRef(false);
 
   const wheelData = useMemo(
     () => buildExpandedWheelSegments(risk, noOfSegments),
@@ -203,80 +202,89 @@ const GameWheel = ({
   }, [drawWheel, isSpinning, wheelPosition]);
 
   useEffect(() => {
-    const wasSpinning = wasSpinningRef.current;
-    wasSpinningRef.current = isSpinning;
-
-    if (!isSpinning || wasSpinning || !canvasRef.current) return;
-
-    playSpinSound();
+    if (!isSpinning) return;
 
     let cancelled = false;
     let rafId;
 
-    const forced = forcedSegmentIndexRef.current;
-    const selectedIndex =
-      forced != null && forced >= 0
-        ? forced % segments
-        : selectSegmentIndexByProbability(wheelData);
-    const totalSpins = 5;
-    const targetPosition = wheelRotationForSegmentIndex(selectedIndex, segments);
-    const startRotation =
-      ((wheelPositionRef.current % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-    let delta = targetPosition - startRotation;
-    if (delta < 0) delta += Math.PI * 2;
-    const finalRotation = Math.PI * 2 * totalSpins + delta;
+    const startAnimation = () => {
+      if (cancelled || !canvasRef.current) return false;
 
-    let startTime = null;
-    const duration = 3000;
+      playSpinSound();
 
-    const animate = (timestamp) => {
-      if (cancelled) return;
-
-      if (!startTime) startTime = timestamp;
-      const elapsed = timestamp - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const newPosition = startRotation + finalRotation * easeOut;
-
-      drawWheel(newPosition);
-
-      if (progress < 1) {
-        rafId = requestAnimationFrame(animate);
-        return;
-      }
-
-      wheelPositionRef.current = startRotation + finalRotation;
-      setWheelPositionRef.current(startRotation + finalRotation);
-
-      const landedIndex =
+      const forced = forcedSegmentIndexRef.current;
+      const selectedIndex =
         forced != null && forced >= 0
           ? forced % segments
-          : segmentIndexUnderPointer(startRotation + finalRotation, segments);
-      const landed = wheelData[landedIndex];
-      handleSelectMultiplierRef.current?.(landed.multiplier);
+          : selectSegmentIndexByProbability(wheelData);
+      const totalSpins = 5;
+      const targetPosition = wheelRotationForSegmentIndex(selectedIndex, segments);
+      const startRotation =
+        ((wheelPositionRef.current % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      let delta = targetPosition - startRotation;
+      if (delta < 0) delta += Math.PI * 2;
+      const finalRotation = Math.PI * 2 * totalSpins + delta;
 
-      const payload = {
-        segmentIndex: landedIndex,
-        multiplier: landed.multiplier,
-        color: landed.color,
-        probability: landed.probability,
+      let startTime = null;
+      const duration = 3000;
+
+      const animate = (timestamp) => {
+        if (cancelled) return;
+
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const newPosition = startRotation + finalRotation * easeOut;
+
+        drawWheel(newPosition);
+
+        if (progress < 1) {
+          rafId = requestAnimationFrame(animate);
+          return;
+        }
+
+        const finalPosition = startRotation + finalRotation;
+        wheelPositionRef.current = finalPosition;
+        setWheelPositionRef.current(finalPosition);
+
+        const landedIndex =
+          forced != null && forced >= 0
+            ? forced % segments
+            : segmentIndexUnderPointer(finalPosition, segments);
+        const landed = wheelData[landedIndex];
+        handleSelectMultiplierRef.current?.(landed.multiplier);
+
+        const payload = {
+          segmentIndex: landedIndex,
+          multiplier: landed.multiplier,
+          color: landed.color,
+          probability: landed.probability,
+        };
+
+        onColorDetectedRef.current?.(payload);
+        onSegmentLandedRef.current?.(payload);
+
+        if (window.wheelBetCallback) {
+          window.wheelBetCallback(payload);
+        }
       };
 
-      onColorDetectedRef.current?.(payload);
-      onSegmentLandedRef.current?.(payload);
-
-      if (window.wheelBetCallback) {
-        window.wheelBetCallback(payload);
-      }
+      rafId = requestAnimationFrame(animate);
+      return true;
     };
 
-    rafId = requestAnimationFrame(animate);
+    if (!startAnimation()) {
+      rafId = requestAnimationFrame(() => {
+        if (!cancelled) startAnimation();
+      });
+    }
 
     return () => {
       cancelled = true;
       if (rafId) cancelAnimationFrame(rafId);
     };
-  }, [drawWheel, isSpinning, segments, wheelData]);
+  }, [drawWheel, isSpinning, segments, wheelData, forcedSegmentIndex]);
 
   return (
     <div className="flex flex-col justify-between items-center h-full w-full">
