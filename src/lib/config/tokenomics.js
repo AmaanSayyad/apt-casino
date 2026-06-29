@@ -316,6 +316,13 @@ export const BUYBACK_SPLIT_COLORS = {
   toMarket: '#34d399',
 };
 
+export const GGR_FLYWHEEL_STEPS = [
+  { step: '1', title: 'Play', desc: 'Bets on-chain' },
+  { step: '2', title: 'GGR', desc: 'House edge revenue' },
+  { step: '3', title: 'Buyback', desc: 'Market buys APTC' },
+  { step: '4', title: 'Distribute', desc: 'Burn · stake · treasury' },
+];
+
 export const APTC_UTILITY = [
   {
     title: 'Casino flywheel',
