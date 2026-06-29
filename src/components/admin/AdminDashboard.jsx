@@ -142,6 +142,7 @@ export default function AdminDashboard() {
   const [wdActionId, setWdActionId] = useState(null);
   const [danger, setDanger] = useState(null);
   const [bannedWallets, setBannedWallets] = useState([]);
+  const [loadedTabs, setLoadedTabs] = useState({});
   const [banAddressInput, setBanAddressInput] = useState('');
   const [banReasonInput, setBanReasonInput] = useState('');
   const [lastSyncAt, setLastSyncAt] = useState(null);
@@ -157,6 +158,104 @@ export default function AdminDashboard() {
     return r.json();
   }, []);
 
+  const fetchCoreData = useCallback(
+    async (token) => {
+      const t = token ?? adminToken;
+      if (!t) return;
+
+      await adminFetch('/api/admin/banned-wallets/reconcile', t, { method: 'POST' });
+
+      const [statsJson, pendingRes, dangerRes, bannedRes] = await Promise.all([
+        adminFetch('/api/admin/stats', t).then((r) => r.json()),
+        adminFetch('/api/admin/withdrawals/pending', t),
+        adminFetch('/api/admin/danger-zone', t),
+        adminFetch('/api/admin/banned-wallets', t),
+      ]);
+
+      setStats(statsJson);
+      if (pendingRes.ok) {
+        const pj = await pendingRes.json();
+        setPendingWd(pj.pending ?? []);
+      }
+      if (dangerRes.ok) setDanger(await dangerRes.json());
+      if (bannedRes.ok) setBannedWallets((await bannedRes.json()).bans ?? []);
+    },
+    [adminToken],
+  );
+
+  const fetchTabData = useCallback(
+    async (tab, token, force = false) => {
+      const t = token ?? adminToken;
+      if (!t) return;
+      if (!force && tab !== 'gameplay' && loadedTabs[tab]) return;
+
+      switch (tab) {
+        case 'users': {
+          const res = await adminFetch('/api/admin/users', t);
+          if (res.ok) setUsers((await res.json()).users ?? []);
+          break;
+        }
+        case 'player_pnl': {
+          const res = await adminFetch('/api/admin/player-ledger', t);
+          if (res.ok) setPlayerPnl((await res.json()).rows ?? []);
+          break;
+        }
+        case 'financial': {
+          const res = await adminFetch('/api/admin/transactions?limit=80', t);
+          if (res.ok) setTransactions((await res.json()).transactions ?? []);
+          break;
+        }
+        case 'gameplay': {
+          const [betsRes, modeRes] = await Promise.all([
+            adminFetch(`/api/admin/game-history?limit=500${chainFilter !== 'ALL' ? `&chain=${chainFilter}` : ''}`, t),
+            adminFetch('/api/admin/mode-analytics', t),
+          ]);
+          if (betsRes.ok) setBets((await betsRes.json()).bets ?? []);
+          if (modeRes.ok) setModeAnalytics(await modeRes.json());
+          break;
+        }
+        case 'staking': {
+          const res = await adminFetch('/api/admin/staking', t);
+          if (res.ok) setStaking(await res.json());
+          break;
+        }
+        case 'referrals': {
+          const res = await adminFetch('/api/admin/referrals', t);
+          if (res.ok) setReferrals((await res.json()).rows ?? []);
+          break;
+        }
+        case 'newsletter': {
+          const res = await adminFetch('/api/newsletter/list?limit=200', t);
+          if (res.ok) {
+            setSubs(await res.json());
+            setSubsError('');
+          } else {
+            const sj = await res.json().catch(() => ({}));
+            setSubs(null);
+            setSubsError(sj.error || 'Newsletter load failed');
+          }
+          break;
+        }
+        case 'daily_streak': {
+          const res = await adminFetch('/api/admin/daily-streak', t);
+          if (res.ok) {
+            const j = await res.json();
+            setDailyStreakLeaders(j.leaders ?? []);
+            setDailyStreakRecent(j.recent ?? []);
+          }
+          break;
+        }
+        default:
+          break;
+      }
+
+      if (tab !== 'gameplay') {
+        setLoadedTabs((prev) => ({ ...prev, [tab]: true }));
+      }
+    },
+    [adminToken, chainFilter, loadedTabs],
+  );
+
   const syncTerminal = useCallback(
     async (token) => {
       const t = token ?? adminToken;
@@ -164,77 +263,19 @@ export default function AdminDashboard() {
       setSyncing(true);
       setSessionError('');
       try {
-        await adminFetch('/api/admin/banned-wallets/reconcile', t, { method: 'POST' });
-
-        const [
-          statsJson,
-          usersRes,
-          pnlRes,
-          txRes,
-          betsRes,
-          pendingRes,
-          stakeRes,
-          refRes,
-          subRes,
-          dangerRes,
-          bannedRes,
-          modeRes,
-          dailyStreakRes,
-        ] = await Promise.all([
-          adminFetch('/api/admin/stats', t).then((r) => r.json()),
-          adminFetch('/api/admin/users', t),
-          adminFetch('/api/admin/player-ledger', t),
-          adminFetch('/api/admin/transactions?limit=80', t),
-          adminFetch(`/api/admin/game-history?limit=500${chainFilter !== 'ALL' ? `&chain=${chainFilter}` : ''}`, t),
-          adminFetch('/api/admin/withdrawals/pending', t),
-          adminFetch('/api/admin/staking', t),
-          adminFetch('/api/admin/referrals', t),
-          adminFetch('/api/newsletter/list?limit=200', t),
-          adminFetch('/api/admin/danger-zone', t),
-          adminFetch('/api/admin/banned-wallets', t),
-          adminFetch('/api/admin/mode-analytics', t),
-          adminFetch('/api/admin/daily-streak', t),
-        ]);
-
-        setStats(statsJson);
-        if (usersRes.ok) setUsers((await usersRes.json()).users ?? []);
-        if (pnlRes.ok) setPlayerPnl((await pnlRes.json()).rows ?? []);
-        if (txRes.ok) setTransactions((await txRes.json()).transactions ?? []);
-        if (betsRes.ok) setBets((await betsRes.json()).bets ?? []);
-        if (pendingRes.ok) {
-          const pj = await pendingRes.json();
-          setPendingWd(pj.pending ?? []);
-        }
-        if (stakeRes.ok) setStaking(await stakeRes.json());
-        if (refRes.ok) setReferrals((await refRes.json()).rows ?? []);
-        if (subRes.ok) {
-          const sj = await subRes.json();
-          setSubs(sj);
-          setSubsError('');
-        } else {
-          const sj = await subRes.json().catch(() => ({}));
-          setSubs(null);
-          setSubsError(sj.error || 'Newsletter load failed');
-        }
-        if (dangerRes.ok) setDanger(await dangerRes.json());
-        if (bannedRes.ok) setBannedWallets((await bannedRes.json()).bans ?? []);
-        if (modeRes.ok) setModeAnalytics(await modeRes.json());
-        if (dailyStreakRes.ok) {
-          const j = await dailyStreakRes.json();
-          setDailyStreakLeaders(j.leaders ?? []);
-          setDailyStreakRecent(j.recent ?? []);
-        }
+        await fetchCoreData(t);
+        await fetchTabData(activeTab, t, true);
+        setLastSyncAt(new Date());
       } catch (e) {
         setSessionError(e.message || 'Sync failed');
         if (String(e.message).includes('401')) {
           setAuthorized(false);
         }
-        setLastSyncAt(new Date());
       } finally {
         setSyncing(false);
       }
     },
-    [adminToken, chainFilter],
+    [activeTab, adminToken, fetchCoreData, fetchTabData],
   );
 
   const refreshTreasury = useCallback(async () => {
@@ -272,6 +313,11 @@ export default function AdminDashboard() {
     }
   }, [probeAuth, refreshTreasury, syncTerminal]);
 
+  useEffect(() => {
+    if (!authorized || !adminToken) return;
+    void fetchTabData(activeTab, adminToken);
+  }, [activeTab, adminToken, authorized, fetchTabData]);
+
   const unlock = async (e) => {
     e.preventDefault();
     const t = tokenInput.trim();
@@ -281,6 +327,7 @@ export default function AdminDashboard() {
       await probeAuth(t);
       setAdminToken(t);
       setAuthorized(true);
+      setLoadedTabs({});
       window.localStorage.setItem(TOKEN_LS, t);
       await syncTerminal(t);
       await refreshTreasury();
@@ -295,6 +342,7 @@ export default function AdminDashboard() {
     setTokenInput('');
     setAuthorized(false);
     setStats(null);
+    setLoadedTabs({});
     window.localStorage.removeItem(TOKEN_LS);
   };
 
@@ -841,17 +889,7 @@ export default function AdminDashboard() {
               <ChainPills
                 options={['ALL', 'solana', 'aptos']}
                 value={chainFilter}
-                onChange={(c) => {
-                  setChainFilter(c);
-                  if (adminToken) {
-                    adminFetch(
-                      `/api/admin/game-history?limit=500${c !== 'ALL' ? `&chain=${c}` : ''}`,
-                      adminToken,
-                    )
-                      .then((r) => r.json())
-                      .then((j) => setBets(j.bets ?? []));
-                  }
-                }}
+                onChange={setChainFilter}
               />
               {bets.filter((b) => filterRow(b.wallet)).length === 0 ? (
                 <EmptyState title="No bets" description="Try another chain filter or sync terminal." />
