@@ -266,6 +266,7 @@ export async function GET(request: NextRequest) {
     },
     otcEntries: otcRes.data ?? [],
     recentDeposits: deposits.slice(0, 40),
+    depositHistory: deposits,
     recentBets: bets.slice(0, 80).map((b) => ({
       ...b,
       betNative: rawToNative(b.chain, b.bet_raw),

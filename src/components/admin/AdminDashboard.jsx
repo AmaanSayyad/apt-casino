@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { FaSync, FaSignOutAlt } from 'react-icons/fa';
 import OtcLotteryAdminPanel from '@/components/OtcLotteryAdminPanel';
@@ -12,6 +12,7 @@ import GgrBuybackPanel from '@/components/GgrBuybackPanel';
 import WalletIntelPanel from '@/components/admin/WalletIntelPanel';
 import DangerZonePanel from '@/components/admin/DangerZonePanel';
 import GameModePnLPanel from '@/components/admin/GameModePnLPanel';
+import { walletAddressSearchVariants } from '@/lib/admin/walletAddressVariants';
 import {
   AdminTable,
   Badge,
@@ -32,6 +33,16 @@ import {
 } from '@/components/admin/ui';
 
 const TOKEN_LS = 'apt_casino_admin_token';
+
+function matchesWalletFilter(wallet, query) {
+  const q = query.trim();
+  if (!q) return true;
+  const w = String(wallet || '').toLowerCase();
+  const needle = q.toLowerCase();
+  if (w.includes(needle)) return true;
+  const variants = walletAddressSearchVariants(q).map((v) => v.toLowerCase());
+  return variants.some((v) => v === w || w.includes(v) || v.includes(w));
+}
 
 const TABLE_TABS = new Set([
   'users',
@@ -104,12 +115,14 @@ export default function AdminDashboard() {
   const [syncing, setSyncing] = useState(false);
   const [activeTab, setActiveTab] = useState('wallet_intel');
   const [search, setSearch] = useState('');
+  const [financialWalletSearch, setFinancialWalletSearch] = useState('');
 
   const [stats, setStats] = useState(null);
   const [treasury, setTreasury] = useState(null);
   const [treasuryLoading, setTreasuryLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [playerPnl, setPlayerPnl] = useState([]);
+  const [playerPnlSort, setPlayerPnlSort] = useState({ key: 'wagered', dir: 'desc' });
   const [transactions, setTransactions] = useState([]);
   const [bets, setBets] = useState([]);
   const [pendingWd, setPendingWd] = useState([]);
@@ -344,6 +357,34 @@ export default function AdminDashboard() {
     if (!search.trim()) return true;
     return String(wallet).toLowerCase().includes(search.trim().toLowerCase());
   };
+
+  const handlePlayerPnlSort = (key) => {
+    setPlayerPnlSort((prev) =>
+      prev.key === key ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'desc' },
+    );
+  };
+
+  const sortedPlayerPnl = useMemo(() => {
+    const filtered = playerPnl.filter((r) => filterRow(r.wallet));
+    const { key, dir } = playerPnlSort;
+    const mul = dir === 'asc' ? 1 : -1;
+
+    return [...filtered].sort((a, b) => {
+      if (key === 'joinedAt') {
+        if (!a.joinedAt && !b.joinedAt) return 0;
+        if (!a.joinedAt) return 1;
+        if (!b.joinedAt) return -1;
+        return (new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()) * mul;
+      }
+
+      const va = a[key] ?? 0;
+      const vb = b[key] ?? 0;
+      if (typeof va === 'string' || typeof vb === 'string') {
+        return String(va).localeCompare(String(vb)) * mul;
+      }
+      return (Number(va) - Number(vb)) * mul;
+    });
+  }, [playerPnl, playerPnlSort, search]);
 
   if (!authorized) {
     return (
@@ -666,7 +707,7 @@ export default function AdminDashboard() {
                     {TABLE_TABS.has(activeTab) && activeTab !== 'financial' && activeTab !== 'gameplay' && 'Filterable ledger data'}
                   </p>
                 </div>
-                {TABLE_TABS.has(activeTab) && (
+                {TABLE_TABS.has(activeTab) && activeTab !== 'financial' && (
                   <div className="w-full sm:w-auto sm:max-w-md min-w-0">
                     <SearchInput
                       value={search}
@@ -743,7 +784,7 @@ export default function AdminDashboard() {
                 Avail. balance = house funds they can still withdraw. Player P&L = (Withdrawn + Avail.) − Deposited;
                 positive means the user is net-up.
               </p>
-              {playerPnl.filter((r) => filterRow(r.wallet)).length === 0 ? (
+              {sortedPlayerPnl.length === 0 ? (
                 <EmptyState title="No P&L rows" description="Player ledger populates after deposits and play." />
               ) : (
                 <AdminTable stickyHeader>
@@ -751,7 +792,7 @@ export default function AdminDashboard() {
                     cols={[
                       'Player',
                       'Currency',
-                      'Joined',
+                      { key: 'joinedAt', label: 'Joined', sortable: true },
                       'Deposited',
                       'Withdrawn',
                       'Avail. balance',
@@ -759,9 +800,12 @@ export default function AdminDashboard() {
                       'Bets',
                       'Wagered',
                     ]}
+                    sortKey={playerPnlSort.key}
+                    sortDir={playerPnlSort.dir}
+                    onSort={handlePlayerPnlSort}
                   />
                   <tbody>
-                    {playerPnl.filter((r) => filterRow(r.wallet)).map((r) => (
+                    {sortedPlayerPnl.map((r) => (
                       <TableRow key={`${r.wallet}-${r.chain}`}>
                         <td className="px-4 py-3 font-mono text-xs">
                           <WalletExplorerLink wallet={r.wallet} chain={r.chain} />
@@ -842,18 +886,63 @@ export default function AdminDashboard() {
 
           {activeTab === 'financial' && (
             <div className="space-y-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white">Wallet filter</p>
+                  <p className="text-xs text-white/40 mt-1 max-w-xl">
+                    Enter a Solana or Aptos address to show only that wallet&apos;s pending withdrawals and deposit/withdrawal history.
+                  </p>
+                </div>
+                <div className="flex w-full sm:w-auto sm:min-w-[320px] gap-2">
+                  <SearchInput
+                    value={financialWalletSearch}
+                    onChange={(e) => setFinancialWalletSearch(e.target.value)}
+                    placeholder="Wallet address…"
+                    className="w-full"
+                  />
+                  {financialWalletSearch.trim() ? (
+                    <button
+                      type="button"
+                      onClick={() => setFinancialWalletSearch('')}
+                      className="shrink-0 rounded-xl border border-white/10 px-3 py-2 text-xs text-white/50 hover:text-white hover:bg-white/5"
+                    >
+                      Clear
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              {(() => {
+                const filterFinancialWallet = (wallet) =>
+                  matchesWalletFilter(wallet, financialWalletSearch);
+                const filteredPending = pendingWd.filter((w) => filterFinancialWallet(w.wallet));
+                const filteredTransactions = transactions.filter((t) => filterFinancialWallet(t.wallet));
+
+                return (
+                  <>
               <div>
                 <SectionHeading
                   title="Pending withdrawals"
-                  description="Amounts over manual USD threshold — approve to execute on-chain."
+                  description={
+                    financialWalletSearch.trim()
+                      ? `Showing ${filteredPending.length} pending for this wallet.`
+                      : 'Amounts over manual USD threshold — approve to execute on-chain.'
+                  }
                 />
-                {pendingWd.length === 0 ? (
-                  <EmptyState title="Queue clear" description="No withdrawals awaiting manual review." />
+                {filteredPending.length === 0 ? (
+                  <EmptyState
+                    title={financialWalletSearch.trim() ? 'No pending withdrawals' : 'Queue clear'}
+                    description={
+                      financialWalletSearch.trim()
+                        ? 'This wallet has no withdrawals awaiting manual review.'
+                        : 'No withdrawals awaiting manual review.'
+                    }
+                  />
                 ) : (
                   <AdminTable stickyHeader>
                     <THead cols={['Wallet', 'Chain', 'Gross', 'USD est.', 'Created', 'Action']} />
                     <tbody>
-                      {pendingWd.filter((w) => filterRow(w.wallet)).map((w) => (
+                      {filteredPending.map((w) => (
                         <TableRow key={w.id}>
                           <td className="px-4 py-3 font-mono text-xs">
                             <WalletExplorerLink wallet={w.wallet} chain={w.chain} />
@@ -895,14 +984,28 @@ export default function AdminDashboard() {
                 )}
               </div>
               <div>
-                <SectionHeading title="Recent deposits & withdrawals" />
-                {transactions.filter((t) => filterRow(t.wallet)).length === 0 ? (
-                  <EmptyState title="No transactions" />
+                <SectionHeading
+                  title="Recent deposits & withdrawals"
+                  description={
+                    financialWalletSearch.trim()
+                      ? `Showing ${filteredTransactions.length} transactions for this wallet.`
+                      : undefined
+                  }
+                />
+                {filteredTransactions.length === 0 ? (
+                  <EmptyState
+                    title="No transactions"
+                    description={
+                      financialWalletSearch.trim()
+                        ? 'No deposits or withdrawals logged for this wallet address.'
+                        : 'Deposit and withdrawal activity will appear here.'
+                    }
+                  />
                 ) : (
                   <AdminTable className="max-h-[420px] overflow-y-auto" stickyHeader>
                     <THead cols={['Time', 'Type', 'Wallet', 'Chain', 'Amount', 'Status']} />
                     <tbody>
-                      {transactions.filter((t) => filterRow(t.wallet)).map((t) => (
+                      {filteredTransactions.map((t) => (
                         <TableRow key={t.id}>
                           <td className="px-4 py-2.5 text-xs text-white/50">{new Date(t.createdAt).toLocaleString()}</td>
                           <td className="px-4 py-2.5 capitalize text-xs">
@@ -922,6 +1025,9 @@ export default function AdminDashboard() {
                   </AdminTable>
                 )}
               </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 

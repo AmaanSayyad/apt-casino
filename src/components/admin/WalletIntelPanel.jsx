@@ -1,6 +1,60 @@
 'use client';
 
+import { getPlayChainConfig } from '@/lib/chains/registry';
+import { explorerTxUrl } from '@/lib/chains/explorer';
 import { fmtNum, shortWallet, StatBox, AdminTable, THead, TableRow, Panel, Badge, SectionHeading } from '@/components/admin/ui';
+
+function chainSymbol(chain) {
+  return getPlayChainConfig(String(chain))?.nativeSymbol ?? String(chain).toUpperCase();
+}
+
+function octasToNative(chain, octas) {
+  const units = getPlayChainConfig(String(chain))?.units ?? 1e9;
+  return Number(octas) / units;
+}
+
+function withdrawalStatusTone(status) {
+  const s = String(status || '').toLowerCase();
+  if (s === 'completed' || s === 'auto') return 'success';
+  if (s === 'pending') return 'warning';
+  if (s === 'rejected') return 'danger';
+  return 'neutral';
+}
+
+function TxLink({ chain, hash }) {
+  const href = explorerTxUrl(chain, hash);
+  if (!href || !hash) return <span className="text-white/30">—</span>;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-cyan-400/90 hover:text-cyan-300 hover:underline underline-offset-2 font-mono text-[10px]"
+      title={hash}
+    >
+      {String(hash).slice(0, 8)}…
+    </a>
+  );
+}
+
+function LedgerHistoryTable({ title, subtitle, empty, cols, rows }) {
+  return (
+    <Panel className="p-0 overflow-hidden">
+      <div className="px-5 pt-5 pb-3 border-b border-white/5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">{title}</p>
+        {subtitle ? <p className="text-xs text-white/35 mt-1">{subtitle}</p> : null}
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-sm text-white/40 px-5 py-8">{empty}</p>
+      ) : (
+        <AdminTable className="border-0 rounded-none max-h-80 overflow-y-auto">
+          <THead cols={cols} />
+          <tbody>{rows}</tbody>
+        </AdminTable>
+      )}
+    </Panel>
+  );
+}
 
 export default function WalletIntelPanel({
   walletQuery,
@@ -14,6 +68,8 @@ export default function WalletIntelPanel({
   const a = intel?.aggregates;
   const fin = a?.financial;
   const bet = a?.betting;
+  const deposits = intel?.depositHistory ?? intel?.recentDeposits ?? [];
+  const withdrawals = intel?.withdrawalHistory ?? [];
 
   return (
     <div className="min-w-0 space-y-6 sm:space-y-8">
@@ -152,6 +208,82 @@ export default function WalletIntelPanel({
                 </div>
               ))}
             </Panel>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-5">
+            <LedgerHistoryTable
+              title={`Deposits (${deposits.length})`}
+              subtitle={
+                fin?.totalDeposited != null
+                  ? `Total deposited: ${fmtNum(fin.totalDeposited)} across ${fin.depositCount ?? deposits.length} tx`
+                  : undefined
+              }
+              empty="No deposits logged for this wallet."
+              cols={['When', 'Chain', 'Amount', 'Net credited', 'TX']}
+              rows={deposits.map((d) => {
+                const sym = chainSymbol(d.chain);
+                const net = octasToNative(d.chain, d.net_credited_octas ?? d.amount_octas);
+                return (
+                  <TableRow key={d.id}>
+                    <td className="px-4 py-2.5 text-xs text-white/50 whitespace-nowrap">
+                      {new Date(d.created_at).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs capitalize">{d.chain}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-emerald-400">
+                      +{fmtNum(d.amount_native)} {sym}
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-xs">
+                      {fmtNum(net)} {sym}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <TxLink chain={d.chain} hash={d.user_tx_hash} />
+                    </td>
+                  </TableRow>
+                );
+              })}
+            />
+
+            <LedgerHistoryTable
+              title={`Withdrawals (${withdrawals.length})`}
+              subtitle={
+                fin?.totalWithdrawn != null
+                  ? `Completed: ${fmtNum(fin.totalWithdrawn)} · Pending: ${fin.pendingWithdrawals ?? 0}`
+                  : undefined
+              }
+              empty="No withdrawal requests for this wallet."
+              cols={['When', 'Chain', 'Gross', 'Net paid', 'Status', 'TX']}
+              rows={withdrawals.map((w) => {
+                const sym = chainSymbol(w.chain);
+                const net = octasToNative(w.chain, w.user_payout_octas);
+                const when = w.processed_at || w.created_at;
+                return (
+                  <TableRow key={w.id}>
+                    <td className="px-4 py-2.5 text-xs text-white/50 whitespace-nowrap">
+                      {when ? new Date(when).toLocaleString() : '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs capitalize">{w.chain}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-rose-300">
+                      −{fmtNum(w.gross_apt)} {sym}
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-xs">
+                      {w.status === 'completed' || w.status === 'auto' ? (
+                        <span className="text-white/80">
+                          {fmtNum(net)} {sym}
+                        </span>
+                      ) : (
+                        <span className="text-white/35">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <Badge tone={withdrawalStatusTone(w.status)}>{w.status}</Badge>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <TxLink chain={w.chain} hash={w.user_tx_hash} />
+                    </td>
+                  </TableRow>
+                );
+              })}
+            />
           </div>
 
           {bet?.byChain && Object.keys(bet.byChain).length > 0 && (

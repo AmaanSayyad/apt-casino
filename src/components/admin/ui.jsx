@@ -188,15 +188,42 @@ export function AdminTable({ children, className = '', stickyHeader }) {
   );
 }
 
-export function THead({ cols }) {
+function normalizeHeadCol(col) {
+  if (typeof col === 'string') return { key: col, label: col, sortable: false };
+  return { key: col.key ?? col.label, label: col.label, sortable: Boolean(col.sortable) };
+}
+
+export function THead({ cols, sortKey, sortDir, onSort }) {
+  const normalized = cols.map(normalizeHeadCol);
+
   return (
     <thead className="bg-[#1a0015]/95 backdrop-blur-md text-[10px] uppercase tracking-widest text-white/45 border-b border-white/10">
       <tr>
-        {cols.map((c) => (
-          <th key={c} className="px-4 py-3.5 font-semibold whitespace-nowrap">
-            {c}
-          </th>
-        ))}
+        {normalized.map((col) => {
+          const active = sortKey === col.key;
+          const sortable = col.sortable && onSort;
+
+          return (
+            <th key={col.key} className="px-4 py-3.5 font-semibold whitespace-nowrap">
+              {sortable ? (
+                <button
+                  type="button"
+                  onClick={() => onSort(col.key)}
+                  className={`inline-flex items-center gap-1.5 transition-colors hover:text-white/80 ${
+                    active ? 'text-violet-300' : ''
+                  }`}
+                >
+                  {col.label}
+                  <span className="text-[9px] tabular-nums" aria-hidden>
+                    {active ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
+                  </span>
+                </button>
+              ) : (
+                col.label
+              )}
+            </th>
+          );
+        })}
       </tr>
     </thead>
   );
