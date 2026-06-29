@@ -82,7 +82,7 @@ export type OtcEstimateResult = {
   };
 };
 
-/** Estimate APTC received after swap platform fee + token buy tax (2% split creator/bags). */
+/** Estimate APTC received after swap platform fee + Pump.fun curve trade fee (1.25%). */
 export function estimateAptcFromSol(input: OtcEstimateInput): OtcEstimateResult {
   const { solAmount, solPriceUsd, aptcPriceUsd, swapPlatformFeeBps, tokenTradeTaxBps } = input;
   const solUsd = solAmount * solPriceUsd;

@@ -3,7 +3,7 @@
  * Logo files live in /public/logos (shared with chain connect modal).
  */
 
-import { BAGS_LOGO_SRC } from './tokenomics';
+import { PUMP_LOGO_SRC } from './tokenomics';
 
 export type EcosystemLogo = {
   key: string;
@@ -29,7 +29,7 @@ export const ECOSYSTEM_CHAIN_LOGOS: EcosystemLogo[] = [
 
 /** DEX, analytics & launch tooling */
 export const ECOSYSTEM_DEX_LOGOS: EcosystemLogo[] = [
-  { key: 'bags', src: BAGS_LOGO_SRC, alt: 'Bags.fm' },
+  { key: 'pumpfun', src: PUMP_LOGO_SRC, alt: 'Pump.fun' },
   { key: 'jupiter', src: '/logos/jupiter.jpg', alt: 'Jupiter' },
   { key: 'meteora', src: '/logos/meteora-logo.png', alt: 'Meteora' },
   { key: 'pancakeswap', src: '/logos/pancakeswap-logo.png', alt: 'PancakeSwap' },

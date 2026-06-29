@@ -348,7 +348,7 @@ export default function StakePage() {
               <div>
                 <p className="font-semibold">$APTC Launching Soon on Solana</p>
                 <p className="text-amber-200/80 mt-1">
-                  Staking pools and market data will go live when APTC launches on Bags. All UI elements below show placeholder values until launch.
+                  Staking pools and market data will go live when APTC launches on Pump.fun. All UI elements below show placeholder values until launch.
                 </p>
               </div>
             </div>

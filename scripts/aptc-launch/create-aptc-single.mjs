@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * APTC single-wallet launch — full 1B supply minted to payer, all authorities revoked.
- * Payer receives 100% of supply (legacy manual mint — use Bags.fm launch for production).
+ * Payer receives 100% of supply (legacy manual mint — use Pump.fun launch for production).
  */
 import { readFileSync, existsSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';

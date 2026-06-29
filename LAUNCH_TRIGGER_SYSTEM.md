@@ -33,9 +33,8 @@ When this is set with a valid Solana token address, the entire site automaticall
 
 ### 5. **Trade & Research Tool Links**
 **Pre-launch** (generic URLs):
-- Bags: `https://bags.fm/launch`
+- Pump.fun: `https://pump.fun/create`
 - Jupiter: `https://jup.ag/`
-- Meteora: `https://app.meteora.ag/`
 - DexScreener: `https://dexscreener.com/solana`
 - Birdeye: `https://birdeye.so/`
 - GeckoTerminal: `https://www.geckoterminal.com/`
@@ -47,9 +46,8 @@ When this is set with a valid Solana token address, the entire site automaticall
 - Plus: CoinGecko, CMC, PancakeSwap, Pump.fun
 
 **Post-launch** (token-specific URLs):
-- Bags: Token page on bags.fm
+- Pump.fun: Token page on pump.fun/coin/{mint}
 - Jupiter: Swap SOL to token
-- Meteora: DAMM v2 pool
 - DexScreener: Token pair page
 - Birdeye: Token analytics
 - GeckoTerminal: Token pool page
@@ -178,10 +176,9 @@ NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL
 
 When you're ready to launch:
 
-- [ ] Launch APTC on [bags.fm/launch](https://bags.fm/launch) — **SpaceX Mode** · 4% float · ~$50k starting MC · listings-first creator buy
-- [ ] Fee share 100% → @aptcasinofun · no wash · no fake FDV · no dumps
+- [ ] Launch APTC on [pump.fun/create](https://pump.fun/create) — **default mode** · ~1% dev buy · 1.25% curve fee · listings-first creator fees
+- [ ] Creator fees 100% → @aptcasinofun · no wash · no fake FDV · no dumps
 - [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in Vercel
 - [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` in Vercel (optional, for faster chart)
-- [ ] Set `BAGS_API_KEY` in Vercel (optional, for analytics)
 - [ ] Redeploy to production
 - [ ] ✅ Site automatically updates to "Live" state everywhere!

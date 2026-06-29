@@ -222,13 +222,13 @@ All though started as a idea but now we are thinking to carry forward as a busin
 
 **Be the biggest gamefi/ gambling / games hub centre of the gaming industry.**
 
-## $APTC token (Bags.fm launch)
+## $APTC token (Pump.fun launch)
 
-APTC is the native GambleFi token — launching on **Solana via Bags.fm** in **SpaceX Mode** (Meteora bonding curve → DAMM v2).
+APTC is the native GambleFi token — launching on **Solana via Pump.fun** in **default mode** (bonding curve → PumpSwap).
 
-- **SpaceX Mode** on @BagsApp — **4% float** · **96% locked** · modeled after the SpaceX IPO
-- **Dynamic fees** — **2% → 0.5%** as market cap grows · **25% fee compounding** post-migration
-- **~$50k starting MC** on circulating float · creator buy + fee share → @aptcasinofun (**listings-first**)
+- **Default launch** on @pumpdotfun — **~1% creator dev buy** · **~79% on curve** · **~21% PumpSwap LP** (burned at graduation)
+- **Curve fees** — **1.25%** total (0.3% creator + 0.95% protocol); post-grad PumpSwap fees scale with market cap
+- **~85 SOL graduation** → canonical PumpSwap pool · **100% creator fees** → @aptcasinofun (**listings-first**)
 - **0%** team / founder / VC allocation · **No wash volume · no fake FDV · no dumps**
 
 Full tokenomics: [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) · live charts on [aptcasino.fun/#tokenomics](https://aptcasino.fun/#tokenomics).
@@ -236,11 +236,11 @@ Full tokenomics: [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) · live ch
 ```mermaid
 flowchart LR
     PLAY[Casino play] --> GGR[GGR]
-    GGR --> BUY[Jupiter / Meteora buyback]
+    GGR --> BUY[Jupiter / PumpSwap buyback]
     BUY --> BURN[Burn 50%]
     BUY --> STAKE[Stakers 35%]
     BUY --> TRES[Treasury 15%]
-    TRADE[Bags 2% fee] --> OPS[@aptcasinofun treasury]
+    TRADE[Pump.fun 1.25% fee] --> OPS[@aptcasinofun treasury]
     REF[Referrals] --> APTC[APTC rewards]
     STK[/stake pools] --> APTC
 ```
@@ -417,7 +417,7 @@ Upload the `.next` folder and `public` folder to your hosting provider.
 
 | File | Purpose |
 |------|---------|
-| [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) | **$APTC** — Bags bonding curve launch, allocation, GGR flywheel |
+| [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) | **$APTC** — Pump.fun bonding curve launch, allocation, GGR flywheel |
 | [mainnet.md](./mainnet.md) | Mainnet launch checklist (multichain) |
 | [deployment.md](./deployment.md) | Aptos module addresses & entry function reference |
 | [liquidity.md](./liquidity.md) | Treasury, house balance, and fee flow |

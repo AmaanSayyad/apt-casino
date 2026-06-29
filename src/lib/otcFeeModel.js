@@ -1,20 +1,20 @@
 /**
  * OTC vs DEX fee model — sourced wallet/platform rates for calculator UI.
- * Pool fee follows Bags SpaceX Mode: 2% on curve, 2%→0.5% post-migration by market cap.
- * @see https://docs.bags.fm/how-to-guides/customize-token-fees
+ * Pool fee follows Pump.fun default: 1.25% on bonding curve (0.3% creator + 0.95% protocol).
+ * @see https://pump.fun/docs/fees
  */
 
-/** Bags SpaceX Mode — 2% pre-migration; dynamic 2%→0.5% post-migration */
+/** Pump.fun bonding curve — 1.25% total pre-graduation */
 export const APTC_DEX_POOL_FEE = {
-  totalBps: 200,
-  totalLabel: '2%',
-  venue: 'Bags · Meteora DBC / DAMM v2 · SpaceX Mode',
+  totalBps: 125,
+  totalLabel: '1.25%',
+  venue: 'Pump.fun bonding curve → PumpSwap',
   detail:
-    '2% trade fee on bonding curve (1% protocol + 1% creator). Post-migration: market-cap-based fee from 2% down to 0.5% floor; 25% of fees compound after migration.',
+    '1.25% trade fee on bonding curve (0.3% creator + 0.95% protocol). Post-graduation PumpSwap canonical pool fees scale down with market cap per pump.fun/docs/fees.',
   sources: [
     {
-      label: 'Bags — Customize token fees',
-      url: 'https://docs.bags.fm/how-to-guides/customize-token-fees',
+      label: 'Pump.fun — Fees',
+      url: 'https://pump.fun/docs/fees',
     },
   ],
 };
@@ -54,7 +54,7 @@ export const WALLET_SWAP_FEES = [
     name: 'Solflare',
     swapFeeBps: 0,
     swapFeeLabel: '0% (wallet)',
-    notes: 'In-wallet swaps route via Jupiter; you still pay Solana network fees and DEX pool fees (Bags/Meteora 2% on APTC).',
+    notes: 'In-wallet swaps route via Jupiter; you still pay Solana network fees and DEX pool fees (Pump.fun 1.25% on APTC curve).',
     sources: [
       { label: 'Solflare — FAQ', url: 'https://www.solflare.com/faq/' },
       { label: 'Jupiter — Swap fees', url: 'https://docs.jup.ag/user-docs/trade/swap/fees' },
@@ -148,8 +148,8 @@ export const DEX_VALUE_LOSS_SOURCES = [
   },
   {
     id: 'tax',
-    label: 'Bags / Meteora trade fee (APTC/SOL)',
-    detail: '2% on APTC DEX swaps via Bags SpaceX Mode (curve or Meteora DAMM v2). Post-migration fee scales 2%→0.5% as market cap grows.',
+    label: 'Pump.fun trade fee (APTC/SOL)',
+    detail: '1.25% on APTC bonding-curve swaps. Post-graduation PumpSwap fees scale down with market cap.',
   },
   {
     id: 'priceImpact',
@@ -227,7 +227,7 @@ export function estimateDexAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd, swa
   };
 }
 
-/** Full APTC if no DEX swap markup and no Bags/Meteora trade fee (OTC allotment model). */
+/** Full APTC if no DEX swap markup and no Pump.fun trade fee (OTC allotment model). */
 export function estimateOtcAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd) {
   if (!solAmount || !solPriceUsd || !aptcPriceUsd) return { aptc: 0, networkFeeUsd: 0 };
   const grossUsd = solAmount * solPriceUsd;
@@ -258,7 +258,7 @@ export function compareDexVsOtc(input) {
     solPriceUsd,
     aptcPriceUsd,
     walletId = 'conservative',
-    tokenTaxBps = BAGS_TOKEN_TAX.totalBps,
+    tokenTaxBps = APTC_DEX_POOL_FEE.totalBps,
   } = input;
 
   const wallet =
@@ -320,7 +320,7 @@ export function getWalletById(id) {
 }
 
 /**
- * Per DEX purchase: full value loss in SOL — swap fee, market loss (impact/slippage/LP), Bags/Meteora trade fee.
+ * Per DEX purchase: full value loss in SOL — swap fee, market loss (impact/slippage/LP), Pump.fun trade fee.
  * @param {number} solIn
  * @param {number} swapFeeBps
  * @param {number} tokenTaxBps
@@ -407,7 +407,7 @@ export function calculateOtcPerBuySol(solIn) {
  * }} input
  */
 export function compareDexVsOtcSol(input) {
-  const { solPerBuy, numPurchases = 1, walletId = 'phantom', tokenTaxBps = BAGS_TOKEN_TAX.totalBps } =
+  const { solPerBuy, numPurchases = 1, walletId = 'phantom', tokenTaxBps = APTC_DEX_POOL_FEE.totalBps } =
     input;
   const wallet = getWalletById(walletId);
   const swapFeeBps =

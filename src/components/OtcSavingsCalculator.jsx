@@ -25,7 +25,7 @@ function fmtUsd(n) {
 }
 
 /**
- * Per-buy fee + market loss calculator (swap, Bags/Meteora trade fee, price impact / slippage).
+ * Per-buy fee + market loss calculator (swap, Pump.fun trade fee, price impact / slippage).
  */
 export default function OtcSavingsCalculator({
   solPerBuy,

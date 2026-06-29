@@ -1,95 +1,105 @@
 /**
  * APTC tokenomics — public-facing constants for landing + litepaper + docs.
- * Launch: Bags.fm SpaceX Mode (96% locked · 4% float) → Meteora DBC → DAMM v2.
- * @see https://docs.bags.fm/how-to-guides/customize-token-fees
- * @see https://docs.bags.fm/how-to-guides/initial-buy-math
+ * Launch: Pump.fun default mode (SOL-paired bonding curve → PumpSwap).
+ * @see https://pump.fun/create
+ * @see https://pump.fun/docs/fees
+ * @see https://github.com/pump-fun/pump-public-docs
  */
 
 import { getAptcMint, isAptcLaunched, getAptcPairAddress } from './launchStatus';
 
-/** Bags SpaceX Mode — 4% float, 96% locked, dynamic 2%→0.5% fees, 25% fee compounding post-migration, ~55 SOL graduation */
-export const BAGS_SPACEX_CONFIG_ID = 'ba28db46-ea6f-4452-8218-5587f6aca0a1';
+/** Pump.fun program (mainnet) */
+export const PUMP_PROGRAM_ID = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P';
 
-/** @deprecated Use BAGS_SPACEX_CONFIG_ID */
-export const BAGS_DEFAULT_CONFIG_ID = BAGS_SPACEX_CONFIG_ID;
+export const PUMP_LOGO_SRC = '/logos/pumpfun-logo.png';
 
-/** Public Bags.fm brand mark */
-export const BAGS_LOGO_SRC = '/bagsapp.png';
-
-/** Bags SpaceX Mode — modeled after the SpaceX IPO (4% float, dynamic fees, compounding). */
-export const BAGS_SPACEX_MODE = {
-  label: 'SpaceX Mode',
-  tagline: 'Modeled after the SpaceX IPO',
-  floatPct: 4,
-  lockedPct: 96,
-  tradeFeeStartPct: 2,
-  tradeFeeFloorPct: 0.5,
-  feeCompoundingPct: 25,
-  docsUrl: 'https://docs.bags.fm/how-to-guides/customize-token-fees',
-  bagsAppUrl: 'https://bags.fm/launch',
+/**
+ * Default Pump.fun launch — NOT mayhem mode, NOT cashback, SOL-paired `create_v2`.
+ * Bonding curve sells ~793.1M tokens; graduation migrates liquidity to PumpSwap (LP burned).
+ */
+export const PUMP_LAUNCH_MODE = {
+  label: 'Default launch',
+  tagline: 'SOL-paired bonding curve · PumpSwap graduation',
+  mayhemMode: false,
+  cashbackEnabled: false,
+  quotePair: 'SOL',
+  createUrl: 'https://pump.fun/create',
+  feesDocsUrl: 'https://pump.fun/docs/fees',
+  publicDocsUrl: 'https://github.com/pump-fun/pump-public-docs',
+  /** Creator initial buy target — 1% of 1B supply */
+  devHoldPct: 1,
+  /** Tokens tradeable on the bonding curve before graduation (~79.31% of supply) */
+  curveSupplyPct: 79.31,
+  /** Remaining supply migrates to PumpSwap LP on graduation */
+  migrationLpPct: 20.69,
+  /** Bonding-curve trade fee (creator + protocol) per pump.fun/fees */
+  curveCreatorFeePct: 0.3,
+  curveProtocolFeePct: 0.95,
+  curveTotalFeePct: 1.25,
+  /** Post-graduation PumpSwap canonical pool fees scale with market cap down to ~0.3% total */
+  pumpswapFeeFloorPct: 0.3,
+  /** Approximate SOL raised when the curve completes (varies with curve math) */
+  graduationSolApprox: 85,
+  migrationFeeSol: 0.015,
+  createFeeSol: 0,
 };
 
 export const APTC_TOKENOMICS = {
   name: 'AptCasino.fun',
   symbol: 'APTC',
-  chain: 'Solana (SPL · Bags + Meteora)',
+  chain: 'Solana (SPL · Token-2022 · Pump.fun)',
   maxSupply: '1,000,000,000',
-  decimals: 9,
+  decimals: 6,
   get mint() {
     return getAptcMint();
   },
-  launchVenue: 'Bags.fm · Meteora DBC → DAMM v2',
-  launchPlatformUrl: 'https://bags.fm/launch',
-  feeMode: 'SPACEX',
-  feeModeLabel: 'SpaceX Mode',
-  bagsConfigId: BAGS_SPACEX_CONFIG_ID,
+  launchVenue: 'Pump.fun → PumpSwap',
+  launchPlatformUrl: PUMP_LAUNCH_MODE.createUrl,
+  feeMode: 'PUMP_DEFAULT',
+  feeModeLabel: 'Pump.fun default',
   launch:
-    'Bags SpaceX Mode · 4% float at TGE · 96% supply locked · dynamic 2%→0.5% trade fees · 25% post-migration fee compounding · Meteora DBC graduates at ~55 SOL into DAMM v2.',
+    'Pump.fun default launch · SOL bonding curve · ~1% creator dev buy at TGE · 100% creator fees to @aptcasinofun · graduates to PumpSwap when curve completes.',
   authorities: {
     mintRevoked: true,
     freezeRevoked: true,
     updateRevoked: true,
-    bagsTokenAuthority: true,
+    pumpBondingCurve: true,
   },
   feeShare: {
     enabled: true,
     claimer: '@aptcasinofun',
     bps: 10_000,
-    label: '100% of creator fee share → operations wallet',
+    label: '100% of creator fees → operations wallet',
   },
 };
 
-/** Bags / Meteora bonding-curve launch parameters */
+/** Pump.fun bonding-curve launch parameters */
 export const APTC_LAUNCH_METRICS = {
   pair: 'APTC/SOL',
-  dex: 'Bags.fm · Meteora Dynamic Bonding Curve → DAMM v2',
-  launchPlatform: 'Bags.fm',
-  meteoraPrograms: {
-    dbc: 'dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN',
-    dammV2: 'cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG',
-    bagsFeeShareV2: 'FEE2tBhCKAt7shrod19QttSVREUYPiyMzoku1mL1gqVK',
+  dex: 'Pump.fun bonding curve → PumpSwap (canonical pool)',
+  launchPlatform: 'Pump.fun',
+  pumpPrograms: {
+    bondingCurve: PUMP_PROGRAM_ID,
   },
   totalSupplyShort: '1B',
-  floatPct: BAGS_SPACEX_MODE.floatPct,
-  lockedPct: BAGS_SPACEX_MODE.lockedPct,
-  graduationSol: 55,
-  migrationQuoteLamports: 55_000_000_000,
-  /** Creator kickstart buy from the 4% float (listings-first ops) */
-  initialBuyUsd: 610,
-  initialBuySolApprox: 8.6,
-  tradeFeePreMigrationPct: BAGS_SPACEX_MODE.tradeFeeStartPct,
-  tradeFeePostMigrationStartPct: BAGS_SPACEX_MODE.tradeFeeStartPct,
-  tradeFeePostMigrationFloorPct: BAGS_SPACEX_MODE.tradeFeeFloorPct,
-  feeCompoundingPostMigrationPct: BAGS_SPACEX_MODE.feeCompoundingPct,
-  /** Target circulating market cap at TGE (4% float) */
-  approxMarketCapUsd: 50_000,
-  /** FDV implied by $50k MC on 4% float ($50k ÷ 0.04) */
-  approxSpotFdvUsd: 1_250_000,
-  approxAverageFdvUsd: 1_250_000,
-  approxTokenPriceUsd: 0.00125,
-  get bagsPoolUrl() {
+  devHoldPct: PUMP_LAUNCH_MODE.devHoldPct,
+  curveSupplyPct: PUMP_LAUNCH_MODE.curveSupplyPct,
+  migrationLpPct: PUMP_LAUNCH_MODE.migrationLpPct,
+  graduationSol: PUMP_LAUNCH_MODE.graduationSolApprox,
+  /** Creator dev buy — 1% of supply at launch (listings-first ops) */
+  devBuySupplyPct: PUMP_LAUNCH_MODE.devHoldPct,
+  devBuyTokensShort: '10M',
+  tradeFeePreMigrationPct: PUMP_LAUNCH_MODE.curveTotalFeePct,
+  tradeFeePostMigrationFloorPct: PUMP_LAUNCH_MODE.pumpswapFeeFloorPct,
+  curveCreatorFeePct: PUMP_LAUNCH_MODE.curveCreatorFeePct,
+  /** Illustrative starting MC if dev buys 1% near curve open — not a price guarantee */
+  approxMarketCapUsd: null,
+  approxSpotFdvUsd: null,
+  approxAverageFdvUsd: null,
+  approxTokenPriceUsd: null,
+  get pumpTokenUrl() {
     const mint = getAptcMint();
-    return isAptcLaunched() ? `https://bags.fm/${mint}` : 'https://bags.fm/launch';
+    return isAptcLaunched() ? pumpTokenUrl(mint) : PUMP_LAUNCH_MODE.createUrl;
   },
   get dexscreenerPairUrl() {
     const pair = getAptcPairAddress();
@@ -97,36 +107,45 @@ export const APTC_LAUNCH_METRICS = {
   },
 };
 
-/** Supply at TGE — SpaceX Mode float vs locked (no team / founder / VC slice) */
+/** Supply at TGE — pump.fun curve mechanics + disclosed dev hold */
 export const APTC_ALLOCATION = [
   {
-    label: 'Locked supply',
-    pct: 96,
-    tokensShort: '960M',
-    fill: '#6366f1',
-    color: 'from-indigo-500 to-violet-600',
-    detail:
-      '96% locked at launch per Bags SpaceX Mode — protocol lock, not a hidden team wallet. Unlocks follow Bags rules.',
-  },
-  {
-    label: 'Float at launch',
-    pct: 4,
-    tokensShort: '40M',
+    label: 'Bonding curve (public)',
+    pct: PUMP_LAUNCH_MODE.curveSupplyPct,
+    tokensShort: '793.1M',
     fill: '#ec4899',
     color: 'from-fuchsia-500 to-pink-500',
     detail:
-      '4% circulating on Bags bonding curve at TGE — modeled after SpaceX IPO scarcity · organic buyers on Meteora DBC until ~55 SOL graduation',
+      'Standard Pump.fun curve supply — anyone can buy/sell on the bonding curve until it completes and migrates to PumpSwap.',
+  },
+  {
+    label: 'PumpSwap LP (on graduation)',
+    pct: PUMP_LAUNCH_MODE.migrationLpPct,
+    tokensShort: '206.9M',
+    fill: '#6366f1',
+    color: 'from-indigo-500 to-violet-600',
+    detail:
+      'Remaining supply seeds the canonical PumpSwap pool at graduation. LP tokens are burned — liquidity stays on-chain.',
+  },
+  {
+    label: 'Creator dev buy',
+    pct: PUMP_LAUNCH_MODE.devHoldPct,
+    tokensShort: '10M',
+    fill: '#34d399',
+    color: 'from-emerald-500 to-teal-500',
+    detail:
+      'One-time ~1% creator buy at launch via Pump.fun — disclosed dev hold for listings, rewards, and ops. Not a hidden team wallet.',
   },
 ];
 
-/** How @aptcasinofun deploys creator initial buy + 100% Bags fee share */
+/** How @aptcasinofun deploys dev buy + 100% Pump creator fees */
 export const CREATOR_BUY_DEPLOYMENT = [
   {
     label: 'Tier 1, 2 & 3 listings',
     pct: 50,
     fill: '#c084fc',
     detail:
-      'Largest share — Tier 1 DEX & trader tools (Bags, Meteora, DexScreener, Jupiter), Tier 2 aggregators (CoinGecko, CMC), Tier 3 CEX roadmap (MEXC, Gate, KuCoin, Bybit, OKX, Binance)',
+      'Largest share — Tier 1 DEX & trader tools (Pump.fun, PumpSwap, DexScreener, Jupiter), Tier 2 aggregators (CoinGecko, CMC), Tier 3 CEX roadmap (MEXC, Gate, KuCoin, Bybit, OKX, Binance)',
     highlight: true,
   },
   {
@@ -150,16 +169,16 @@ export const CREATOR_BUY_DEPLOYMENT = [
 ];
 
 export const CREATOR_BUY_PURPOSE =
-  'Every APTC from the creator initial buy and 100% of Bags fee share is deployed only for platform growth. The largest share funds Tier 1, 2 & 3 listings (DEX → aggregators → CEX). No founder allocation. No team allocation. No wash volume. No fake FDV. No dumps.';
+  'Every APTC from the ~1% creator dev buy and 100% of Pump.fun creator fees is deployed only for platform growth. The largest share funds Tier 1, 2 & 3 listings (DEX → aggregators → CEX). No founder allocation. No team allocation. No wash volume. No fake FDV. No dumps.';
 
 export const APTC_TRANSPARENCY = {
   headline: 'The green flag checklist',
   subhead:
     'What snipers, bots, agents, and degens scan before they buy — and how APTC answers each one.',
   pledge:
-    'We are not hiding supply behind clusters, bundles, or fake metrics. No wash volume. No fake FDV. No dumps. APTC is a live GambleFi product with Bags SpaceX Mode (4% float), revoked authorities, one public ops wallet, and on-chain casino revenue. Every creator-wallet token exists to grow the platform — not to extract from it.',
+    'We are not hiding supply behind clusters, bundles, or fake metrics. No wash volume. No fake FDV. No dumps. APTC is a live GambleFi product with a standard Pump.fun launch, revoked mint/freeze authorities, one public ops wallet, and on-chain casino revenue. Every creator-wallet token exists to grow the platform — not to extract from it.',
   opsWalletRule:
-    'Creator initial buy + 100% fee share → @aptcasinofun only · listings-first deployment · no wash · no fake FDV · no dumps',
+    'Creator dev buy + 100% creator fees → @aptcasinofun only · listings-first deployment · no wash · no fake FDV · no dumps',
 };
 
 export const APTC_TRADER_GREEN_FLAGS = [
@@ -174,9 +193,9 @@ export const APTC_TRADER_GREEN_FLAGS = [
     detail: 'No wallet freeze rug — holders can always move tokens.',
   },
   {
-    term: 'Update authority',
-    status: 'Bags Token Authority',
-    detail: 'Metadata & fee routing on Bags — not a custom honeypot contract.',
+    term: 'Launch venue',
+    status: 'Pump.fun default',
+    detail: 'Standard SOL-paired `create_v2` — not mayhem mode, not cashback.',
   },
   {
     term: 'Team / founder allocation',
@@ -184,19 +203,19 @@ export const APTC_TRADER_GREEN_FLAGS = [
     detail: 'No VC slice, no advisor unlock, no separate “team wallet” line item.',
   },
   {
+    term: 'Dev hold',
+    status: '~1%',
+    detail: 'Disclosed creator buy at launch — used for listings, rewards, staking, and ops only.',
+  },
+  {
     term: 'Bundled wallets',
     status: 'None',
     detail: 'No launch-day wallet clusters or same-block insider snipes from us.',
   },
   {
-    term: 'Supply at TGE',
-    status: '4% float',
-    detail: 'Only 4% circulating at launch (SpaceX Mode) — 96% locked by Bags, not a dev bag.',
-  },
-  {
-    term: 'Creator wallet use',
-    status: 'Growth only',
-    detail: 'Largest slice → Tier 1–3 listings (DEX → CEX). Rest → rewards, staking, ops.',
+    term: 'Creator fees',
+    status: '100% → ops',
+    detail: 'Pump.fun creator fee vault claimed by @aptcasinofun for platform growth.',
   },
   {
     term: 'Volume & metrics',
@@ -205,8 +224,8 @@ export const APTC_TRADER_GREEN_FLAGS = [
   },
   {
     term: 'FDV / market cap',
-    status: 'No fake FDV',
-    detail: 'Starting ~$50k MC on 4% float — pricing from real curve trades, not inflated posts.',
+    status: 'Curve-priced',
+    detail: 'Market cap follows bonding-curve trades — no inflated launch posts.',
   },
   {
     term: 'Supply dumps',
@@ -214,9 +233,9 @@ export const APTC_TRADER_GREEN_FLAGS = [
     detail: 'No bundled wallets, no hidden multi-wallet sells, no team unlock cliffs.',
   },
   {
-    term: 'Launch mode',
-    status: 'SpaceX Mode',
-    detail: 'Bags default · 4% float · dynamic 2%→0.5% fees · 25% fee compounding after migration.',
+    term: 'Graduation',
+    status: 'PumpSwap',
+    detail: 'Curve completes → canonical PumpSwap pool · LP burned on migration.',
   },
   {
     term: 'Hidden wallets',
@@ -224,9 +243,9 @@ export const APTC_TRADER_GREEN_FLAGS = [
     detail: 'One disclosed ops wallet (@aptcasinofun) — no shadow treasuries.',
   },
   {
-    term: 'Transfer / sell tax',
-    status: 'Bags SpaceX fees',
-    detail: '2% on curve; post-migration fee scales down from 2% toward 0.5% as market cap grows.',
+    term: 'Trade fees',
+    status: 'Pump.fun schedule',
+    detail: '1.25% on curve (0.3% creator + 0.95% protocol). Post-grad fees scale down on PumpSwap.',
   },
   {
     term: 'Live product',
@@ -255,15 +274,15 @@ export const APTC_WALLETS = [
     pct: null,
     address: null,
     purpose:
-      'Creator initial buy from the 4% float + 100% Bags fee share — largest allocation to Tier 1–3 listings (DEX → CEX), then community rewards, staking, and protocol ops. Platform growth only.',
-    purposeShort: 'Creator buy + fee share · growth only',
+      'Creator dev buy (~1% supply) + 100% Pump.fun creator fees — largest allocation to Tier 1–3 listings (DEX → CEX), then community rewards, staking, and protocol ops. Platform growth only.',
+    purposeShort: 'Dev buy + creator fees · growth only',
   },
 ];
 
 export const APTC_LAUNCH_STEPS = [
   'Token live',
-  '4% float curve',
-  'Graduate (~55 SOL)',
+  'Bonding curve',
+  'Graduate (~85 SOL)',
   'DexScreener',
 ];
 
@@ -271,22 +290,22 @@ export const APTC_LAUNCH_PHASES = [
   {
     step: '1',
     title: 'Token live',
-    detail: '1B supply · Bags SpaceX Mode · 96% locked · fee share to @aptcasinofun',
+    detail: '1B supply · Pump.fun default · ~1% creator dev buy · fees to @aptcasinofun',
   },
   {
     step: '2',
-    title: '4% float curve',
-    detail: 'Meteora DBC · 2% trade fee · ~$50k starting MC target on circulating float',
+    title: 'Bonding curve',
+    detail: '1.25% trade fee on curve · public buys until curve completes',
   },
   {
     step: '3',
     title: 'Graduation',
-    detail: '~55 SOL raised → auto-migrate to Meteora DAMM v2 · fees begin scaling 2%→0.5%',
+    detail: '~85 SOL raised → migrate to PumpSwap · LP burned · canonical pool',
   },
   {
     step: '4',
     title: 'Flywheel on',
-    detail: '25% of post-migration fees compound · creator fees + GGR buybacks · staking · listings',
+    detail: 'Creator fees + GGR buybacks · staking · listings · aggregators',
   },
 ];
 
@@ -300,11 +319,11 @@ export const BUYBACK_SPLIT_COLORS = {
 export const APTC_UTILITY = [
   {
     title: 'Casino flywheel',
-    body: 'Live GGR from Plinko, Mines, Wheel & Roulette → open-market APTC buybacks on Jupiter / Meteora.',
+    body: 'Live GGR from Plinko, Mines, Wheel & Roulette → open-market APTC buybacks on Jupiter / PumpSwap.',
   },
   {
     title: 'Creator fee stream',
-    body: '100% Bags fee share to @aptcasinofun — dynamic 2%→0.5% trading fees fund listings, rewards, and ops.',
+    body: '100% Pump.fun creator fees to @aptcasinofun — fund listings, rewards, and ops from a single treasury wallet.',
   },
   {
     title: 'Staking',
@@ -316,15 +335,8 @@ export const APTC_UTILITY = [
   },
 ];
 
-export const GGR_FLYWHEEL_STEPS = [
-  { step: '1', title: 'Play', desc: 'Bets on-chain' },
-  { step: '2', title: 'GGR', desc: 'House edge revenue' },
-  { step: '3', title: 'Buyback', desc: 'Market buys APTC' },
-  { step: '4', title: 'Distribute', desc: 'Burn · stake · treasury' },
-];
-
 export function getAllocationSummary() {
-  return '1B APTC fixed supply · Bags SpaceX Mode · 4% float at TGE · 96% locked · ~$50k starting MC · dynamic 2%→0.5% fees · 0% team/founder · no wash · no fake FDV · no dumps.';
+  return '1B APTC fixed supply · Pump.fun default launch · ~1% dev hold · ~79% on bonding curve · 0% team/founder · creator fees → ops · no wash · no fake FDV · no dumps.';
 }
 
 export function getCreatorBuyDeploymentLines() {
@@ -344,8 +356,13 @@ export function solscanTokenUrl(mint = APTC_TOKENOMICS.mint) {
   return `https://solscan.io/token/${mint}`;
 }
 
+export function pumpTokenUrl(mint = APTC_TOKENOMICS.mint) {
+  return isAptcLaunched() ? `https://pump.fun/coin/${mint}` : PUMP_LAUNCH_MODE.createUrl;
+}
+
+/** @deprecated Use pumpTokenUrl */
 export function bagsTokenUrl(mint = APTC_TOKENOMICS.mint) {
-  return isAptcLaunched() ? `https://bags.fm/${mint}` : 'https://bags.fm/launch';
+  return pumpTokenUrl(mint);
 }
 
 export function dexscreenerTokenUrl(mint = APTC_TOKENOMICS.mint) {
@@ -362,8 +379,9 @@ export function jupiterSwapUrl(mint = APTC_TOKENOMICS.mint) {
   return `https://jup.ag/swap/SOL-${mint}`;
 }
 
+/** @deprecated Post-TGE swaps route via Jupiter / PumpSwap */
 export function meteoraPoolUrl(mint = APTC_TOKENOMICS.mint) {
-  return `https://app.meteora.ag/pools?search=${mint}`;
+  return pumpTokenUrl(mint);
 }
 
 export function getAptcTradeLinks(options = {}) {
@@ -373,17 +391,15 @@ export function getAptcTradeLinks(options = {}) {
     options.pairUrl ||
     (APTC_LAUNCH_METRICS.dexscreenerPairUrl ?? null) ||
     (launched ? dexscreenerTokenUrl(mint) : null);
-  const bagsHref = bagsTokenUrl(mint);
+  const pumpHref = pumpTokenUrl(mint);
   const jupiterHref = launched ? jupiterSwapUrl(mint) : 'https://jup.ag/';
-  const meteoraHref = launched ? meteoraPoolUrl(mint) : 'https://app.meteora.ag/';
   const solscanHref = launched ? solscanTokenUrl(mint) : 'https://solscan.io/';
   const dexscreenerHref = pairUrl || 'https://dexscreener.com/solana';
 
   return [
-    { id: 'bags', label: 'Bags', sub: launched ? 'Token page' : 'Launch', href: bagsHref, external: true, logo: BAGS_LOGO_SRC },
+    { id: 'pumpfun', label: 'Pump.fun', sub: launched ? 'Token page' : 'Create', href: pumpHref, external: true, logo: PUMP_LOGO_SRC },
     { id: 'dexscreener', label: 'DexScreener', sub: launched ? 'Live chart' : 'Charts', href: dexscreenerHref, external: true, logo: '/logos/dexscreener.png' },
     { id: 'jupiter', label: 'Jupiter', sub: launched ? 'Swap' : 'Aggregator', href: jupiterHref, external: true, logo: '/logos/jupiter.jpg' },
-    { id: 'meteora', label: 'Meteora', sub: launched ? 'DAMM v2 pool' : 'DEX', href: meteoraHref, external: true, logo: '/logos/meteora-logo.png' },
     { id: 'solscan', label: 'Solscan', sub: launched ? 'Mint' : 'Explorer', href: solscanHref, external: true, logo: 'https://solscan.io/favicon.ico' },
     { id: 'stake', label: 'Stake', sub: 'Earn APY', href: '/stake', external: false, logo: '/APTC_logo_1000x1000.png' },
     { id: 'litepaper', label: 'Litepaper', sub: 'Full docs', href: '/litepaper#aptc-token', external: false, logo: '/APTC_logo_1000x1000.png' },
@@ -395,7 +411,7 @@ export function getWalletAllocationColor(walletId) {
   return row?.fill ?? '#06b6d4';
 }
 
-/** @deprecated Raydium launch — post-TGE swaps may route via Jupiter/Meteora */
+/** @deprecated Raydium launch — post-TGE swaps may route via Jupiter */
 export function raydiumSwapUrl(mint = APTC_TOKENOMICS.mint) {
   return jupiterSwapUrl(mint);
 }

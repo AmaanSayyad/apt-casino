@@ -23,9 +23,9 @@ import { getLitepaperUrl } from '../siteMetadata.js';
 export const PUBLIC_ROADMAP_ITEMS = [
   {
     id: 'a1000001-0001-4001-8001-000000000001',
-    title: 'APTC TGE on Bags.fm (Meteora DBC)',
+    title: 'APTC TGE on Pump.fun',
     excerpt:
-      'SpaceX Mode launch on Bags.fm · 4% float · 96% locked · ~$50k starting MC · dynamic 2%→0.5% trade fees · ~55 SOL graduation → Meteora DAMM v2 · 25% fee compounding post-migration · 100% fee share to @aptcasinofun.',
+      'Default Pump.fun launch · SOL bonding curve · ~1% creator dev buy · 1.25% curve trade fee · ~85 SOL graduation → PumpSwap (LP burned) · 100% creator fees to @aptcasinofun.',
     category: 'Platform',
     status: 'in_progress',
     link: getLitepaperUrl('aptc-token'),
@@ -35,10 +35,10 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000037',
     title: 'Tier 1 — DEX & trader listings',
     excerpt:
-      'Bags.fm · Meteora DBC · DexScreener Enhanced · Jupiter · Birdeye · GeckoTerminal — bonding curve launch and chart visibility at TGE.',
+      'Pump.fun · PumpSwap · DexScreener Enhanced · Jupiter · Birdeye · GeckoTerminal — bonding curve launch and chart visibility at TGE.',
     category: 'Partnership',
     status: 'in_progress',
-    link: 'https://bags.fm/launch',
+    link: 'https://pump.fun/create',
     sortOrder: 21,
   },
   {
@@ -103,19 +103,19 @@ export const PUBLIC_ROADMAP_ITEMS = [
   },
   {
     id: 'a1000001-0001-4001-8001-000000000008',
-    title: 'Meteora DAMM v2 post-graduation trading',
+    title: 'PumpSwap post-graduation trading',
     excerpt:
-      'Post-graduation pool depth — fee compounding, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
+      'Post-graduation canonical pool depth on PumpSwap — LP burned at migration, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
     category: 'Partnership',
     status: 'planned',
-    link: 'https://app.meteora.ag/',
+    link: 'https://pump.fun/docs/fees',
     sortOrder: 35,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000009',
     title: 'Automated GGR → APTC buyback pipeline',
     excerpt:
-      'Scheduled open-market buys on Jupiter & Meteora from gross gaming revenue — burn, staker, treasury splits published live.',
+      'Scheduled open-market buys on Jupiter & PumpSwap from gross gaming revenue — burn, staker, treasury splits published live.',
     category: 'Platform',
     status: 'planned',
     link: getLitepaperUrl('ggr-flywheel'),
@@ -325,7 +325,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000030',
     title: 'Ecosystem wallet & data partners',
     excerpt:
-      'Deeper integrations with Bags, DexScreener, Meteora, Jupiter, CoinGecko, and major wallets — co-marketing with Aptos & Solana ecosystems.',
+      'Deeper integrations with Pump.fun, DexScreener, Jupiter, CoinGecko, and major wallets — co-marketing with Aptos & Solana ecosystems.',
     category: 'Partnership',
     status: 'planned',
     link: null,

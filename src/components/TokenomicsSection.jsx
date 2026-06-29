@@ -8,14 +8,13 @@ import {
   APTC_LAUNCH_STEPS,
   APTC_TOKENOMICS,
   APTC_UTILITY,
-  BAGS_SPACEX_MODE,
+  PUMP_LAUNCH_MODE,
+  PUMP_LOGO_SRC,
+  pumpTokenUrl,
   solscanTokenUrl,
-  bagsTokenUrl,
-  meteoraPoolUrl,
-  BAGS_LOGO_SRC,
 } from '@/lib/config/tokenomics';
 import { isAptcLaunched, getLaunchStatusText } from '@/lib/config/launchStatus';
-import BagsAnalyticsPanel from '@/components/BagsAnalyticsPanel';
+import PumpLaunchPanel from '@/components/PumpLaunchPanel';
 
 const AllocationDonut = dynamic(
   () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.AllocationDonut),
@@ -38,32 +37,25 @@ function getTradeTools() {
   const mint = APTC_TOKENOMICS.mint;
   
   if (!launched) {
-    // Pre-launch: generic URLs
     return [
-      { id: 'bags',         label: 'Bags',          logo: BAGS_LOGO_SRC,                  href: 'https://bags.fm/launch' },
-      { id: 'meteora',      label: 'Meteora',       logo: '/logos/meteora-logo.png',     href: 'https://app.meteora.ag/' },
-      { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/` },
-      { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
-      { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana` },
-      { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: `https://birdeye.so/` },
-      { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/` },
-      { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/` },
-      { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: `https://gmgn.ai/` },
-      { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: `https://axiom.trade/` },
-      { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: `https://photon-sol.tinyastro.io/` },
-      { id: 'pumpfun',      label: 'Pump.fun',       logo: '/logos/pumpfun-logo.png',      href: 'https://pump.fun/' },
-      { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: `https://www.coingecko.com/` },
+      { id: 'pumpfun',      label: 'Pump.fun',       logo: PUMP_LOGO_SRC,                  href: 'https://pump.fun/create' },
+      { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: 'https://jup.ag/' },
+      { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: 'https://dexscreener.com/solana' },
+      { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: 'https://birdeye.so/' },
+      { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: 'https://www.geckoterminal.com/' },
+      { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: 'https://www.dextools.io/' },
+      { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: 'https://gmgn.ai/' },
+      { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: 'https://axiom.trade/' },
+      { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: 'https://photon-sol.tinyastro.io/' },
+      { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: 'https://www.coingecko.com/' },
       { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: 'https://coinmarketcap.com/' },
-      { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: `https://solscan.io/` },
+      { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: 'https://solscan.io/' },
     ];
   }
-  
-  // Post-launch: token-specific URLs
+
   return [
-    { id: 'bags',         label: 'Bags',          logo: BAGS_LOGO_SRC,                  href: bagsTokenUrl(mint) },
-    { id: 'meteora',      label: 'Meteora',       logo: '/logos/meteora-logo.png',     href: meteoraPoolUrl(mint) },
+    { id: 'pumpfun',      label: 'Pump.fun',       logo: PUMP_LOGO_SRC,                  href: pumpTokenUrl(mint) },
     { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/swap/SOL-${mint}` },
-    { id: 'pancakeswap',  label: 'PancakeSwap',    logo: '/logos/pancakeswap-logo.png',  href: 'https://pancakeswap.finance/' },
     { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana/${mint}` },
     { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: `https://birdeye.so/token/${mint}?chain=solana` },
     { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/solana/pools/${mint}` },
@@ -71,10 +63,9 @@ function getTradeTools() {
     { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: `https://gmgn.ai/sol/token/${mint}` },
     { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: `https://axiom.trade/token/${mint}` },
     { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: `https://photon-sol.tinyastro.io/en/lp/${mint}` },
-    { id: 'pumpfun',      label: 'Pump.fun',       logo: '/logos/pumpfun-logo.png',      href: 'https://pump.fun/' },
     { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: `https://www.coingecko.com/en/coins/${mint}` },
     { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: `https://coinmarketcap.com/currencies/${mint}/` },
-    { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: `https://solscan.io/token/${mint}` },
+    { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: solscanTokenUrl(mint) },
   ];
 }
 
@@ -126,9 +117,9 @@ export default function TokenomicsSection() {
   const priceChange24h = market?.priceChange24h ?? null;
   const marketLabel = hasLiveMarket
     ? 'Live market · DexScreener'
-    : market?.bags?.source === 'live'
-      ? 'Live · Bags / Meteora'
-      : 'Launch targets';
+    : market?.pump?.source === 'live'
+      ? 'Live · Pump.fun'
+      : 'Pre-launch';
 
   return (
     <section id="tokenomics" className="py-16 md:py-24 px-4 md:px-8 lg:px-16 bg-[#070005]">
@@ -149,29 +140,29 @@ export default function TokenomicsSection() {
             Tokenomics
           </h2>
           <p className="mt-3 max-w-full overflow-x-auto text-sm sm:text-base text-white/55 leading-relaxed whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            1B fixed supply · creator wallet listings-first (Tier 1–3 DEX → CEX) · 0% team / founder allocation.
+            1B fixed supply · ~1% dev hold · 100% creator fees to ops · 0% team / founder allocation.
           </p>
         </div>
 
-        {/* SpaceX Mode — single launch-params block */}
-        <div className="mb-6 rounded-2xl border border-sky-500/25 bg-gradient-to-br from-sky-950/40 via-[#120010] to-indigo-950/30 p-5 md:p-6">
+        {/* Pump.fun launch — single launch-params block */}
+        <div className="mb-6 rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/40 via-[#120010] to-fuchsia-950/30 p-5 md:p-6">
           <div className="flex flex-wrap items-start gap-4">
             <div className="flex items-center gap-3">
-              <img src={BAGS_LOGO_SRC} alt="Bags.fm" className="h-10 w-10 rounded-xl object-contain bg-white/5" />
+              <img src={PUMP_LOGO_SRC} alt="Pump.fun" className="h-10 w-10 rounded-xl object-contain bg-white/5" />
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-sky-300/80">
-                  Launching on @BagsApp
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-300/80">
+                  Launching on Pump.fun
                 </p>
-                <h3 className="text-lg font-semibold text-white">{BAGS_SPACEX_MODE.label}</h3>
-                <p className="text-xs text-white/50">{BAGS_SPACEX_MODE.tagline}</p>
+                <h3 className="text-lg font-semibold text-white">{PUMP_LAUNCH_MODE.label}</h3>
+                <p className="text-xs text-white/50">{PUMP_LAUNCH_MODE.tagline}</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 flex-1 min-w-[200px]">
-              <LaunchStat label="Float" value={`${BAGS_SPACEX_MODE.floatPct}% at TGE`} />
-              <LaunchStat label="Locked" value={`${BAGS_SPACEX_MODE.lockedPct}%`} />
-              <LaunchStat label="Starting MC" value={`~$${(m.approxMarketCapUsd / 1000).toFixed(0)}k`} />
-              <LaunchStat label="Trade fee" value={`${BAGS_SPACEX_MODE.tradeFeeStartPct}% → ${BAGS_SPACEX_MODE.tradeFeeFloorPct}%`} />
-              <LaunchStat label="Compounding" value={`${BAGS_SPACEX_MODE.feeCompoundingPct}% post-migration`} />
+              <LaunchStat label="Dev hold" value={`~${PUMP_LAUNCH_MODE.devHoldPct}% at TGE`} />
+              <LaunchStat label="Curve supply" value={`~${PUMP_LAUNCH_MODE.curveSupplyPct}%`} />
+              <LaunchStat label="Curve fee" value={`${PUMP_LAUNCH_MODE.curveTotalFeePct}%`} />
+              <LaunchStat label="Creator fee" value={`${PUMP_LAUNCH_MODE.curveCreatorFeePct}%`} />
+              <LaunchStat label="Post-grad floor" value={`${PUMP_LAUNCH_MODE.pumpswapFeeFloorPct}%`} />
               <LaunchStat label="Graduation" value={`~${m.graduationSol} SOL`} />
             </div>
           </div>
@@ -188,7 +179,7 @@ export default function TokenomicsSection() {
               <div className="flex flex-wrap gap-2 mb-4">
                 <AuthorityChip label="Mint revoked" />
                 <AuthorityChip label="Freeze revoked" />
-                <AuthorityChip label="Bags Token Authority" />
+                <AuthorityChip label="Pump.fun curve" />
               </div>
               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-white/45">
                 {APTC_LAUNCH_STEPS.map((step, i) => (
@@ -218,9 +209,9 @@ export default function TokenomicsSection() {
                 />
                 <TickerStat label="Market cap" value={fmtUsdCompact(mcapUsd)} loading={marketLoading} />
                 <TickerStat
-                  label="Float"
-                  value={`${m.floatPct}%`}
-                  sub={hasLiveMarket ? 'Circulating' : 'At TGE target'}
+                  label="Dev hold"
+                  value={`~${m.devHoldPct}%`}
+                  sub={hasLiveMarket ? 'Disclosed' : 'Creator buy at TGE'}
                   loading={marketLoading}
                 />
                 <TickerStat
@@ -254,7 +245,7 @@ export default function TokenomicsSection() {
               </div>
             </div>
 
-            <BagsAnalyticsPanel bags={market?.bags} loading={marketLoading} compact />
+            <PumpLaunchPanel pump={market?.pump} loading={marketLoading} compact />
 
             {/* Trade & research grid */}
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6 space-y-5">
@@ -289,7 +280,7 @@ export default function TokenomicsSection() {
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
               <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
               <p className="text-xs text-white/45 mb-5">
-                4% float · 96% locked · 0% team
+                ~1% dev hold · bonding curve · 0% team
               </p>
               <AllocationDonut />
             </div>
@@ -297,7 +288,7 @@ export default function TokenomicsSection() {
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
               <h3 className="text-xl font-semibold text-white mb-1">GGR → buyback</h3>
               <p className="text-sm text-white/50 mb-2">
-                Play → GGR → market buy on Jupiter / Meteora → burn · stake · treasury
+                Play → GGR → market buy on Jupiter / PumpSwap → burn · stake · treasury
               </p>
               <BuybackSplitDonut config={cfg} />
               {est?.projectedBuybackUsd30d != null && (

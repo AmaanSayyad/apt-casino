@@ -17,12 +17,12 @@ Your site is currently in "Launching Soon" mode because `NEXT_PUBLIC_APTC_SOLANA
 
 3. **DexScreener Section**
    - Amber badge: "$APTC Launching Soon"
-   - Placeholder text: "Live chart and trading data will appear here once APTC launches on Bags (Meteora bonding curve)"
+   - Placeholder text: "Live chart and trading data will appear here once APTC launches on Pump.fun"
 
 4. **Tokenomics Section**
    - Amber badge: "$APTC · Launching Soon"
    - Token address box: "Token address: Launching soon" (amber)
-   - Trade & Research: Generic URLs (e.g., `https://bags.fm/launch`, `https://jup.ag/`)
+   - Trade & Research: Generic URLs (e.g., `https://pump.fun/create`, `https://jup.ag/`)
 
 5. **Stake Page**
    - Amber warning banner: "$APTC Launching Soon on Solana"
@@ -61,9 +61,8 @@ Your site is currently in "Launching Soon" mode because `NEXT_PUBLIC_APTC_SOLANA
    - ✅ Badge turns GREEN: "$APTC · Live on Solana"
    - ✅ Token address box shows full CA with Solscan link (green)
    - ✅ Trade & Research: Token-specific URLs
-     - Bags: `https://bags.fm/<mint>`
+     - Pump.fun: `https://pump.fun/coin/<mint>`
      - Jupiter: `https://jup.ag/swap/SOL-<mint>`
-     - Meteora: `https://app.meteora.ag/pools?search=<mint>`
      - DexScreener: `https://dexscreener.com/solana/ApT...`
      - Birdeye: `https://birdeye.so/token/ApT...?chain=solana`
      - etc.

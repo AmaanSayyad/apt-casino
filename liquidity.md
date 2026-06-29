@@ -178,38 +178,37 @@ timeline
 - Solana program pause instruction
 - Platform fee wallets separate from player payout treasury where possible
 
-## APTC on Bags / Meteora (token trading)
+## APTC on Pump.fun (token trading)
 
-APTC/SOL trades on **Bags.fm SpaceX Mode → Meteora DBC → DAMM v2** — separate from player SOL/APT casino treasury balances.
+APTC/SOL trades on **Pump.fun bonding curve → PumpSwap** — separate from player SOL/APT casino treasury balances.
 
 ```mermaid
 flowchart TB
-    subgraph Launch["APTC launch (Bags SpaceX Mode)"]
-        LOCK[96% supply locked] --> DBC[Meteora DBC · 4% float]
-        CRE[Creator buy ~$610 from float] --> DBC
-        PUB[Public buys on curve] --> DBC
-        DBC -->|~55 SOL raised| DAMM[Meteora DAMM v2]
-        DAMM --> FEE[25% fees compound post-migration]
+    subgraph Launch["APTC launch (Pump.fun default)"]
+        DEV[~1% creator dev buy] --> CURVE[Bonding curve ~79% supply]
+        PUB[Public buys on curve] --> CURVE
+        CURVE -->|~85 SOL raised| PUMP[PumpSwap canonical pool]
+        PUMP --> LP[LP tokens burned]
     end
 
     subgraph Flywheel["GGR flywheel"]
         GGR[Gross gaming revenue] --> BB[Buyback budget]
-        BB --> SW[Jupiter / Meteora]
+        BB --> SW[Jupiter / PumpSwap]
         SW --> SINK[Burn · Stakers · Treasury]
     end
 
-    subgraph CreatorFees["Bags fee share"]
-        TRADE[2%→0.5% dynamic fee] --> FS[@aptcasinofun 100%]
+    subgraph CreatorFees["Pump.fun creator fees"]
+        TRADE[1.25% curve fee] --> FS[@aptcasinofun 100%]
         FS --> LIST[Tier 1-3 listings 50%]
         FS --> OPS[Rewards · staking · ops]
     end
 
     PLAY[Player bets] --> GGR
-    DBC --> TRADE
-    DAMM --> TRADE
+    CURVE --> TRADE
+    PUMP --> TRADE
 ```
 
-See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for SpaceX Mode parameters, creator-wallet deployment (listings-first), and fee economics.
+See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for Pump.fun launch parameters, creator-wallet deployment (listings-first), and fee economics.
 
 ## Related docs
 

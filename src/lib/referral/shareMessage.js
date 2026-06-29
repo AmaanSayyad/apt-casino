@@ -4,7 +4,7 @@
 
 export function getReferralBroadcastBody() {
   return [
-    'Craziest thing I have ever seen, @aptcasinofun on @solana x @aptos x @bagsapp',
+    'Craziest thing I have ever seen, @aptcasinofun on @solana x @aptos x @pumpdotfun',
     '',
     '50:50 chance casino in the world, first time, fair roulette/mines/plinko/spin wheel like @stake',
     '',
@@ -31,7 +31,7 @@ export function getReferralLinkedInPost(link) {
 
 export function getReferralTweetText() {
   return [
-    'Craziest thing I have ever seen, @aptcasinofun on @solana x @aptos x @bagsapp',
+    'Craziest thing I have ever seen, @aptcasinofun on @solana x @aptos x @pumpdotfun',
     '',
     '50:50 chance casino in the world, first time, fair roulette/mines/plinko/spin wheel like @stake',
     '',

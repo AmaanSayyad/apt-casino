@@ -1,17 +1,16 @@
 # APTC launch scripts (legacy CLI)
 
-**Primary path:** launch via [bags.fm/launch](https://bags.fm/launch) in **SpaceX Mode** (Meteora DBC → DAMM v2). See [docs/APTC_TOKENOMICS.md](../../docs/APTC_TOKENOMICS.md).
+**Primary path:** launch via [pump.fun/create](https://pump.fun/create) in **default mode** (SOL bonding curve → PumpSwap). See [docs/APTC_TOKENOMICS.md](../../docs/APTC_TOKENOMICS.md).
 
-This folder contains a **legacy CLI script** for manual SPL mint + distribution. Use only if you need a custom mint flow outside Bags.
+This folder contains a **legacy CLI script** for manual SPL mint + distribution. Use only if you need a custom mint flow outside Pump.fun.
 
-## Bags.fm launch (recommended)
+## Pump.fun launch (recommended)
 
-1. Open [bags.fm/launch](https://bags.fm/launch)
-2. Configure: **SpaceX Mode** (4% float · 96% locked), **~$50k starting MC target**, **~$610** creator initial buy from float, **100% fee share → @aptcasinofun** · listings-first (Tier 1–3 DEX → CEX)
+1. Open [pump.fun/create](https://pump.fun/create)
+2. Configure: **default mode** (`mayhemMode: false`, `cashback: false`), **~1% creator dev buy**, **100% creator fees → @aptcasinofun** · listings-first (Tier 1–3 DEX → CEX)
 3. After TGE, set env:
-   - `NEXT_PUBLIC_APTC_SOLANA_MINT=<mint from Bags>`
+   - `NEXT_PUBLIC_APTC_SOLANA_MINT=<mint from Pump.fun>`
    - `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=<pair>` (optional)
-   - `BAGS_API_KEY=<from dev.bags.fm>` (optional)
 
 ## Legacy manual mint
 
@@ -23,14 +22,14 @@ node scripts/aptc-launch/create-aptc-single.mjs
 
 | Milestone | Target |
 |-----------|--------|
-| Graduation | Monitor bonding curve until **~55 SOL** → DAMM v2 (SpaceX Mode) |
+| Graduation | Monitor bonding curve until **~85 SOL** → PumpSwap canonical pool (LP burned) |
 
-## Estimated cost (Bags launch)
+## Estimated cost (Pump.fun launch)
 
 | Item | Approx. |
 |------|---------|
 | Launch tx fees | ~0.2 SOL |
-| Creator initial buy | ~$610 (~8.6 SOL) |
-| **Total** | **~9 SOL + $610** |
+| Creator dev buy (~1%) | varies with SOL price |
+| User volume accumulator rent | ~0.0018 SOL (first buy/sell if new) |
 
-Example graduated Bags token: [Bynomo on Solscan](https://solscan.io/token/Faw8wwB6MnyAm9xG3qeXgN1isk9agXBoaRZX9Ma8BAGS)
+Program docs: [pump-public-docs](https://github.com/pump-fun/pump-public-docs) · fees: [pump.fun/docs/fees](https://pump.fun/docs/fees)

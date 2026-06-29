@@ -8,9 +8,9 @@ export const APTC_LISTING_TIERS = [
     tier: 1,
     label: 'Tier 1 — DEX & trader tools',
     status: 'in_progress',
-    venues: ['Bags.fm', 'Meteora', 'DexScreener', 'Jupiter', 'Birdeye', 'GeckoTerminal'],
+    venues: ['Pump.fun', 'PumpSwap', 'DexScreener', 'Jupiter', 'Birdeye', 'GeckoTerminal'],
     summary:
-      'Primary Solana launch at TGE — Bags SpaceX Mode (4% float), Meteora DBC graduation to DAMM v2, DexScreener enhanced info, Jupiter swap routing, Birdeye & GeckoTerminal tracking.',
+      'Primary Solana launch at TGE — Pump.fun bonding curve, PumpSwap graduation, DexScreener enhanced info, Jupiter swap routing, Birdeye & GeckoTerminal tracking.',
   },
   {
     tier: 2,
