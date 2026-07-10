@@ -51,7 +51,7 @@ export default function TokenomicsSection() {
       : ipoPhase === 'live'
         ? '$APTC · IPO Live'
         : ipoPhase === 'upcoming'
-          ? `$APTC · Opens ${IPO_SALE.launchLabel}`
+          ? `$APTC · ${IPO_SALE.launchLabel}`
           : ipoPhase === 'ended'
             ? '$APTC · IPO Complete'
             : '$APTC · Launching Soon';

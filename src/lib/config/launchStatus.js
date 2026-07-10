@@ -42,7 +42,7 @@ export function getLaunchStatusText() {
   }
   const phase = getIpoPhase();
   if (phase === 'upcoming') {
-    return `$APTC IPO Opens ${IPO_SALE.launchLabel}`;
+    return `$APTC IPO · ${IPO_SALE.launchLabel}`;
   }
   if (phase === 'live') {
     return '$APTC IPO is Live — Buy at aptcasino.fun/ipo';
