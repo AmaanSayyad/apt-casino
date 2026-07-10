@@ -1,24 +1,33 @@
 /**
  * Central launch status configuration
- * This determines if APTC token is launched and controls all conditional UI across the site
+ * Controls marketing / trading UI. IPO inventory may use a configured mint before public DEX listing.
  */
 
+import { getIpoPhase, IPO_SALE } from './ipo';
+
 /**
- * Check if the APTC token is launched
- * Returns true when NEXT_PUBLIC_APTC_SOLANA_MINT is configured
+ * Mint address configured (IPO treasury inventory, Solscan links, etc.)
  */
-export function isAptcLaunched() {
+export function hasAptcMintConfigured() {
   const mint = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim();
   return Boolean(mint && mint !== 'Launching soon' && mint.length > 20);
 }
 
 /**
+ * Public trading live on a DEX (DexScreener pair configured).
+ * Distinct from mint existing for IPO — hero teaser stays until this is true.
+ */
+export function isAptcLaunched() {
+  return Boolean(getAptcPairAddress());
+}
+
+/**
  * Get the current token mint address
- * Returns the mint address if launched, otherwise 'Launching soon'
+ * Returns the mint address when configured, otherwise 'Launching soon'
  */
 export function getAptcMint() {
   const mint = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim();
-  return isAptcLaunched() ? mint : 'Launching soon';
+  return hasAptcMintConfigured() ? mint : 'Launching soon';
 }
 
 /**
@@ -33,9 +42,20 @@ export function getAptcPairAddress() {
  * Get launch status text for badges and announcements
  */
 export function getLaunchStatusText() {
-  return isAptcLaunched() 
-    ? '$APTC is now Live on Solana'
-    : '$APTC Launching Soon on Solana';
+  if (isAptcLaunched()) {
+    return '$APTC is now Live on Solana';
+  }
+  const phase = getIpoPhase();
+  if (phase === 'upcoming') {
+    return `$APTC IPO Opens ${IPO_SALE.launchLabel}`;
+  }
+  if (phase === 'live') {
+    return '$APTC IPO is Live — Buy at aptcasino.fun/ipo';
+  }
+  if (phase === 'ended') {
+    return '$APTC IPO Complete — Raydium listing soon';
+  }
+  return '$APTC Launching Soon on Solana';
 }
 
 /**
@@ -110,5 +130,7 @@ export function getHeroImageDimensions() {
  * Get CTA link text based on launch status
  */
 export function getLaunchCtaText() {
-  return isAptcLaunched() ? 'Trade now →' : 'Learn more →';
+  if (isAptcLaunched()) return 'Trade now →';
+  if (getIpoPhase() === 'live') return 'Buy APTC →';
+  return 'Learn more →';
 }

@@ -5,12 +5,24 @@
 
 export const APTC_MAX_SUPPLY = 1_000_000_000;
 
+/** User-facing fixed-term pools on /stake */
 export const STAKING_POOL_DEFINITIONS = [
   { pool_key: 'APTC_30D', lock_days: 30, apy_bps: 3000, min_supply_pct: 1 },
   { pool_key: 'APTC_60D', lock_days: 60, apy_bps: 6000, min_supply_pct: 2 },
   { pool_key: 'APTC_90D', lock_days: 90, apy_bps: 18000, min_supply_pct: 3 },
   { pool_key: 'APTC_180D', lock_days: 180, apy_bps: 36000, min_supply_pct: 4 },
 ] as const;
+
+/** IPO auto-stake only — not shown as a selectable pool on /stake */
+export const IPO_STAKING_POOL_KEY = 'IPO_30D';
+
+export const USER_STAKING_POOL_KEYS = new Set(
+  STAKING_POOL_DEFINITIONS.map((d) => d.pool_key),
+);
+
+export function isUserFacingStakingPool(poolKey: string): boolean {
+  return USER_STAKING_POOL_KEYS.has(poolKey as StakingPoolKey);
+}
 
 export type StakingPoolKey = (typeof STAKING_POOL_DEFINITIONS)[number]['pool_key'];
 

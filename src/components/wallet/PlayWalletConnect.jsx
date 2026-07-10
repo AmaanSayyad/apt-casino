@@ -13,6 +13,7 @@ import { getPlayChainConfig } from '@/lib/chains/registry';
 import { CHAIN_UI } from '@/lib/chains/chainUi';
 import { explorerAddressUrl, solanaExplorerAddressUrl } from '@/lib/chains/explorer';
 import { usePlayerProfile } from '@/hooks/usePlayerProfile';
+import { useWalletNativeBalance } from '@/hooks/useWalletSolBalance';
 import PlayerAvatar from '@/components/PlayerAvatar';
 import ChainConnectModal from './ChainConnectModal';
 
@@ -49,7 +50,26 @@ export default function PlayWalletConnect({
   const ui = CHAIN_UI[play.chain];
   const playerProfile = usePlayerProfile();
   const symbol = balanceSymbol ?? config?.nativeSymbol ?? play.chain;
-  const balanceText = isLoadingBalance ? '…' : (balanceFormatted ?? '0.000');
+  const houseBalanceText = isLoadingBalance ? '…' : (balanceFormatted ?? '0.000');
+  const {
+    balance: walletNativeBalance,
+    loading: walletBalanceLoading,
+    refresh: refreshWalletBalance,
+  } = useWalletNativeBalance(play.chain, { enabled: play.connected && !play.isDemo });
+  const walletBalanceText =
+    play.isDemo || !play.connected
+      ? null
+      : walletBalanceLoading && walletNativeBalance == null
+        ? '…'
+        : walletNativeBalance != null
+          ? walletNativeBalance.toFixed(4)
+          : '—';
+  const primaryBalanceText = play.isDemo ? houseBalanceText : walletBalanceText ?? houseBalanceText;
+  const secondaryLine = play.isDemo
+    ? playerProfile.hasX
+      ? playerProfile.displayName
+      : shorten(play.address)
+    : `Play · ${houseBalanceText}`;
   const isSheet = layout === 'sheet';
   const isCompact = layout === 'compact';
   const explorerHref = walletExplorerHref(play.chain, play.address);
@@ -161,9 +181,16 @@ export default function PlayWalletConnect({
             </p>
           )}
         </div>
-        <span className="shrink-0 rounded-lg bg-emerald-500/10 px-2 py-1 font-mono text-xs tabular-nums text-emerald-300">
-          {symbol} {balanceText}
-        </span>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          {!play.isDemo ? (
+            <span className="rounded-lg bg-white/[0.06] px-2 py-1 font-mono text-[10px] tabular-nums text-white/75">
+              Wallet {walletBalanceText} {symbol}
+            </span>
+          ) : null}
+          <span className="rounded-lg bg-emerald-500/10 px-2 py-1 font-mono text-xs tabular-nums text-emerald-300">
+            {play.isDemo ? `${symbol} ${houseBalanceText}` : `Play ${houseBalanceText} ${symbol}`}
+          </span>
+        </div>
       </div>
 
       {onManageBalance && (
@@ -237,8 +264,12 @@ export default function PlayWalletConnect({
           className={triggerClass}
           aria-expanded={menuOpen}
           aria-haspopup="menu"
-          aria-label={isCompact ? `Wallet · ${symbol} ${balanceText}` : undefined}
-          title={`${symbol} ${balanceText} · ${play.address}`}
+          aria-label={isCompact ? `Wallet · ${symbol} ${primaryBalanceText}` : undefined}
+          title={
+            play.isDemo
+              ? `${symbol} ${houseBalanceText} · ${play.address}`
+              : `Wallet ${walletBalanceText} ${symbol} · Play ${houseBalanceText} ${symbol} · ${play.address}`
+          }
         >
           <div className={`relative shrink-0 ${isSheet ? 'h-9 w-9' : isCompact ? 'h-5 w-5' : 'h-5 w-5'}`}>
             {playerProfile.avatarUrl ? (
@@ -259,10 +290,10 @@ export default function PlayWalletConnect({
                 <span
                   className={`block truncate font-mono tabular-nums text-emerald-300/95 ${isSheet ? 'text-sm font-semibold' : 'text-[11px]'}`}
                 >
-                  {symbol} {balanceText}
+                  {symbol} {primaryBalanceText}
                 </span>
                 <span className={`block truncate text-white/55 ${isSheet ? 'text-xs' : 'text-[10px]'}`}>
-                  {playerProfile.hasX ? playerProfile.displayName : shorten(play.address)}
+                  {secondaryLine}
                 </span>
               </div>
               <svg
@@ -281,7 +312,7 @@ export default function PlayWalletConnect({
               className="absolute -bottom-0.5 -right-0.5 min-w-[2.25rem] rounded-md bg-emerald-500/20 px-1 py-px text-[9px] font-mono font-semibold tabular-nums text-emerald-300 ring-1 ring-emerald-500/30"
               aria-hidden
             >
-              {balanceText}
+              {primaryBalanceText}
             </span>
           )}
         </button>

@@ -16,6 +16,8 @@ import {
   Clock,
   Wallet,
 } from 'lucide-react';
+import { SolscanLink } from '@/components/ui/SolscanMark';
+
 function shorten(str, head = 8, tail = 6) {
   if (!str || typeof str !== 'string') return '—';
   if (str.length <= head + tail + 1) return str;
@@ -289,15 +291,13 @@ function FairnessVerifyContent() {
 
             <div className="flex flex-wrap gap-3 pt-2">
               {proof?.proofReference && (
-                <a
+                <SolscanLink
                   href={`https://solscan.io/account/${encodeURIComponent(proof.wallet || event?.wallet || '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:border-white/30 transition-colors"
+                  size={16}
+                  className="rounded-lg border border-white/15 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:border-white/30"
                 >
-                  <ExternalLink size={16} />
                   View wallet on Solscan
-                </a>
+                </SolscanLink>
               )}
             </div>
           </div>

@@ -4,15 +4,14 @@ Last updated: 2026-06-19
 
 Checklist for launching APT Casino on production infrastructure. Solana is the primary live chain; Aptos modules can run in parallel when `NEXT_PUBLIC_CASINO_MODULE_ADDRESS` is set and Aptos is marked `live` in the chain registry.
 
-## APTC token (Pump.fun launch)
+## APTC token (public IPO → Raydium)
 
-- [ ] Launch on [pump.fun/create](https://pump.fun/create) — **default mode** (`mayhemMode: false`, `cashback: false`)
-- [ ] **~1% creator dev buy** at TGE · **1.25%** curve trade fee · **100% creator fees → @aptcasinofun**
+- [ ] Open `/ipo` fixed-price sale — **250M APTC** · **$100K** raise @ **$0.0004**
+- [ ] Confirm SOL collector + APTC distributor wallets (split hot/cold)
 - [ ] Publish transparency pledge: **no wash volume · no fake FDV · no dumps** on site + litepaper
 - [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production
-- [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` once DexScreener indexes the pair
-- [ ] Bonding curve live on Pump.fun (SOL-paired `create_v2`)
-- [ ] Graduation at **~85 SOL** → PumpSwap canonical pool (LP burned)
+- [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` once DexScreener indexes the Raydium pair
+- [ ] Post-IPO Raydium APTC/SOL pool live
 - [ ] DexScreener Enhanced Token Info submitted
 - [ ] Jupiter routing visible
 - [ ] CoinGecko & CoinMarketCap applications submitted
@@ -22,12 +21,12 @@ Checklist for launching APT Casino on production infrastructure. Solana is the p
 sequenceDiagram
     participant Env as Vercel env
     participant Site as aptcasino.fun
-    participant P as Pump.fun
+    participant IPO as IPO rails
     participant DS as DexScreener
 
     Env->>Site: NEXT_PUBLIC_APTC_SOLANA_MINT
-    P->>Site: Token + bonding curve live
-    Site->>DS: Price / chart embed
+    IPO->>Site: Fixed-price SOL→APTC live
+    Site->>DS: Price / chart embed (post-IPO)
     Site->>Site: Tokenomics + roadmap live
 ```
 
@@ -94,7 +93,7 @@ NEXT_PUBLIC_SOL_TREASURY_ADDRESS=
 SOL_TREASURY_SECRET_KEY=
 NEXT_PUBLIC_APT_CASINO_PROGRAM_ID=
 
-# APTC (Pump.fun launch)
+# APTC (public IPO → Raydium)
 NEXT_PUBLIC_APTC_SOLANA_MINT=
 NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=
 
@@ -180,8 +179,8 @@ Or use `./deploy.sh -n mainnet` for combined contract + Vercel flow.
 - [ ] Mobile layouts verified on iOS Safari and Android Chrome
 - [ ] Demo mode refill shows 100 native units (or `NEXT_PUBLIC_DEMO_START_NATIVE`)
 - [ ] Error rate and latency in Vercel logs acceptable
-- [ ] Pump.fun bonding curve progress toward ~85 SOL graduation
-- [ ] Creator fees claimable via `collect_creator_fee_v2` on Pump program
+- [ ] IPO raise progress toward $100K target
+- [ ] Post-IPO Raydium pool + DexScreener indexing
 
 ## Rollback
 
@@ -207,7 +206,7 @@ flowchart TD
 |------|-------------|
 | Aptos module publish | tens of APT (gas + package size) |
 | Solana program deploy | ~1–3 SOL + rent |
-| Pump.fun token launch | ~0.2 SOL tx fees + ~1% creator dev buy |
+| Public IPO ops | SOL collector + APTC distributor fee SOL |
 | Vercel Pro | per plan |
 | Supabase Pro | per plan |
 | Livepeer / RPC | usage-based |

@@ -1,6 +1,7 @@
 'use client';
 
 import { explorerAddressUrl, solanaExplorerAddressUrl } from '@/lib/chains/explorer';
+import { SolscanMark } from '@/components/ui/SolscanMark';
 
 export function fmtNum(n, maxFrac = 4) {
   if (n === undefined || n === null || !Number.isFinite(n)) return '—';
@@ -51,8 +52,9 @@ export function WalletExplorerLink({ wallet, chain, className = '' }) {
       target="_blank"
       rel="noopener noreferrer"
       title={String(wallet)}
-      className={`text-cyan-400/90 hover:text-cyan-300 hover:underline underline-offset-2 transition-colors ${className}`}
+      className={`inline-flex items-center gap-1 text-cyan-400/90 hover:text-cyan-300 hover:underline underline-offset-2 transition-colors ${className}`}
     >
+      {chainId === 'solana' ? <SolscanMark size={12} /> : null}
       {label}
     </a>
   );

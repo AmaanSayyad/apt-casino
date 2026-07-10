@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronDown, ChevronUp, Minus, Plus } from "lucide-react";
 import { usePlayCurrency } from '@/hooks/usePlayCurrency';
 import PlayChainIcon from '@/components/play/PlayChainIcon';
@@ -22,8 +22,9 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
   const [rows, setRows] = useState(initialRows);
   const [showRiskDropdown, setShowRiskDropdown] = useState(false);
   const [showRowsDropdown, setShowRowsDropdown] = useState(false);
-  const [autoBetInterval, setAutoBetInterval] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const autoBetIntervalRef = useRef(null);
+  const isAutoPlayingRef = useRef(false);
 
   const riskLevels = ["Low", "Medium", "High"];
   const rowOptions = [8, 9, 10, 11, 12, 13, 14, 15, 16];
@@ -48,18 +49,28 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
     setRows(initialRows);
   }, [initialRiskLevel, initialRows]);
 
+  const clearAutoBetInterval = () => {
+    if (autoBetIntervalRef.current != null) {
+      clearInterval(autoBetIntervalRef.current);
+      autoBetIntervalRef.current = null;
+    }
+  };
+
+  // Cleanup auto betting on unmount or when leaving auto mode
+  useEffect(() => {
+    if (gameMode !== "auto") {
+      clearAutoBetInterval();
+      isAutoPlayingRef.current = false;
+      setIsAutoPlaying(false);
+    }
+    return () => {
+      clearAutoBetInterval();
+      isAutoPlayingRef.current = false;
+    };
+  }, [gameMode]);
+
   const formatBalance = (decimals = 4) =>
     mounted ? balanceNative.toFixed(decimals) : (0).toFixed(decimals);
-
-  // Cleanup auto betting interval when component unmounts or game mode changes
-  useEffect(() => {
-    return () => {
-      if (autoBetInterval) {
-        console.log('Cleaning up auto betting interval on unmount/mode change');
-        clearInterval(autoBetInterval);
-      }
-    };
-  }, [autoBetInterval, gameMode]);
 
   const applyBetAmount = (value, { persist = true } = {}) => {
     if (typeof value === 'string') {
@@ -109,8 +120,6 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
     onBetAmountChange?.(betValue);
 
     if (gameMode === "auto") {
-      console.log('Starting auto betting...');
-      setIsAutoPlaying(true);
       startAutoBetting();
     } else if (onBet) {
       onBet(betValue);
@@ -118,81 +127,67 @@ export default function GameControls({ onBet, onRowChange, onRiskLevelChange, on
   };
 
   const startAutoBetting = () => {
+    // Re-entry guard — never stack concurrent bet loops
+    if (isAutoPlayingRef.current || autoBetIntervalRef.current != null) {
+      return;
+    }
+
     const totalBets = parseInt(numberOfBets) || 1;
     let currentBet = 0;
     
-    // Check if we have enough balance for all bets
     const totalBetAmount = totalBets * parseFloat(betAmount);
     const totalBetAmountInReduxUnit = toRaw(totalBetAmount);
     const currentBalance = toRaw(balanceNative);
     
     if (totalBetAmountInReduxUnit > currentBalance) {
       alert(`Insufficient balance for ${totalBets} bets of ${betAmount} ${symbol} each. You need ${totalBetAmount.toFixed(3)} ${symbol} but have ${balanceNative.toFixed(3)} ${symbol}`);
-      setIsAutoPlaying(false);
       return;
     }
-    
-    console.log('Auto betting started with', totalBets, 'bets');
-    console.log('onBet function exists:', !!onBet);
+
+    clearAutoBetInterval();
+    isAutoPlayingRef.current = true;
+    setIsAutoPlaying(true);
     
     // Start first bet immediately
     if (onBet) {
-      console.log('First bet starting...');
-      // Notify parent that auto betting has started
-      if (onBetAmountChange) {
-        onBetAmountChange(parseFloat(betAmount));
-      }
+      onBetAmountChange?.(parseFloat(betAmount));
       onBet(parseFloat(betAmount));
       currentBet++;
       setNumberOfBets((totalBets - currentBet).toString());
-      console.log('First bet completed, remaining:', totalBets - currentBet);
     }
     
     // Then continue with interval - 0.3 seconds between bets
     const interval = setInterval(() => {
-      console.log('Interval triggered, currentBet:', currentBet, 'totalBets:', totalBets, 'isAutoPlaying:', isAutoPlaying);
-      
-      if (currentBet >= totalBets) {
-        console.log('Auto betting finished - all bets completed');
+      if (!isAutoPlayingRef.current) {
         clearInterval(interval);
+        if (autoBetIntervalRef.current === interval) autoBetIntervalRef.current = null;
+        return;
+      }
+
+      if (currentBet >= totalBets) {
+        clearInterval(interval);
+        if (autoBetIntervalRef.current === interval) autoBetIntervalRef.current = null;
+        isAutoPlayingRef.current = false;
         setIsAutoPlaying(false);
-        setAutoBetInterval(null);
-        // Reset to original value when all bets are completed
         setNumberOfBets("1");
         return;
       }
       
       if (onBet) {
-        console.log('Auto bet', currentBet + 1, 'starting...');
-        // Notify parent about each auto bet
-        if (onBetAmountChange) {
-          onBetAmountChange(parseFloat(betAmount));
-        }
+        onBetAmountChange?.(parseFloat(betAmount));
         onBet(parseFloat(betAmount));
         currentBet++;
-        // Update the remaining bets count
         setNumberOfBets((totalBets - currentBet).toString());
-        console.log('Auto bet completed, remaining:', totalBets - currentBet);
       }
-    }, 300); // 0.3 second delay between bets
+    }, 300);
     
-    // Store the interval ID in state so we can clear it later
-    setAutoBetInterval(interval);
-    console.log('Auto bet interval set with ID:', interval);
+    autoBetIntervalRef.current = interval;
   };
 
   const stopAutoBetting = () => {
-    console.log('Stop auto betting called');
-    
-    // Clear the interval if it exists
-    if (autoBetInterval) {
-      console.log('Clearing interval with ID:', autoBetInterval);
-      clearInterval(autoBetInterval);
-      setAutoBetInterval(null);
-    }
-    
+    clearAutoBetInterval();
+    isAutoPlayingRef.current = false;
     setIsAutoPlaying(false);
-    // Don't reset numberOfBets - keep showing remaining bets
   };
 
   const handleRowChange = (newRows) => {

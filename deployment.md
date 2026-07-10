@@ -1,8 +1,10 @@
 # Contract deployment reference
 
-Last updated: 2026-05-27
+Last updated: 2026-07-10
 
 On-chain integration details for APT Casino. For step-by-step publish commands see [move-contracts/README-DEPLOY.md](./move-contracts/README-DEPLOY.md) and [solana-programs/README-DEPLOY.md](./solana-programs/README-DEPLOY.md).
+
+**$APTC public IPO** (off-chain settlement + SPL transfers) is documented in [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) and configured via `IPO_*` / `NEXT_PUBLIC_IPO_*` in `.env.example`. Apply Supabase IPO migrations under `supabase/migrations/20260709*` before enabling sales in production.
 
 ## Package topology
 

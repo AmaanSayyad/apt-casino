@@ -1,105 +1,85 @@
 /**
  * APTC tokenomics — public-facing constants for landing + litepaper + docs.
- * Launch: Pump.fun default mode (SOL-paired bonding curve → PumpSwap).
- * @see https://pump.fun/create
- * @see https://pump.fun/docs/fees
- * @see https://github.com/pump-fun/pump-public-docs
+ * Launch: Fixed-price IPO (25% public sale) → Raydium liquidity post-TGE.
  */
 
 import { getAptcMint, isAptcLaunched, getAptcPairAddress } from './launchStatus';
+import { IPO_SALE, METAPLEX_LOGO_SRC, RAYDIUM_LOGO_SRC, METADAO_LOGO_SRC, PINKSALE_LOGO_SRC, PYTH_LOGO_SRC } from './ipo';
+import { SOLSCAN_LOGO_SRC } from './solscan';
 
-/** Pump.fun program (mainnet) */
-export const PUMP_PROGRAM_ID = '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P';
+export const METAPLEX_LOGO = METAPLEX_LOGO_SRC;
 
-export const PUMP_LOGO_SRC = '/logos/pumpfun-logo.png';
-
-/**
- * Default Pump.fun launch — NOT mayhem mode, NOT cashback, SOL-paired `create_v2`.
- * Bonding curve sells ~793.1M tokens; graduation migrates liquidity to PumpSwap (LP burned).
- */
-export const PUMP_LAUNCH_MODE = {
-  label: 'Default launch',
-  tagline: 'SOL-paired bonding curve · PumpSwap graduation',
-  mayhemMode: false,
-  cashbackEnabled: false,
+export const IPO_LAUNCH_MODE = {
+  label: 'Public IPO',
+  tagline: 'Fixed-price SOL swap · Raydium post-TGE',
   quotePair: 'SOL',
-  createUrl: 'https://pump.fun/create',
-  feesDocsUrl: 'https://pump.fun/docs/fees',
-  publicDocsUrl: 'https://github.com/pump-fun/pump-public-docs',
-  /** Creator initial buy target — 1% of 1B supply */
-  devHoldPct: 1,
-  /** Tokens tradeable on the bonding curve before graduation (~79.31% of supply) */
-  curveSupplyPct: 79.31,
-  /** Remaining supply migrates to PumpSwap LP on graduation */
-  migrationLpPct: 20.69,
-  /** Bonding-curve trade fee (creator + protocol) per pump.fun/fees */
-  curveCreatorFeePct: 0.3,
-  curveProtocolFeePct: 0.95,
-  curveTotalFeePct: 1.25,
-  /** Post-graduation PumpSwap canonical pool fees scale with market cap down to ~0.3% total */
-  pumpswapFeeFloorPct: 0.3,
-  /** Approximate SOL raised when the curve completes (varies with curve math) */
-  graduationSolApprox: 85,
-  migrationFeeSol: 0.015,
-  createFeeSol: 0,
+  createUrl: '/ipo',
+  feesDocsUrl: 'https://docs.metaplex.com/genesis',
+  publicDocsUrl: 'https://docs.metaplex.com/genesis/presale',
+  saleSupplyPct: IPO_SALE.saleSupplyPct,
+  migrationLpPct: 12,
+  raiseTargetUsd: IPO_SALE.raiseTargetUsd,
+  tokenPriceUsd: IPO_SALE.tokenPriceUsd,
+  launchLabel: IPO_SALE.launchLabel,
+  endLabel: IPO_SALE.endLabel,
+  timezoneLabel: IPO_SALE.timezoneLabel,
 };
+
+/** @deprecated Use IPO_LAUNCH_MODE */
+export const PUMP_LAUNCH_MODE = IPO_LAUNCH_MODE;
+export const PUMP_PROGRAM_ID = '';
+export const PUMP_LOGO_SRC = METAPLEX_LOGO_SRC;
 
 export const APTC_TOKENOMICS = {
   name: 'AptCasino.fun',
   symbol: 'APTC',
-  chain: 'Solana (SPL · Token-2022 · Pump.fun)',
+  chain: 'Solana (SPL · Token-2022)',
   maxSupply: '1,000,000,000',
   decimals: 6,
   get mint() {
     return getAptcMint();
   },
-  launchVenue: 'Pump.fun → PumpSwap',
-  launchPlatformUrl: PUMP_LAUNCH_MODE.createUrl,
-  feeMode: 'PUMP_DEFAULT',
-  feeModeLabel: 'Pump.fun default',
+  launchVenue: 'IPO → Raydium',
+  launchPlatformUrl: '/ipo',
+  feeMode: 'IPO_FIXED',
+  feeModeLabel: 'Fixed-price IPO',
   launch:
-    'Pump.fun default launch · SOL bonding curve · ~1% creator dev buy at TGE · 100% creator fees to @aptcasinofun · graduates to PumpSwap when curve completes.',
+    '25% public IPO — deposit SOL, receive APTC instantly. Auto-staked 30 days @ 30% APY. Post-IPO Raydium liquidity. Powered by Metaplex.',
   authorities: {
     mintRevoked: true,
     freezeRevoked: true,
     updateRevoked: true,
-    pumpBondingCurve: true,
+    pumpBondingCurve: false,
   },
   feeShare: {
     enabled: true,
     claimer: '@aptcasinofun',
     bps: 10_000,
-    label: '100% of creator fees → operations wallet',
+    label: 'Protocol revenue → operations wallet',
   },
 };
 
-/** Pump.fun bonding-curve launch parameters */
 export const APTC_LAUNCH_METRICS = {
   pair: 'APTC/SOL',
-  dex: 'Pump.fun bonding curve → PumpSwap (canonical pool)',
-  launchPlatform: 'Pump.fun',
-  pumpPrograms: {
-    bondingCurve: PUMP_PROGRAM_ID,
-  },
+  dex: 'IPO → Raydium (post-TGE)',
+  launchPlatform: 'AptCasino IPO',
+  pumpPrograms: { bondingCurve: null },
   totalSupplyShort: '1B',
-  devHoldPct: PUMP_LAUNCH_MODE.devHoldPct,
-  curveSupplyPct: PUMP_LAUNCH_MODE.curveSupplyPct,
-  migrationLpPct: PUMP_LAUNCH_MODE.migrationLpPct,
-  graduationSol: PUMP_LAUNCH_MODE.graduationSolApprox,
-  /** Creator dev buy — 1% of supply at launch (listings-first ops) */
-  devBuySupplyPct: PUMP_LAUNCH_MODE.devHoldPct,
-  devBuyTokensShort: '10M',
-  tradeFeePreMigrationPct: PUMP_LAUNCH_MODE.curveTotalFeePct,
-  tradeFeePostMigrationFloorPct: PUMP_LAUNCH_MODE.pumpswapFeeFloorPct,
-  curveCreatorFeePct: PUMP_LAUNCH_MODE.curveCreatorFeePct,
-  /** Illustrative starting MC if dev buys 1% near curve open — not a price guarantee */
-  approxMarketCapUsd: null,
-  approxSpotFdvUsd: null,
+  devHoldPct: 0,
+  curveSupplyPct: IPO_SALE.saleSupplyPct,
+  migrationLpPct: 12,
+  graduationSol: null,
+  devBuySupplyPct: 0,
+  devBuyTokensShort: '0',
+  tradeFeePreMigrationPct: 0,
+  tradeFeePostMigrationFloorPct: 0.25,
+  curveCreatorFeePct: 0,
+  approxMarketCapUsd: IPO_SALE.raiseTargetUsd,
+  approxSpotFdvUsd: IPO_SALE.raiseTargetUsd * 4,
   approxAverageFdvUsd: null,
-  approxTokenPriceUsd: null,
+  approxTokenPriceUsd: IPO_SALE.tokenPriceUsd,
   get pumpTokenUrl() {
-    const mint = getAptcMint();
-    return isAptcLaunched() ? pumpTokenUrl(mint) : PUMP_LAUNCH_MODE.createUrl;
+    return '/ipo';
   },
   get dexscreenerPairUrl() {
     const pair = getAptcPairAddress();
@@ -107,45 +87,50 @@ export const APTC_LAUNCH_METRICS = {
   },
 };
 
-/** Supply at TGE — pump.fun curve mechanics + disclosed dev hold */
 export const APTC_ALLOCATION = [
   {
-    label: 'Bonding curve (public)',
-    pct: PUMP_LAUNCH_MODE.curveSupplyPct,
-    tokensShort: '793.1M',
-    fill: '#ec4899',
-    color: 'from-fuchsia-500 to-pink-500',
+    label: 'Public IPO',
+    pct: IPO_SALE.saleSupplyPct,
+    tokensShort: IPO_SALE.saleTokensShort,
+    fill: '#d946ef',
+    color: 'from-fuchsia-500 to-violet-600',
     detail:
-      'Standard Pump.fun curve supply — anyone can buy/sell on the bonding curve until it completes and migrates to PumpSwap.',
+      'Fixed-price presale on aptcasino.fun — swap SOL for APTC instantly. Target raise $100K at $0.0004/APTC. Oversubscription accepted.',
   },
   {
-    label: 'PumpSwap LP (on graduation)',
-    pct: PUMP_LAUNCH_MODE.migrationLpPct,
-    tokensShort: '206.9M',
+    label: 'Raydium LP (post-TGE)',
+    pct: 12,
+    tokensShort: '120M',
     fill: '#6366f1',
     color: 'from-indigo-500 to-violet-600',
-    detail:
-      'Remaining supply seeds the canonical PumpSwap pool at graduation. LP tokens are burned — liquidity stays on-chain.',
+    detail: 'Liquidity seeded on Raydium after IPO closes — canonical APTC/SOL pool.',
   },
   {
-    label: 'Creator dev buy',
-    pct: PUMP_LAUNCH_MODE.devHoldPct,
-    tokensShort: '10M',
+    label: 'Treasury & ops',
+    pct: 25,
+    tokensShort: '250M',
     fill: '#34d399',
     color: 'from-emerald-500 to-teal-500',
-    detail:
-      'One-time ~1% creator buy at launch via Pump.fun — disclosed dev hold for listings, rewards, and ops. Not a hidden team wallet.',
+    detail: 'Listings, rewards, staking emissions, protocol runway — @aptcasinofun ops wallet.',
+  },
+  {
+    label: 'Community & staking',
+    pct: 38,
+    tokensShort: '380M',
+    fill: '#a78bfa',
+    color: 'from-violet-500 to-purple-600',
+    detail: 'Player rewards, Volume Cup, referrals, long-term staking — organic growth only.',
   },
 ];
 
-/** How @aptcasinofun deploys dev buy + 100% Pump creator fees */
+/** How @aptcasinofun deploys IPO proceeds + protocol GGR */
 export const CREATOR_BUY_DEPLOYMENT = [
   {
     label: 'Tier 1, 2 & 3 listings',
     pct: 50,
     fill: '#c084fc',
     detail:
-      'Largest share — Tier 1 DEX & trader tools (Pump.fun, PumpSwap, DexScreener, Jupiter), Tier 2 aggregators (CoinGecko, CMC), Tier 3 CEX roadmap (MEXC, Gate, KuCoin, Bybit, OKX, Binance)',
+      'Largest share — Tier 1 DEX & trader tools (Raydium, DexScreener, Jupiter), Tier 2 aggregators (CoinGecko, CMC), Tier 3 CEX roadmap (MEXC, Gate, KuCoin, Bybit, OKX, Binance)',
     highlight: true,
   },
   {
@@ -169,16 +154,16 @@ export const CREATOR_BUY_DEPLOYMENT = [
 ];
 
 export const CREATOR_BUY_PURPOSE =
-  'Every APTC from the ~1% creator dev buy and 100% of Pump.fun creator fees is deployed only for platform growth. The largest share funds Tier 1, 2 & 3 listings (DEX → aggregators → CEX). No founder allocation. No team allocation. No wash volume. No fake FDV. No dumps.';
+  'Protocol treasury tokens fund Tier 1, 2 & 3 listings (DEX → aggregators → CEX), community rewards, staking, and ops. No founder allocation. No team allocation. No wash volume. No fake FDV. No dumps.';
 
 export const APTC_TRANSPARENCY = {
   headline: 'The green flag checklist',
   subhead:
     'What snipers, bots, agents, and degens scan before they buy — and how APTC answers each one.',
   pledge:
-    'We are not hiding supply behind clusters, bundles, or fake metrics. No wash volume. No fake FDV. No dumps. APTC is a live GambleFi product with a standard Pump.fun launch, revoked mint/freeze authorities, one public ops wallet, and on-chain casino revenue. Every creator-wallet token exists to grow the platform — not to extract from it.',
+    'We are not hiding supply behind clusters, bundles, or fake metrics. APTC is a live GambleFi product with a fixed-price public IPO, revoked mint/freeze authorities, one public ops wallet, and on-chain casino revenue.',
   opsWalletRule:
-    'Creator dev buy + 100% creator fees → @aptcasinofun only · listings-first deployment · no wash · no fake FDV · no dumps',
+    'Treasury → @aptcasinofun only · listings-first deployment · no wash · no fake FDV · no dumps',
 };
 
 export const APTC_TRADER_GREEN_FLAGS = [
@@ -194,8 +179,8 @@ export const APTC_TRADER_GREEN_FLAGS = [
   },
   {
     term: 'Launch venue',
-    status: 'Pump.fun default',
-    detail: 'Standard SOL-paired `create_v2` — not mayhem mode, not cashback.',
+    status: 'Public IPO',
+    detail: 'Fixed-price SOL → APTC swap on aptcasino.fun · Powered by Metaplex.',
   },
   {
     term: 'Team / founder allocation',
@@ -204,8 +189,8 @@ export const APTC_TRADER_GREEN_FLAGS = [
   },
   {
     term: 'Dev hold',
-    status: '~1%',
-    detail: 'Disclosed creator buy at launch — used for listings, rewards, staking, and ops only.',
+    status: '0%',
+    detail: 'No undisclosed dev buy — public IPO is the primary distribution event.',
   },
   {
     term: 'Bundled wallets',
@@ -214,8 +199,8 @@ export const APTC_TRADER_GREEN_FLAGS = [
   },
   {
     term: 'Creator fees',
-    status: '100% → ops',
-    detail: 'Pump.fun creator fee vault claimed by @aptcasinofun for platform growth.',
+    status: 'N/A',
+    detail: 'IPO fixed price — post-TGE Raydium pool fees apply to secondary trading.',
   },
   {
     term: 'Volume & metrics',
@@ -224,8 +209,8 @@ export const APTC_TRADER_GREEN_FLAGS = [
   },
   {
     term: 'FDV / market cap',
-    status: 'Curve-priced',
-    detail: 'Market cap follows bonding-curve trades — no inflated launch posts.',
+    status: 'IPO-priced',
+    detail: 'Fixed $0.0004/APTC during IPO — oversubscription queued until supply added.',
   },
   {
     term: 'Supply dumps',
@@ -233,9 +218,9 @@ export const APTC_TRADER_GREEN_FLAGS = [
     detail: 'No bundled wallets, no hidden multi-wallet sells, no team unlock cliffs.',
   },
   {
-    term: 'Graduation',
-    status: 'PumpSwap',
-    detail: 'Curve completes → canonical PumpSwap pool · LP burned on migration.',
+    term: 'Post-IPO liquidity',
+    status: 'Raydium',
+    detail: 'Canonical APTC/SOL pool on Raydium after IPO window closes.',
   },
   {
     term: 'Hidden wallets',
@@ -244,8 +229,8 @@ export const APTC_TRADER_GREEN_FLAGS = [
   },
   {
     term: 'Trade fees',
-    status: 'Pump.fun schedule',
-    detail: '1.25% on curve (0.3% creator + 0.95% protocol). Post-grad fees scale down on PumpSwap.',
+    status: 'Raydium pool',
+    detail: 'Standard AMM fees on Raydium post-TGE. IPO itself is fixed-price with no curve fee.',
   },
   {
     term: 'Live product',
@@ -274,38 +259,33 @@ export const APTC_WALLETS = [
     pct: null,
     address: null,
     purpose:
-      'Creator dev buy (~1% supply) + 100% Pump.fun creator fees — largest allocation to Tier 1–3 listings (DEX → CEX), then community rewards, staking, and protocol ops. Platform growth only.',
-    purposeShort: 'Dev buy + creator fees · growth only',
+      'Protocol treasury funds Tier 1–3 listings (DEX → aggregators → CEX), community rewards, staking, and ops. No founder allocation. IPO is the primary distribution event.',
+    purposeShort: 'IPO + GGR · growth only',
   },
 ];
 
-export const APTC_LAUNCH_STEPS = [
-  'Token live',
-  'Bonding curve',
-  'Graduate (~85 SOL)',
-  'DexScreener',
-];
+export const APTC_LAUNCH_STEPS = ['IPO live', 'Swap SOL→APTC', 'Raydium LP', 'DexScreener'];
 
 export const APTC_LAUNCH_PHASES = [
   {
     step: '1',
-    title: 'Token live',
-    detail: '1B supply · Pump.fun default · ~1% creator dev buy · fees to @aptcasinofun',
+    title: 'IPO opens',
+    detail: '250M APTC soft cap · $0.0004/APTC · instant SOL swap · oversubscription queued · auto-stake 30d @ 30% APY',
   },
   {
     step: '2',
-    title: 'Bonding curve',
-    detail: '1.25% trade fee on curve · public buys until curve completes',
+    title: 'Swap rail',
+    detail: 'Deposit SOL → receive APTC immediately from treasury inventory',
   },
   {
     step: '3',
-    title: 'Graduation',
-    detail: '~85 SOL raised → migrate to PumpSwap · LP burned · canonical pool',
+    title: 'Raydium TGE',
+    detail: 'IPO closes → seed Raydium APTC/SOL liquidity pool',
   },
   {
     step: '4',
     title: 'Flywheel on',
-    detail: 'Creator fees + GGR buybacks · staking · listings · aggregators',
+    detail: 'GGR buybacks · staking · listings · aggregators',
   },
 ];
 
@@ -326,15 +306,15 @@ export const GGR_FLYWHEEL_STEPS = [
 export const APTC_UTILITY = [
   {
     title: 'Casino flywheel',
-    body: 'Live GGR from Plinko, Mines, Wheel & Roulette → open-market APTC buybacks on Jupiter / PumpSwap.',
+    body: 'Live GGR from Plinko, Mines, Wheel & Roulette → open-market APTC buybacks on Jupiter / Raydium.',
   },
   {
-    title: 'Creator fee stream',
-    body: '100% Pump.fun creator fees to @aptcasinofun — fund listings, rewards, and ops from a single treasury wallet.',
+    title: 'IPO + staking',
+    body: 'Public IPO buyers auto-enrolled in 30-day stake at 30% APY — rewards recorded for manual admin payout.',
   },
   {
     title: 'Staking',
-    body: 'Fixed-term pools on /stake · rewards from GGR buyback staker share.',
+    body: 'Additional fixed-term pools on /stake · rewards from GGR buyback staker share.',
   },
   {
     title: 'Referrals & Volume Cup',
@@ -343,7 +323,7 @@ export const APTC_UTILITY = [
 ];
 
 export function getAllocationSummary() {
-  return '1B APTC fixed supply · Pump.fun default launch · ~1% dev hold · ~79% on bonding curve · 0% team/founder · creator fees → ops · no wash · no fake FDV · no dumps.';
+  return '1B APTC fixed supply · 25% public IPO · Raydium post-TGE · 0% team/founder · treasury → ops · no wash · no fake FDV · no dumps.';
 }
 
 export function getCreatorBuyDeploymentLines() {
@@ -363,8 +343,13 @@ export function solscanTokenUrl(mint = APTC_TOKENOMICS.mint) {
   return `https://solscan.io/token/${mint}`;
 }
 
-export function pumpTokenUrl(mint = APTC_TOKENOMICS.mint) {
-  return isAptcLaunched() ? `https://pump.fun/coin/${mint}` : PUMP_LAUNCH_MODE.createUrl;
+export function ipoPageUrl() {
+  return '/ipo';
+}
+
+/** @deprecated Use ipoPageUrl */
+export function pumpTokenUrl() {
+  return ipoPageUrl();
 }
 
 /** @deprecated Use pumpTokenUrl */
@@ -386,9 +371,31 @@ export function jupiterSwapUrl(mint = APTC_TOKENOMICS.mint) {
   return `https://jup.ag/swap/SOL-${mint}`;
 }
 
-/** @deprecated Post-TGE swaps route via Jupiter / PumpSwap */
+/** @deprecated Post-TGE swaps route via Jupiter / Raydium */
 export function meteoraPoolUrl(mint = APTC_TOKENOMICS.mint) {
   return pumpTokenUrl(mint);
+}
+
+/** Full trade & research grid — generic URLs pre-TGE, mint-specific after Raydium listing */
+export function getTradeResearchTools() {
+  const launched = isAptcLaunched();
+  const mint = APTC_TOKENOMICS.mint;
+
+  return [
+    { id: 'ipo', label: 'IPO', logo: '/APTC_logo_1000x1000.png', href: '/ipo' },
+    { id: 'raydium', label: 'Raydium', logo: RAYDIUM_LOGO_SRC, href: launched ? `https://raydium.io/swap/?inputMint=sol&outputMint=${mint}` : 'https://raydium.io/' },
+    { id: 'jupiter', label: 'Jupiter', logo: '/logos/jupiter.jpg', href: launched ? jupiterSwapUrl(mint) : 'https://jup.ag/' },
+    { id: 'dexscreener', label: 'DexScreener', logo: '/logos/dexscreener.png', href: launched ? dexscreenerTokenUrl(mint) : 'https://dexscreener.com/solana' },
+    { id: 'birdeye', label: 'Birdeye', logo: '/logos/birdeye.png', href: launched ? `https://birdeye.so/token/${mint}?chain=solana` : 'https://birdeye.so/' },
+    { id: 'gecko', label: 'GeckoTerminal', logo: '/logos/gecko.png', href: launched ? `https://www.geckoterminal.com/solana/pools/${mint}` : 'https://www.geckoterminal.com/' },
+    { id: 'dextools', label: 'DexTools', logo: '/logos/dextools.png', href: launched ? `https://www.dextools.io/app/en/solana/pair-explorer/${mint}` : 'https://www.dextools.io/' },
+    { id: 'gmgn', label: 'GMGN', logo: '/logos/gmgn.png', href: launched ? `https://gmgn.ai/sol/token/${mint}` : 'https://gmgn.ai/' },
+    { id: 'axiom', label: 'Axiom', logo: '/logos/axiom.jpeg', href: launched ? `https://axiom.trade/token/${mint}` : 'https://axiom.trade/' },
+    { id: 'photon', label: 'Photon', logo: '/logos/photon.png', href: launched ? `https://photon-sol.tinyastro.io/en/lp/${mint}` : 'https://photon-sol.tinyastro.io/' },
+    { id: 'coingecko', label: 'CoinGecko', logo: '/logos/coingecko-logo.png', href: launched ? `https://www.coingecko.com/en/coins/${mint}` : 'https://www.coingecko.com/' },
+    { id: 'cmc', label: 'CMC', logo: '/logos/cmc.png', href: launched ? `https://coinmarketcap.com/currencies/${mint}/` : 'https://coinmarketcap.com/' },
+    { id: 'solscan', label: 'Solscan', logo: SOLSCAN_LOGO_SRC, href: launched ? solscanTokenUrl(mint) : 'https://solscan.io/' },
+  ];
 }
 
 export function getAptcTradeLinks(options = {}) {
@@ -398,16 +405,20 @@ export function getAptcTradeLinks(options = {}) {
     options.pairUrl ||
     (APTC_LAUNCH_METRICS.dexscreenerPairUrl ?? null) ||
     (launched ? dexscreenerTokenUrl(mint) : null);
-  const pumpHref = pumpTokenUrl(mint);
   const jupiterHref = launched ? jupiterSwapUrl(mint) : 'https://jup.ag/';
   const solscanHref = launched ? solscanTokenUrl(mint) : 'https://solscan.io/';
   const dexscreenerHref = pairUrl || 'https://dexscreener.com/solana';
 
   return [
-    { id: 'pumpfun', label: 'Pump.fun', sub: launched ? 'Token page' : 'Create', href: pumpHref, external: true, logo: PUMP_LOGO_SRC },
+    { id: 'ipo', label: 'IPO', sub: 'Swap SOL→APTC', href: '/ipo', external: false, logo: '/APTC_logo_1000x1000.png' },
+    { id: 'metaplex', label: 'Metaplex', sub: 'Genesis presale', href: 'https://docs.metaplex.com/genesis/presale', external: true, logo: METAPLEX_LOGO_SRC },
+    { id: 'metadao', label: 'MetaDAO', sub: 'Launch architecture', href: 'https://metadao.fi/', external: true, logo: METADAO_LOGO_SRC },
+    { id: 'pinksale', label: 'PinkSale', sub: 'Affiliate model', href: 'https://www.pinksale.finance/', external: true, logo: PINKSALE_LOGO_SRC },
+    { id: 'pyth', label: 'Pyth', sub: 'SOL/USD oracle', href: 'https://pyth.network/', external: true, logo: PYTH_LOGO_SRC },
     { id: 'dexscreener', label: 'DexScreener', sub: launched ? 'Live chart' : 'Charts', href: dexscreenerHref, external: true, logo: '/logos/dexscreener.png' },
     { id: 'jupiter', label: 'Jupiter', sub: launched ? 'Swap' : 'Aggregator', href: jupiterHref, external: true, logo: '/logos/jupiter.jpg' },
-    { id: 'solscan', label: 'Solscan', sub: launched ? 'Mint' : 'Explorer', href: solscanHref, external: true, logo: 'https://solscan.io/favicon.ico' },
+    { id: 'raydium', label: 'Raydium', sub: 'Post-TGE', href: launched ? `https://raydium.io/swap/?inputMint=sol&outputMint=${mint}` : 'https://raydium.io/', external: true, logo: RAYDIUM_LOGO_SRC },
+    { id: 'solscan', label: 'Solscan', sub: launched ? 'Mint' : 'Explorer', href: solscanHref, external: true, logo: SOLSCAN_LOGO_SRC },
     { id: 'stake', label: 'Stake', sub: 'Earn APY', href: '/stake', external: false, logo: '/APTC_logo_1000x1000.png' },
     { id: 'litepaper', label: 'Litepaper', sub: 'Full docs', href: '/litepaper#aptc-token', external: false, logo: '/APTC_logo_1000x1000.png' },
   ];

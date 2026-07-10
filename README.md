@@ -75,6 +75,8 @@ APT-Casino addresses these problems by offering:
 12. **Admin dashboard** → Ops tools for withdrawals, streams, bans, and analytics (server-gated).
 13. **Promotions engine** → Admin-created coupon credits + deposit deals with audit logs and anti-abuse controls.
 14. **KOL portal upgrades** → Self-service password reset and expanded earnings surfaces.
+15. **$APTC public IPO** → Fixed-price SOL → APTC sale at [`/ipo`](https://aptcasino.fun/ipo) (split SOL collector + APTC distributor wallets, 3-level affiliates, 30d auto-stake @ 30% APY, Raydium post-sale).
+16. **Provably fair verify** → On-site proof checker at [`/fairness/verify`](https://aptcasino.fun/fairness/verify).
 
 ## Technical Architecture
 
@@ -222,30 +224,46 @@ All though started as a idea but now we are thinking to carry forward as a busin
 
 **Be the biggest gamefi/ gambling / games hub centre of the gaming industry.**
 
-## $APTC token (Pump.fun launch)
+## $APTC token (public IPO → Raydium)
 
-APTC is the native GambleFi token — launching on **Solana via Pump.fun** in **default mode** (bonding curve → PumpSwap).
+APTC is the native GambleFi token — launching on **Solana via a fixed-price public IPO**, then trading on **Raydium**.
 
-- **Default launch** on @pumpdotfun — **~1% creator dev buy** · **~79% on curve** · **~21% PumpSwap LP** (burned at graduation)
-- **Curve fees** — **1.25%** total (0.3% creator + 0.95% protocol); post-grad PumpSwap fees scale with market cap
-- **~85 SOL graduation** → canonical PumpSwap pool · **100% creator fees** → @aptcasinofun (**listings-first**)
+**Live sale UI:** [aptcasino.fun/ipo](https://aptcasino.fun/ipo)
+
+- **25% public sale** (250M APTC) · **$100K raise** @ **$0.0004** · July 11–14, 2026 3:30 AM ET
+- **Deposit SOL → receive APTC** instantly · auto-staked **30 days @ 30% APY**
+- **Split treasuries:** receive-only SOL collector + hot APTC distributor (see `.env.example`)
+- **Oversubscription** accepted · queued until distributor inventory is topped up
+- **Post-IPO** Raydium pool · Jupiter routing · DexScreener · **listings-first** treasury ops
 - **0%** team / founder / VC allocation · **No wash volume · no fake FDV · no dumps**
+- **3-level IPO affiliates** (3% / 1.5% / 0.5%) with a withdraw cliff
 
 Full tokenomics: [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) · live charts on [aptcasino.fun/#tokenomics](https://aptcasino.fun/#tokenomics).
 
 ```mermaid
 flowchart LR
     PLAY[Casino play] --> GGR[GGR]
-    GGR --> BUY[Jupiter / PumpSwap buyback]
+    GGR --> BUY[Jupiter / Raydium buyback]
     BUY --> BURN[Burn 50%]
     BUY --> STAKE[Stakers 35%]
     BUY --> TRES[Treasury 15%]
-    TRADE[Pump.fun 1.25% fee] --> OPS[@aptcasinofun treasury]
-    REF[Referrals] --> APTC[APTC rewards]
-    STK[/stake pools] --> APTC
+    BUYER[Buyer SOL] --> COLLECT[SOL collector]
+    DIST[APTC distributor] --> BUYER
+    COLLECT --> OPS[@aptcasinofun ops]
+    REF[IPO referrals] --> APTC[APTC rewards]
+    STK[/stake + IPO_30D] --> APTC
 ```
 
-Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in production for DexScreener embeds and `/stake` (see `.env.example`).
+Required env (see `.env.example`):
+
+```env
+IPO_ENABLED=true
+NEXT_PUBLIC_IPO_ENABLED=true
+NEXT_PUBLIC_IPO_SOL_TREASURY=   # receive-only SOL collector
+NEXT_PUBLIC_IPO_APTC_DISTRIBUTOR=  # hot wallet that sends APTC
+IPO_TREASURY_SECRET_KEY=        # secret for distributor only — never commit
+NEXT_PUBLIC_APTC_SOLANA_MINT=
+```
 
 ### Games
 - **Roulette**: Classic roulette with multiple bet types (numbers, colors, odds/evens, etc.)
@@ -417,7 +435,7 @@ Upload the `.next` folder and `public` folder to your hosting provider.
 
 | File | Purpose |
 |------|---------|
-| [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) | **$APTC** — Pump.fun bonding curve launch, allocation, GGR flywheel |
+| [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) | **$APTC** — public IPO → Raydium, allocation, GGR flywheel |
 | [mainnet.md](./mainnet.md) | Mainnet launch checklist (multichain) |
 | [deployment.md](./deployment.md) | Aptos module addresses & entry function reference |
 | [liquidity.md](./liquidity.md) | Treasury, house balance, and fee flow |

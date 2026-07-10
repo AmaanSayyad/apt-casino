@@ -33,7 +33,7 @@ When this is set with a valid Solana token address, the entire site automaticall
 
 ### 5. **Trade & Research Tool Links**
 **Pre-launch** (generic URLs):
-- Pump.fun: `https://pump.fun/create`
+- IPO: `/ipo`
 - Jupiter: `https://jup.ag/`
 - DexScreener: `https://dexscreener.com/solana`
 - Birdeye: `https://birdeye.so/`
@@ -43,10 +43,10 @@ When this is set with a valid Solana token address, the entire site automaticall
 - Axiom: `https://axiom.trade/`
 - Photon: `https://photon-sol.tinyastro.io/`
 - Solscan: `https://solscan.io/`
-- Plus: CoinGecko, CMC, PancakeSwap, Pump.fun
+- Plus: CoinGecko, CMC, Raydium
 
 **Post-launch** (token-specific URLs):
-- Pump.fun: Token page on pump.fun/coin/{mint}
+- IPO: `/ipo` (during sale) then Raydium / Jupiter
 - Jupiter: Swap SOL to token
 - DexScreener: Token pair page
 - Birdeye: Token analytics
@@ -176,8 +176,8 @@ NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=C9ej1qVPj9tycKgWZSUkL9RDuz65VzX2WfG7rfhAqSaL
 
 When you're ready to launch:
 
-- [ ] Launch APTC on [pump.fun/create](https://pump.fun/create) — **default mode** · ~1% dev buy · 1.25% curve fee · listings-first creator fees
-- [ ] Creator fees 100% → @aptcasinofun · no wash · no fake FDV · no dumps
+- [ ] Open `/ipo` fixed-price sale · 250M APTC · $100K raise · listings-first treasury ops
+- [ ] No wash · no fake FDV · no dumps
 - [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in Vercel
 - [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` in Vercel (optional, for faster chart)
 - [ ] Redeploy to production

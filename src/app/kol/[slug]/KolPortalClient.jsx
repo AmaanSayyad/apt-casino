@@ -20,6 +20,8 @@ import {
   FaVideo,
 } from 'react-icons/fa';
 
+import { SolscanLink, SolscanMark } from '@/components/ui/SolscanMark';
+
 function fmtNum(n) {
   if (n == null || !Number.isFinite(Number(n))) return '—';
   return Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
@@ -582,10 +584,10 @@ export default function KolPortalClient({ slug }) {
                 href={`https://solscan.io/account/${allocation.walletAddress}`}
                 target="_blank"
                 rel="noreferrer"
-                className="shrink-0 rounded-lg border border-white/10 p-2 text-white/50 hover:text-cyan-300 hover:bg-white/5"
+                className="shrink-0 rounded-lg border border-white/10 p-2 text-white/50 hover:text-cyan-300 hover:bg-white/5 inline-flex items-center justify-center"
                 title="View on Solscan"
               >
-                <FaExternalLinkAlt className="text-xs" />
+                <SolscanMark size={14} />
               </a>
             </dd>
           </div>
@@ -650,14 +652,13 @@ export default function KolPortalClient({ slug }) {
             <div className="flex justify-between gap-4 items-center px-5 py-4">
               <dt className="text-white/45">Payout transaction</dt>
               <dd>
-                <a
+                <SolscanLink
                   href={`https://solscan.io/tx/${allocation.fulfillmentTxHash}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1.5 font-mono text-xs"
+                  size={13}
+                  className="text-cyan-300 hover:text-cyan-200 font-mono text-xs"
                 >
-                  View on Solscan <FaExternalLinkAlt />
-                </a>
+                  View on Solscan
+                </SolscanLink>
               </dd>
             </div>
           ) : null}

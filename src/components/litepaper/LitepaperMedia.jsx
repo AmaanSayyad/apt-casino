@@ -14,7 +14,7 @@ export default function LitepaperMedia() {
           href={PITCH_DECK_URL}
           target="_blank"
           rel="noreferrer"
-          className="hidden shrink-0 text-xs font-semibold text-blue-magic underline sm:inline"
+          className="hidden shrink-0 text-xs font-semibold text-red-magic underline sm:inline"
         >
           Open in Figma →
         </a>
@@ -31,7 +31,7 @@ export default function LitepaperMedia() {
             allowFullScreen
           />
           <div className="border-t border-white/10 px-4 py-3 sm:hidden">
-            <a href={PITCH_DECK_URL} target="_blank" rel="noreferrer" className="text-xs text-blue-magic underline">
+            <a href={PITCH_DECK_URL} target="_blank" rel="noreferrer" className="text-xs text-red-magic underline">
               Open in Figma →
             </a>
           </div>

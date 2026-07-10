@@ -178,37 +178,28 @@ timeline
 - Solana program pause instruction
 - Platform fee wallets separate from player payout treasury where possible
 
-## APTC on Pump.fun (token trading)
+## APTC on Raydium (token trading)
 
-APTC/SOL trades on **Pump.fun bonding curve → PumpSwap** — separate from player SOL/APT casino treasury balances.
+APTC/SOL trades on **Raydium** after the public IPO closes — separate from player SOL/APT casino treasury balances.
 
 ```mermaid
 flowchart TB
-    subgraph Launch["APTC launch (Pump.fun default)"]
-        DEV[~1% creator dev buy] --> CURVE[Bonding curve ~79% supply]
-        PUB[Public buys on curve] --> CURVE
-        CURVE -->|~85 SOL raised| PUMP[PumpSwap canonical pool]
-        PUMP --> LP[LP tokens burned]
+    subgraph Launch["APTC launch (public IPO)"]
+        IPO[Fixed-price SOL→APTC /ipo] --> DIST[APTC to buyers]
+        DIST --> STAKE[30-day auto-stake]
+        IPO -->|sale ends| RAY[Raydium APTC/SOL pool]
     end
 
     subgraph Flywheel["GGR flywheel"]
         GGR[Gross gaming revenue] --> BB[Buyback budget]
-        BB --> SW[Jupiter / PumpSwap]
+        BB --> SW[Jupiter / Raydium]
         SW --> SINK[Burn · Stakers · Treasury]
     end
 
-    subgraph CreatorFees["Pump.fun creator fees"]
-        TRADE[1.25% curve fee] --> FS[@aptcasinofun 100%]
-        FS --> LIST[Tier 1-3 listings 50%]
-        FS --> OPS[Rewards · staking · ops]
-    end
-
     PLAY[Player bets] --> GGR
-    CURVE --> TRADE
-    PUMP --> TRADE
 ```
 
-See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for Pump.fun launch parameters, creator-wallet deployment (listings-first), and fee economics.
+See [docs/APTC_TOKENOMICS.md](./docs/APTC_TOKENOMICS.md) for IPO parameters and listing-tier economics.
 
 ## Related docs
 

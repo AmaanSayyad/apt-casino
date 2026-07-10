@@ -57,10 +57,10 @@ export default function LitepaperContent() {
           <section key={group.title}>
             <div className="mb-5 flex items-center gap-3">
               <div className="h-px flex-1 bg-gradient-to-r from-red-magic/50 to-transparent" />
-              <h2 className="shrink-0 text-[11px] font-black uppercase tracking-[0.2em] text-blue-magic/80">
+              <h2 className="shrink-0 text-[11px] font-black uppercase tracking-[0.2em] text-red-magic/80">
                 {group.title}
               </h2>
-              <div className="h-px flex-1 bg-gradient-to-l from-blue-magic/50 to-transparent" />
+              <div className="h-px flex-1 bg-gradient-to-l from-red-magic/50 to-transparent" />
             </div>
 
             <div className="space-y-4">

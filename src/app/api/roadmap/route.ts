@@ -21,6 +21,8 @@ function mergeRoadmapItems(dbRows: DbRow[] | null) {
   const dbById = new Map((dbRows ?? []).map((r) => [r.id, r]));
   const sortById = new Map(PUBLIC_ROADMAP_ITEMS.map((r) => [r.id, r.sortOrder]));
 
+  // Static publicRoadmap.js is canonical for copy (title/excerpt/link).
+  // Supabase may only override status (e.g. mark shipped) so stale DB text cannot resurface.
   return PUBLIC_ROADMAP_ITEMS.map((staticRow) => {
     const db = dbById.get(staticRow.id);
     const status = db?.status ?? staticRow.status;
@@ -28,12 +30,12 @@ function mergeRoadmapItems(dbRows: DbRow[] | null) {
 
     return {
       id: staticRow.id,
-      title: db?.title ?? staticRow.title,
-      excerpt: db?.excerpt ?? staticRow.excerpt,
-      category: db?.category ?? staticRow.category,
+      title: staticRow.title,
+      excerpt: staticRow.excerpt,
+      category: staticRow.category,
       status,
       statusLabel: status === 'in_progress' ? 'In progress' : 'Planned',
-      link: db?.link ?? staticRow.link,
+      link: staticRow.link,
     };
   })
     .filter(Boolean)
@@ -43,8 +45,8 @@ function mergeRoadmapItems(dbRows: DbRow[] | null) {
 
 /**
  * Returns upcoming roadmap items (status = planned | in_progress) ordered by sort_order.
- * Static config in publicRoadmap.js is canonical for which milestones exist; Supabase
- * rows override title/excerpt/status when present (after seed or admin edits).
+ * Static config in publicRoadmap.js is canonical for milestone copy;
+ * Supabase may override status only (after seed or admin edits).
  */
 export async function GET() {
   const fallbackItems = mapPublicRoadmapToApi();

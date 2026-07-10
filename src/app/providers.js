@@ -10,6 +10,7 @@ import ClientThemeProvider from '@/components/ClientThemeProvider';
 import { AptosWalletAdapterProvider } from '@aptos-labs/wallet-adapter-react';
 import ReferralCapture from '@/components/ReferralCapture';
 import SolanaWalletProvider from '@/components/SolanaWalletProvider';
+import { WalletNativeBalanceProvider } from '@/components/wallet/WalletNativeBalanceProvider';
 import WalletModalHost from '@/components/WalletModalHost';
 import SessionTracker from '@/components/SessionTracker';
 import PlayChainSync from '@/components/play/PlayChainSync';
@@ -33,6 +34,7 @@ export default function Providers({ children }) {
   return (
     <Provider store={store}>
       <SolanaWalletProvider>
+        <WalletNativeBalanceProvider>
         <AptosWalletAdapterProvider
           autoConnect={false}
           dappConfig={{ network: APTOS_DAPP_NETWORK }}
@@ -63,6 +65,7 @@ export default function Providers({ children }) {
             </NotificationProvider>
           </QueryClientProvider>
         </AptosWalletAdapterProvider>
+        </WalletNativeBalanceProvider>
       </SolanaWalletProvider>
     </Provider>
   );

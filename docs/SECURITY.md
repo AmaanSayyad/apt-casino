@@ -1,6 +1,6 @@
 # Security Policy
 
-Last updated: 2026-06-19
+Last updated: 2026-07-10
 
 ## Supported scope
 
@@ -10,6 +10,7 @@ Security reports are welcome for:
 - Next.js API routes and admin routes
 - Supabase schema / RLS for production features
 - Solana/Aptos treasury, deposit, withdraw, and payout paths
+- **$APTC IPO** rails (SOL collector is receive-only; APTC distributor hot key is server-only — never expose `IPO_TREASURY_SECRET_KEY` to the client)
 - Promotions, referrals, KOL portal, and profile reward systems
 
 ## Reporting a vulnerability

@@ -8,13 +8,15 @@ import {
   APTC_LAUNCH_STEPS,
   APTC_TOKENOMICS,
   APTC_UTILITY,
-  PUMP_LAUNCH_MODE,
-  PUMP_LOGO_SRC,
-  pumpTokenUrl,
+  IPO_LAUNCH_MODE,
+  METAPLEX_LOGO,
+  getTradeResearchTools,
   solscanTokenUrl,
 } from '@/lib/config/tokenomics';
+import { IPO_SALE } from '@/lib/config/ipo';
 import { isAptcLaunched, getLaunchStatusText } from '@/lib/config/launchStatus';
-import PumpLaunchPanel from '@/components/PumpLaunchPanel';
+import IpoStackLogos from '@/components/IpoStackLogos';
+import { SolscanLink } from '@/components/ui/SolscanMark';
 
 const AllocationDonut = dynamic(
   () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.AllocationDonut),
@@ -31,42 +33,9 @@ const TraderTransparencyPanel = dynamic(
 
 const _MINT = 'TBD';
 
-/** Get trade tools with conditional URLs based on launch status */
+/** Trade & research — full platform grid (generic URLs pre-TGE, live mint links after Raydium) */
 function getTradeTools() {
-  const launched = isAptcLaunched();
-  const mint = APTC_TOKENOMICS.mint;
-  
-  if (!launched) {
-    return [
-      { id: 'pumpfun',      label: 'Pump.fun',       logo: PUMP_LOGO_SRC,                  href: 'https://pump.fun/create' },
-      { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: 'https://jup.ag/' },
-      { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: 'https://dexscreener.com/solana' },
-      { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: 'https://birdeye.so/' },
-      { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: 'https://www.geckoterminal.com/' },
-      { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: 'https://www.dextools.io/' },
-      { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: 'https://gmgn.ai/' },
-      { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: 'https://axiom.trade/' },
-      { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: 'https://photon-sol.tinyastro.io/' },
-      { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: 'https://www.coingecko.com/' },
-      { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: 'https://coinmarketcap.com/' },
-      { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: 'https://solscan.io/' },
-    ];
-  }
-
-  return [
-    { id: 'pumpfun',      label: 'Pump.fun',       logo: PUMP_LOGO_SRC,                  href: pumpTokenUrl(mint) },
-    { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/swap/SOL-${mint}` },
-    { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana/${mint}` },
-    { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: `https://birdeye.so/token/${mint}?chain=solana` },
-    { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/solana/pools/${mint}` },
-    { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/app/en/solana/pair-explorer/${mint}` },
-    { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: `https://gmgn.ai/sol/token/${mint}` },
-    { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: `https://axiom.trade/token/${mint}` },
-    { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: `https://photon-sol.tinyastro.io/en/lp/${mint}` },
-    { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: `https://www.coingecko.com/en/coins/${mint}` },
-    { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: `https://coinmarketcap.com/currencies/${mint}/` },
-    { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: solscanTokenUrl(mint) },
-  ];
+  return getTradeResearchTools();
 }
 
 export default function TokenomicsSection() {
@@ -117,9 +86,7 @@ export default function TokenomicsSection() {
   const priceChange24h = market?.priceChange24h ?? null;
   const marketLabel = hasLiveMarket
     ? 'Live market · DexScreener'
-    : market?.pump?.source === 'live'
-      ? 'Live · Pump.fun'
-      : 'Pre-launch';
+    : 'Pre-launch · IPO';
 
   return (
     <section id="tokenomics" className="py-16 md:py-24 px-4 md:px-8 lg:px-16 bg-[#070005]">
@@ -140,38 +107,40 @@ export default function TokenomicsSection() {
             Tokenomics
           </h2>
           <p className="mt-3 max-w-full overflow-x-auto text-sm sm:text-base text-white/55 leading-relaxed whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            1B fixed supply · ~1% dev hold · 100% creator fees to ops · 0% team / founder allocation.
+            1B fixed supply · 25% public IPO · Raydium post-TGE · 0% team / founder allocation.
           </p>
         </div>
 
-        {/* Pump.fun launch — single launch-params block */}
-        <div className="mb-6 rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/40 via-[#120010] to-fuchsia-950/30 p-5 md:p-6">
+        {/* IPO launch */}
+        <div className="mb-6 rounded-2xl border border-fuchsia-500/25 bg-gradient-to-br from-fuchsia-950/40 via-[#120010] to-violet-950/30 p-5 md:p-6">
           <div className="flex flex-wrap items-start gap-4">
             <div className="flex items-center gap-3">
-              <img src={PUMP_LOGO_SRC} alt="Pump.fun" className="h-10 w-10 rounded-xl object-contain bg-white/5" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={METAPLEX_LOGO} alt="Metaplex" className="h-10 w-10 rounded-xl object-contain bg-white/5 p-1" />
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-300/80">
-                  Launching on Pump.fun
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-fuchsia-300/80">
+                  {IPO_LAUNCH_MODE.label}
                 </p>
-                <h3 className="text-lg font-semibold text-white">{PUMP_LAUNCH_MODE.label}</h3>
-                <p className="text-xs text-white/50">{PUMP_LAUNCH_MODE.tagline}</p>
+                <h3 className="text-lg font-semibold text-white">{IPO_SALE.launchLabel}</h3>
+                <p className="text-xs text-white/50">{IPO_LAUNCH_MODE.tagline}</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 flex-1 min-w-[200px]">
-              <LaunchStat label="Dev hold" value={`~${PUMP_LAUNCH_MODE.devHoldPct}% at TGE`} />
-              <LaunchStat label="Curve supply" value={`~${PUMP_LAUNCH_MODE.curveSupplyPct}%`} />
-              <LaunchStat label="Curve fee" value={`${PUMP_LAUNCH_MODE.curveTotalFeePct}%`} />
-              <LaunchStat label="Creator fee" value={`${PUMP_LAUNCH_MODE.curveCreatorFeePct}%`} />
-              <LaunchStat label="Post-grad floor" value={`${PUMP_LAUNCH_MODE.pumpswapFeeFloorPct}%`} />
-              <LaunchStat label="Graduation" value={`~${m.graduationSol} SOL`} />
+              <LaunchStat label="Raise target" value={`$${(IPO_SALE.raiseTargetUsd / 1000).toFixed(0)}K`} />
+              <LaunchStat label="IPO price" value={`$${IPO_SALE.tokenPriceUsd}`} />
+              <LaunchStat label="Sale supply" value={`${IPO_SALE.saleTokensShort} APTC`} />
+              <LaunchStat label="Window" value={`${IPO_SALE.durationDays} days`} />
+              <LaunchStat label="Timezone" value={IPO_SALE.timezoneLabel} />
+              <LaunchStat label="Post-IPO" value="Raydium LP" />
             </div>
           </div>
+          <IpoStackLogos variant="compact" className="mt-4" />
         </div>
 
         {/* ── Main 2-column grid ── */}
-        <div className="grid lg:grid-cols-[1fr_1.15fr] gap-6 mb-6">
+        <div className="grid lg:grid-cols-[1fr_1.15fr] gap-6 mb-6 lg:items-start">
 
-          {/* LEFT — identity, ticker, stats, trade links */}
+          {/* LEFT — identity, ticker, trade links, GGR buyback */}
           <div className="flex flex-col gap-5">
 
             {/* Authority chips + timeline */}
@@ -179,7 +148,7 @@ export default function TokenomicsSection() {
               <div className="flex flex-wrap gap-2 mb-4">
                 <AuthorityChip label="Mint revoked" />
                 <AuthorityChip label="Freeze revoked" />
-                <AuthorityChip label="Pump.fun curve" />
+                <AuthorityChip label="Fixed-price IPO" />
               </div>
               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-white/45">
                 {APTC_LAUNCH_STEPS.map((step, i) => (
@@ -192,7 +161,7 @@ export default function TokenomicsSection() {
             </div>
 
             {/* Live ticker */}
-            <div className="rounded-2xl border border-white/10 bg-[#120010] p-5 md:p-6 flex-1">
+            <div className="rounded-2xl border border-white/10 bg-[#120010] p-5 md:p-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40 mb-3">
                 {marketLabel}
               </p>
@@ -209,9 +178,9 @@ export default function TokenomicsSection() {
                 />
                 <TickerStat label="Market cap" value={fmtUsdCompact(mcapUsd)} loading={marketLoading} />
                 <TickerStat
-                  label="Dev hold"
-                  value={`~${m.devHoldPct}%`}
-                  sub={hasLiveMarket ? 'Disclosed' : 'Creator buy at TGE'}
+                  label="IPO supply"
+                  value={`${m.curveSupplyPct}%`}
+                  sub={hasLiveMarket ? 'Public sale' : IPO_SALE.launchLabel}
                   loading={marketLoading}
                 />
                 <TickerStat
@@ -230,14 +199,13 @@ export default function TokenomicsSection() {
                     <span className="text-emerald-200/90 font-medium truncate flex-1">
                       {mint}
                     </span>
-                    <a
+                    <SolscanLink
                       href={solscanTokenUrl(mint)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-emerald-300 hover:text-emerald-100 transition-colors font-medium whitespace-nowrap"
+                      size={14}
+                      className="text-emerald-300 hover:text-emerald-100 font-medium whitespace-nowrap"
                     >
-                      Solscan →
-                    </a>
+                      Solscan
+                    </SolscanLink>
                   </>
                 ) : (
                   <span className="text-amber-200/90 font-medium">Token address: Launching soon</span>
@@ -245,50 +213,36 @@ export default function TokenomicsSection() {
               </div>
             </div>
 
-            <PumpLaunchPanel pump={market?.pump} loading={marketLoading} compact />
-
             {/* Trade & research grid */}
-            <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6 space-y-5">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35 mb-3">
-                  Trade & research
-                </p>
-                <div className="grid grid-cols-4 gap-2">
-                  {TRADE_TOOLS.map((t) => {
-                    const isExternal = !t.href.startsWith('/');
-                    const cls = "group flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-2.5 hover:border-white/20 hover:bg-white/[0.06] transition-all";
-                    const inner = (
-                      <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={t.logo} alt={t.label} className="w-7 h-7 rounded-lg object-contain bg-white/5 shrink-0" />
-                        <span className="text-[10px] font-medium text-white/60 group-hover:text-white text-center leading-tight transition-colors truncate w-full text-center">{t.label}</span>
-                      </>
-                    );
-                    return isExternal ? (
-                      <a key={t.id} href={t.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
-                    ) : (
-                      <Link key={t.id} href={t.href} className={cls}>{inner}</Link>
-                    );
-                  })}
-                </div>
+            <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35 mb-3">
+                Trade & research
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {TRADE_TOOLS.map((t) => {
+                  const isExternal = !t.href.startsWith('/');
+                  const cls = "group flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-2 py-2.5 hover:border-white/20 hover:bg-white/[0.06] transition-all";
+                  const inner = (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={t.logo} alt={t.label} className="w-7 h-7 rounded-lg object-contain bg-white/5 shrink-0" />
+                      <span className="text-[10px] font-medium text-white/60 group-hover:text-white text-center leading-tight transition-colors truncate w-full text-center">{t.label}</span>
+                    </>
+                  );
+                  return isExternal ? (
+                    <a key={t.id} href={t.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+                  ) : (
+                    <Link key={t.id} href={t.href} className={cls}>{inner}</Link>
+                  );
+                })}
               </div>
             </div>
-          </div>
 
-          {/* RIGHT — charts */}
-          <div className="flex flex-col gap-5">
-            <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
-              <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
-              <p className="text-xs text-white/45 mb-5">
-                ~1% dev hold · bonding curve · 0% team
-              </p>
-              <AllocationDonut />
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8 flex-1">
-              <h3 className="text-xl font-semibold text-white mb-1">GGR → buyback</h3>
+            {/* GGR buyback — fills left column under trade tools */}
+            <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6">
+              <h3 className="text-lg font-semibold text-white mb-1">GGR → buyback</h3>
               <p className="text-sm text-white/50 mb-2">
-                Play → GGR → market buy on Jupiter / PumpSwap → burn · stake · treasury
+                Play → GGR → market buy on Jupiter / Raydium → burn · stake · treasury
               </p>
               <BuybackSplitDonut config={cfg} />
               {est?.projectedBuybackUsd30d != null && (
@@ -304,6 +258,15 @@ export default function TokenomicsSection() {
                 </p>
               )}
             </div>
+          </div>
+
+          {/* RIGHT — supply allocation + creator ops */}
+          <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8">
+            <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
+            <p className="text-xs text-white/45 mb-5">
+              25% public IPO · Raydium LP · 0% team
+            </p>
+            <AllocationDonut />
           </div>
         </div>
 

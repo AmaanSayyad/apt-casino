@@ -230,10 +230,7 @@ const GameCarousel = () => {
       <div className="absolute top-1/3 right-1/4 w-60 h-60 rounded-full bg-blue-magic/5 blur-[80px] z-0"></div>
     
       <div className="mb-12 text-center lg:text-left">
-        <HeaderText
-          header="Featured Games"
-          description="Experience our premium selection of games with the highest payout rates and player counts"
-        />
+        <HeaderText header="Featured Games" />
       </div>
       
       {/* Category filters */}

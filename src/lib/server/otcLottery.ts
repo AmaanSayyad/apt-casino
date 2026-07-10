@@ -82,7 +82,7 @@ export type OtcEstimateResult = {
   };
 };
 
-/** Estimate APTC received after swap platform fee + Pump.fun curve trade fee (1.25%). */
+/** Estimate APTC received after swap platform fee + Raydium pool fee (~0.25%). */
 export function estimateAptcFromSol(input: OtcEstimateInput): OtcEstimateResult {
   const { solAmount, solPriceUsd, aptcPriceUsd, swapPlatformFeeBps, tokenTradeTaxBps } = input;
   const solUsd = solAmount * solPriceUsd;

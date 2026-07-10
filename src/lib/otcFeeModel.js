@@ -1,20 +1,19 @@
 /**
  * OTC vs DEX fee model — sourced wallet/platform rates for calculator UI.
- * Pool fee follows Pump.fun default: 1.25% on bonding curve (0.3% creator + 0.95% protocol).
- * @see https://pump.fun/docs/fees
+ * Pool fee follows typical Raydium AMM routing post-IPO (~0.25% floor on canonical pools).
  */
 
-/** Pump.fun bonding curve — 1.25% total pre-graduation */
+/** Raydium / DEX pool fee estimate for secondary APTC/SOL trading */
 export const APTC_DEX_POOL_FEE = {
-  totalBps: 125,
-  totalLabel: '1.25%',
-  venue: 'Pump.fun bonding curve → PumpSwap',
+  totalBps: 25,
+  totalLabel: '0.25%',
+  venue: 'Raydium AMM (post-IPO)',
   detail:
-    '1.25% trade fee on bonding curve (0.3% creator + 0.95% protocol). Post-graduation PumpSwap canonical pool fees scale down with market cap per pump.fun/docs/fees.',
+    'Standard Raydium pool fees on secondary APTC/SOL trading after IPO. IPO itself is fixed-price with no curve fee.',
   sources: [
     {
-      label: 'Pump.fun — Fees',
-      url: 'https://pump.fun/docs/fees',
+      label: 'Raydium',
+      url: 'https://raydium.io/',
     },
   ],
 };
@@ -54,7 +53,7 @@ export const WALLET_SWAP_FEES = [
     name: 'Solflare',
     swapFeeBps: 0,
     swapFeeLabel: '0% (wallet)',
-    notes: 'In-wallet swaps route via Jupiter; you still pay Solana network fees and DEX pool fees (Pump.fun 1.25% on APTC curve).',
+    notes: 'In-wallet swaps route via Jupiter; you still pay Solana network fees and DEX pool fees (Raydium ~0.25% on APTC/SOL post-IPO).',
     sources: [
       { label: 'Solflare — FAQ', url: 'https://www.solflare.com/faq/' },
       { label: 'Jupiter — Swap fees', url: 'https://docs.jup.ag/user-docs/trade/swap/fees' },
@@ -148,8 +147,8 @@ export const DEX_VALUE_LOSS_SOURCES = [
   },
   {
     id: 'tax',
-    label: 'Pump.fun trade fee (APTC/SOL)',
-    detail: '1.25% on APTC bonding-curve swaps. Post-graduation PumpSwap fees scale down with market cap.',
+    label: 'DEX pool fee (APTC/SOL)',
+    detail: 'Raydium AMM fees on secondary APTC/SOL swaps post-IPO.',
   },
   {
     id: 'priceImpact',
@@ -227,7 +226,7 @@ export function estimateDexAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd, swa
   };
 }
 
-/** Full APTC if no DEX swap markup and no Pump.fun trade fee (OTC allotment model). */
+/** Full APTC if no DEX swap markup and no pool trade fee (OTC allotment model). */
 export function estimateOtcAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd) {
   if (!solAmount || !solPriceUsd || !aptcPriceUsd) return { aptc: 0, networkFeeUsd: 0 };
   const grossUsd = solAmount * solPriceUsd;
@@ -320,7 +319,7 @@ export function getWalletById(id) {
 }
 
 /**
- * Per DEX purchase: full value loss in SOL — swap fee, market loss (impact/slippage/LP), Pump.fun trade fee.
+ * Per DEX purchase: full value loss in SOL — swap fee, market loss (impact/slippage/LP), Raydium pool fee.
  * @param {number} solIn
  * @param {number} swapFeeBps
  * @param {number} tokenTaxBps

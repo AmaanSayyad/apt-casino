@@ -19,11 +19,11 @@ export default function LitepaperAllocationBlock({ section, sectionLabel, sectio
               {num}
             </span>
           )}
-          <div>
+          <div className="min-w-0 flex-1">
             <h3 className="text-lg font-bold text-white sm:text-xl">{sectionLabel(section.title)}</h3>
-            <div className="mt-3 max-w-2xl space-y-2">
+            <div className="mt-3 w-full space-y-3">
               {section.body.map((paragraph, i) => (
-                <p key={i} className="text-sm leading-7 text-white/65">
+                <p key={i} className="text-sm leading-7 text-white/65 sm:text-[15px] sm:leading-7">
                   {paragraph}
                 </p>
               ))}

@@ -11,6 +11,7 @@ import {
   getCreatorBuyDeploymentLines,
   truncateAddress,
 } from '@/lib/config/tokenomics';
+import { IPO_SALE } from '@/lib/config/ipo';
 
 export { PITCH_DECK_EMBED, PITCH_DECK_URL } from '@/lib/pitchDeck';
 export {
@@ -33,7 +34,6 @@ export function getLitepaperSocialLinks() {
     ['Telegram', process.env.NEXT_PUBLIC_TELEGRAM_URL],
     ['Discord', process.env.NEXT_PUBLIC_DISCORD_URL],
     ['X', process.env.NEXT_PUBLIC_X_URL],
-    ['Linktree', process.env.NEXT_PUBLIC_LINKTREE_URL],
   ];
   return pairs
     .map(([label, href]) => ({ label, href: String(href || '').trim() }))
@@ -134,7 +134,7 @@ export const LITEPAPER_SECTIONS = [
       'APT-Casino is a Next.js application with chain-specific API routes under /api/chains/{chainId}/, Supabase for profiles, balances, referrals, and audit logs, and Move contracts on Aptos for core game logic.',
       'Sensitive writes (deposits, withdrawals, referral unlocks, GGR estimates) run server-side with service-role Supabase and validated env economics — never trusted from the client alone.',
       'Live features (streaming, chat) sit beside the gaming core: Livepeer for video, Socket.IO for real-time messages bound to wallet identity.',
-      'APTC lives on Solana (SPL); price and market stats integrate via DexScreener and display automatically when the token launches on Pump.fun.',
+      'APTC lives on Solana (SPL); fixed-price IPO uses Pyth SOL/USD oracle pricing. Post-IPO charts integrate via DexScreener after Raydium listing.',
     ],
     mermaid: `flowchart LR
     U[Player Wallet] --> FE[Next.js Client]
@@ -226,8 +226,8 @@ export const LITEPAPER_SECTIONS = [
     body: [
       `Native ecosystem token: ${APTC_TOKENOMICS.name} (${APTC_TOKENOMICS.symbol}) on ${APTC_TOKENOMICS.chain}.`,
       `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint and freeze authorities revoked at creation — fixed metadata, fixed supply.`,
-      `Fair launch on ${APTC_TOKENOMICS.launchVenue}: ${APTC_TOKENOMICS.feeModeLabel} · ~${APTC_LAUNCH_METRICS.devHoldPct}% creator dev buy · ${APTC_LAUNCH_METRICS.tradeFeePreMigrationPct}% curve trade fee · graduates at ~${APTC_LAUNCH_METRICS.graduationSol} SOL into PumpSwap (LP burned).`,
-      `100% of Pump.fun creator fees routed to @aptcasinofun operations wallet. Post-graduation fees on the canonical PumpSwap pool scale down toward ${APTC_LAUNCH_METRICS.tradeFeePostMigrationFloorPct}% total per pump.fun/docs/fees.`,
+      `Public IPO on ${APTC_TOKENOMICS.launchVenue}: ${APTC_TOKENOMICS.feeModeLabel} · ${IPO_SALE.saleTokensShort} APTC · $${IPO_SALE.raiseTargetUsd.toLocaleString()} raise · $${IPO_SALE.tokenPriceUsd}/APTC · ${IPO_SALE.launchLabel} → ${IPO_SALE.endLabel}.`,
+      'Settlement inspired by Metaplex Genesis presale · MetaDAO launch architecture · PinkSale-style 3-level affiliates (3% / 1.5% / 0.5%). Post-IPO liquidity seeds Raydium APTC/SOL pool.',
       'Transparency pledge: no wash volume, no fake FDV, no dumps. One public ops wallet — no bundled launch clusters, no team/founder allocation, no hidden treasuries.',
       `Mint: ${APTC_TOKENOMICS.mint}.`,
       utilityText,
@@ -242,8 +242,8 @@ export const LITEPAPER_SECTIONS = [
       `Creator dev buy (~${APTC_LAUNCH_METRICS.devHoldPct}% supply / ${APTC_LAUNCH_METRICS.devBuyTokensShort}) at launch — single @aptcasinofun operations wallet. Listings-first: the largest share funds Tier 1 DEX & trader tools, Tier 2 aggregators (CoinGecko, CoinMarketCap), and Tier 3 CEX roadmap. Remaining allocation → community rewards, staking emissions, and protocol ops.`,
       ...getCreatorBuyDeploymentLines(),
       CREATOR_BUY_PURPOSE,
-      `~${APTC_LAUNCH_METRICS.curveSupplyPct}% (${APTC_LAUNCH_METRICS.curveSupplyPct >= 79 ? '793.1M' : 'curve'}) trades on the public Pump.fun bonding curve until ~${APTC_LAUNCH_METRICS.graduationSol} SOL graduation. ~${APTC_LAUNCH_METRICS.migrationLpPct}% seeds PumpSwap LP on migration (burned).`,
-      'Post-graduation, PumpSwap canonical pool fees scale down with market cap per pump.fun/docs/fees.',
+      `Public IPO (${IPO_SALE.saleTokensShort} APTC, ${IPO_SALE.saleSupplyPct}% of supply) at fixed $${IPO_SALE.tokenPriceUsd}/APTC — oversubscription queued until treasury replenished. ~${APTC_LAUNCH_METRICS.migrationLpPct}% seeds Raydium LP after IPO closes.`,
+      'Secondary trading uses standard Raydium AMM fees post-TGE. IPO buyers auto-stake 30 days @ 30% APY.',
       APTC_TRANSPARENCY.opsWalletRule,
       ...APTC_LAUNCH_PHASES.map((p) => `${p.title}: ${p.detail}`),
     ],
@@ -257,11 +257,11 @@ export const LITEPAPER_SECTIONS = [
       'Default economics (env): 30% of GGR allocated to APTC buyback (GGR_BUYBACK_BPS_OF_GGR=3000).',
       'Buyback split: 50% burn · 35% stakers · 15% treasury (GGR_BURN/STAKER/TREASURY_BPS_OF_BUYBACK).',
       'Average house edge assumption for estimates: 2.5% (GGR_AVG_HOUSE_EDGE_BPS=250). Actual edge varies per game (~1–4%).',
-      'Dashboard surfaces estimated GGR and buyback from play events — live buybacks execute on Jupiter / PumpSwap when treasury ops run.',
+      'Dashboard surfaces estimated GGR and buyback from play events — live buybacks execute on Jupiter / Raydium when treasury ops run.',
     ],
     mermaid: `flowchart LR
     PLAY[Player Bets] --> EDGE[House Edge GGR]
-    EDGE --> BUY[Jupiter / PumpSwap Buy]
+    EDGE --> BUY[Jupiter / Raydium Buy]
     BUY --> BURN[50% Burn]
     BUY --> STAKE[35% Staker Rewards]
     BUY --> TRES[15% Treasury]`,
@@ -335,8 +335,8 @@ export const LITEPAPER_SECTIONS = [
     title: '16. Roadmap',
     body: [
       'Shipped / live: core casino games, Solana + Aptos play, gasless Aptos UX, referrals, Stake UI, GGR dashboard, live streaming shell, ecosystem partners section.',
-      `Near term: APTC TGE on Pump.fun (default launch · ~${APTC_LAUNCH_METRICS.devHoldPct}% dev hold · ~${APTC_LAUNCH_METRICS.graduationSol} SOL graduation → PumpSwap), Tier 1 listings (Pump.fun · DexScreener · Jupiter · Birdeye · GeckoTerminal), Tier 2 (CoinGecko · CoinMarketCap), staking live.`,
-      'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), PumpSwap liquidity growth, Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
+      `Near term: $APTC public IPO on Solana (${IPO_SALE.launchLabel}), Tier 1 listings (Raydium · DexScreener · Jupiter · Birdeye · GeckoTerminal), Tier 2 (CoinGecko · CoinMarketCap), staking live.`,
+      'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), Raydium liquidity growth, Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
       'Long term: largest multichain GambleFi hub — transparent game marketplace, creator revenue share, and community governance over APTC parameters.',
       'The homepage Roadmap section lists 30 curated milestones (Platform, Governance, Community, Security, Tournaments, Partnership) via /api/roadmap — editable in Supabase roadmap_items or src/lib/config/publicRoadmap.js.',
     ],

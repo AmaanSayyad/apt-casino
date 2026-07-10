@@ -17,12 +17,12 @@ Your site is currently in "Launching Soon" mode because `NEXT_PUBLIC_APTC_SOLANA
 
 3. **DexScreener Section**
    - Amber badge: "$APTC Launching Soon"
-   - Placeholder text: "Live chart and trading data will appear here once APTC launches on Pump.fun"
+   - Placeholder text: "Live chart and trading data will appear here once APTC launches on Raydium"
 
 4. **Tokenomics Section**
    - Amber badge: "$APTC · Launching Soon"
    - Token address box: "Token address: Launching soon" (amber)
-   - Trade & Research: Generic URLs (e.g., `https://pump.fun/create`, `https://jup.ag/`)
+   - Trade & Research: Generic URLs (e.g., `/ipo`, `https://jup.ag/`)
 
 5. **Stake Page**
    - Amber warning banner: "$APTC Launching Soon on Solana"
@@ -61,7 +61,7 @@ Your site is currently in "Launching Soon" mode because `NEXT_PUBLIC_APTC_SOLANA
    - ✅ Badge turns GREEN: "$APTC · Live on Solana"
    - ✅ Token address box shows full CA with Solscan link (green)
    - ✅ Trade & Research: Token-specific URLs
-     - Pump.fun: `https://pump.fun/coin/<mint>`
+     - IPO / Raydium: `/ipo` then Raydium pair
      - Jupiter: `https://jup.ag/swap/SOL-<mint>`
      - DexScreener: `https://dexscreener.com/solana/ApT...`
      - Birdeye: `https://birdeye.so/token/ApT...?chain=solana`

@@ -193,7 +193,7 @@ async function loadGameHistory(): Promise<RawGame[]> {
  * (Solana and other house-ledger chains).
  *
  * Query parameters:
- *   - metric:  'pnl' | 'wagered' | 'bets' | 'winrate' | 'biggest'  (default 'pnl')
+ *   - metric:  'biggest' | 'pnl' | 'wagered' | 'bets' | 'winrate'  (default 'biggest')
  *   - period:  '24h' | '7d' | '30d' | 'all'                         (default 'all')
  *   - game:    'all' | 'plinko' | 'mines' | 'roulette' | 'wheel'    (default 'all')
  *   - top:     1..200                                                (default 50)
@@ -205,7 +205,7 @@ async function loadGameHistory(): Promise<RawGame[]> {
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const metric = (searchParams.get('metric') || 'pnl').toLowerCase();
+  const metric = (searchParams.get('metric') || 'biggest').toLowerCase();
   const period = (searchParams.get('period') || 'all').toLowerCase();
   const game = (searchParams.get('game') || 'all').toLowerCase();
   const top = Math.min(Math.max(parseInt(searchParams.get('top') || '50', 10) || 50, 1), 200);
@@ -303,7 +303,7 @@ export async function GET(request: NextRequest) {
       case 'biggest':
         return b.biggestWinApt - a.biggestWinApt;
       default:
-        return b.pnlApt - a.pnlApt;
+        return b.biggestWinApt - a.biggestWinApt;
     }
   });
 

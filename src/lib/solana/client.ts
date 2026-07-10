@@ -82,6 +82,20 @@ export async function buildSolDepositTransaction(
   return buildSolTransferTransaction(amountSol, userAddress, treasury);
 }
 
+/** SOL transfer to IPO presale treasury (fixed-price swap rail). */
+export async function buildIpoSolPurchaseTransaction(
+  amountSol: number,
+  userAddress: string,
+  treasuryAddress?: string,
+): Promise<Transaction> {
+  const treasury =
+    treasuryAddress?.trim() ||
+    process.env.NEXT_PUBLIC_IPO_SOL_TREASURY?.trim() ||
+    '';
+  if (!treasury) throw new Error('IPO SOL treasury is not configured.');
+  return buildSolTransferTransaction(amountSol, userAddress, treasury);
+}
+
 /**
  * Build SPL transfer of APTC from user wallet to a recipient (staking vault, fee wallet, etc.).
  * Creates the recipient ATA in the same transaction when missing (user pays rent).

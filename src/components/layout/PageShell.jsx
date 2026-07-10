@@ -10,6 +10,7 @@ export default function PageShell({
   badge,
   title,
   description,
+  descriptionClassName = '',
   children,
   maxWidth = '6xl',
   className = '',
@@ -20,6 +21,7 @@ export default function PageShell({
     '7xl': 'max-w-7xl',
     '1600': 'max-w-[1600px]',
   }[maxWidth] || 'max-w-6xl';
+  const hasHeader = Boolean(badge || title || description);
 
   return (
     <div
@@ -43,23 +45,33 @@ export default function PageShell({
           </nav>
         )}
 
-        <header className="mb-8 md:mb-12">
-          {badge && (
-            <p className="mb-2 text-[10px] uppercase tracking-[0.35em] text-purple-300/80 md:mb-3">{badge}</p>
-          )}
-          <h1 className="font-display text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
-            {typeof title === 'string' ? (
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic via-fuchsia-400 to-blue-magic">
-                {title}
-              </span>
-            ) : (
-              title
+        {hasHeader ? (
+          <header className="mb-6 md:mb-8">
+            {badge && (
+              <p className="mb-2 text-[10px] uppercase tracking-[0.35em] text-purple-300/80 md:mb-3">{badge}</p>
             )}
-          </h1>
-          {description && (
-            <p className="mt-4 text-sm md:text-base text-white/60 max-w-3xl leading-relaxed">{description}</p>
-          )}
-        </header>
+            {title ? (
+              <h1 className="font-display text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
+                {typeof title === 'string' ? (
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-magic via-fuchsia-400 to-blue-magic">
+                    {title}
+                  </span>
+                ) : (
+                  title
+                )}
+              </h1>
+            ) : null}
+            {description && (
+              <p
+                className={`mt-4 text-sm md:text-base text-white/60 leading-relaxed ${
+                  descriptionClassName || 'max-w-3xl'
+                }`}
+              >
+                {description}
+              </p>
+            )}
+          </header>
+        ) : null}
 
         {children}
       </div>

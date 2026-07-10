@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { enrichStakingPool } from '@/lib/staking/pools';
+import { enrichStakingPool, isUserFacingStakingPool } from '@/lib/staking/pools';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +23,10 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to load staking pools.' }, { status: 500 });
   }
 
-  const pools = (data ?? []).map((row) => enrichStakingPool(row));
+  // Hide IPO_30D (auto-stake only) — it was showing as a second "30 Days" card
+  const pools = (data ?? [])
+    .filter((row) => isUserFacingStakingPool(row.pool_key))
+    .map((row) => enrichStakingPool(row));
 
   return NextResponse.json({ pools });
 }

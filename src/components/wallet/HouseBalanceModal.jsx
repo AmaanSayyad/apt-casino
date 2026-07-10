@@ -8,6 +8,7 @@ import { CHAIN_UI } from '@/lib/chains/chainUi';
 import { withdrawNetFromGross, withdrawFeeFromGross } from '@/lib/feeTiersClient';
 import FeeTierPreview from '@/components/wallet/FeeTierPreview';
 import { demoStartNativeAmount } from '@/lib/play/demoPlay';
+import { useWalletNativeBalance } from '@/hooks/useWalletSolBalance';
 
 const QUICK_AMOUNTS_SOL = [0.01, 0.1, 0.5, 1, 5, 10];
 const QUICK_AMOUNTS_APT = [1, 10, 25, 50, 100, 250];
@@ -51,6 +52,13 @@ export default function HouseBalanceModal({
   const [feeQuote, setFeeQuote] = useState(null);
   const ui = CHAIN_UI[playChain] || CHAIN_UI.solana;
   const depositBusy = isDepositing || isPlayDepositing;
+  const {
+    balance: walletNativeBalance,
+    spendable: walletSpendable,
+    loading: walletBalanceLoading,
+    refresh: refreshWalletBalance,
+    feeReserve: walletFeeReserve,
+  } = useWalletNativeBalance(playChain, { enabled: open && isPlayWalletReady && !demoMode });
   const minimumDeposit =
     playChain === 'aptos'
       ? Number(process.env.NEXT_PUBLIC_APTOS_MIN_DEPOSIT_APT || 1)
@@ -70,12 +78,20 @@ export default function HouseBalanceModal({
     const net = withdrawNetFromGross(withdrawGross);
     return { fee, net };
   }, [withdrawGross]);
+  const exceedsWalletBalance =
+    isPlayWalletReady &&
+    !demoMode &&
+    walletSpendable != null &&
+    Number.isFinite(depositGross) &&
+    depositGross > 0 &&
+    depositGross > walletSpendable + 1e-9;
   const depositDisabled =
     !isPlayWalletReady ||
     demoMode ||
     !depositAmount ||
     parseFloat(depositAmount) < minimumDeposit ||
-    depositBusy;
+    depositBusy ||
+    exceedsWalletBalance;
   const withdrawParsed = parseFloat(withdrawAmount);
   const withdrawDisabled =
     !isPlayWalletReady ||
@@ -85,6 +101,10 @@ export default function HouseBalanceModal({
     withdrawParsed < minimumWithdraw ||
     withdrawParsed > balanceNative ||
     isWithdrawing;
+
+  useEffect(() => {
+    if (open) refreshWalletBalance();
+  }, [open, refreshWalletBalance]);
 
   useEffect(() => {
     setMounted(true);
@@ -177,8 +197,11 @@ export default function HouseBalanceModal({
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
-                  onClick={onRefresh}
-                  disabled={isLoadingBalance}
+                  onClick={() => {
+                    onRefresh();
+                    refreshWalletBalance();
+                  }}
+                  disabled={isLoadingBalance || walletBalanceLoading}
                   className="rounded-lg p-2 text-white/50 transition-colors hover:bg-white/5 hover:text-white disabled:opacity-40"
                   title="Refresh balance"
                   aria-label="Refresh balance"
@@ -235,6 +258,45 @@ export default function HouseBalanceModal({
                     </p>
                   </div>
                 </div>
+                {isPlayWalletReady && !demoMode ? (
+                  <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-black/30 px-3 py-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">
+                      Connected wallet
+                    </p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <p className="font-mono text-sm font-semibold tabular-nums text-white/75">
+                        {walletBalanceLoading && walletNativeBalance == null ? (
+                          '…'
+                        ) : walletNativeBalance != null ? (
+                          <>
+                            {walletNativeBalance.toFixed(4)}{' '}
+                            <span className="text-white/45">{playSymbol}</span>
+                          </>
+                        ) : (
+                          '—'
+                        )}
+                      </p>
+                      {tab === 'deposit' ? (
+                        <button
+                          type="button"
+                          disabled={
+                            depositBusy ||
+                            walletSpendable == null ||
+                            walletSpendable < minimumDeposit
+                          }
+                          onClick={() => {
+                            if (walletSpendable == null || walletSpendable <= 0) return;
+                            const v = Math.floor(walletSpendable * 1e6) / 1e6;
+                            onDepositAmountChange(String(v));
+                          }}
+                          className="rounded-md border border-fuchsia-400/30 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-fuchsia-200/90 hover:bg-fuchsia-500/15 transition-colors disabled:opacity-30"
+                        >
+                          Max
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
                 {demoMode && (
                   <div className="mt-3 space-y-2">
                     <p className="rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-200/90">
@@ -288,7 +350,8 @@ export default function HouseBalanceModal({
                     Minimum deposit:{' '}
                     <span className="font-mono text-white/65">
                       {minimumDeposit} {playSymbol}
-                    </span>.
+                    </span>
+                    .
                   </p>
                   <div className="flex gap-2">
                     <input
@@ -325,6 +388,13 @@ export default function HouseBalanceModal({
                       <span className="text-emerald-300">
                         {depositPreview.net.toFixed(6).replace(/\.?0+$/, '')} {playSymbol} to play
                       </span>
+                    </p>
+                  ) : null}
+                  {exceedsWalletBalance ? (
+                    <p className="text-[11px] text-amber-300/90 font-mono">
+                      Insufficient {playSymbol} in wallet — max spendable{' '}
+                      {walletSpendable?.toFixed(4)} {playSymbol} ({walletFeeReserve} {playSymbol}{' '}
+                      reserved for fees)
                     </p>
                   ) : null}
                   {bonusPreview?.estimatedAptc > 0 && (

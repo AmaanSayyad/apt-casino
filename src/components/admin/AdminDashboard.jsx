@@ -9,6 +9,7 @@ import StreamerRewardsAdminPanel from '@/components/admin/StreamerRewardsAdminPa
 import PromotionsAdminPanel from '@/components/admin/PromotionsAdminPanel';
 import TournamentsAdminPanel from '@/components/admin/TournamentsAdminPanel';
 import GgrBuybackPanel from '@/components/GgrBuybackPanel';
+import IpoPayoutsAdminPanel from '@/components/admin/IpoPayoutsAdminPanel';
 import WalletIntelPanel from '@/components/admin/WalletIntelPanel';
 import DangerZonePanel from '@/components/admin/DangerZonePanel';
 import GameModePnLPanel from '@/components/admin/GameModePnLPanel';
@@ -86,6 +87,7 @@ function buildTabGroups(pendingCount, dangerCount) {
       label: 'Integrations',
       tabs: [
         { id: 'otc', label: 'OTC lottery' },
+        { id: 'ipo_payouts', label: 'IPO payouts' },
         { id: 'promotions', label: 'Promotions' },
         { id: 'kol', label: 'KOL allocations' },
         { id: 'streamers', label: 'Streamer rewards' },
@@ -750,6 +752,7 @@ export default function AdminDashboard() {
                     {activeTab === 'wallet_intel' && 'Cross-chain wallet lookup and risk signals'}
                     {activeTab === 'danger' && 'Bans, freezes, frequency review, win streaks'}
                     {activeTab === 'financial' && 'Manual withdrawals and cash flow'}
+                    {activeTab === 'ipo_payouts' && 'IPO staking rewards and affiliate payout queue'}
                     {activeTab === 'gameplay' && 'Recent bets from game_play_events'}
                     {activeTab === 'daily_streak' && 'Wallets who claimed daily streak APTC'}
                     {TABLE_TABS.has(activeTab) && activeTab !== 'financial' && activeTab !== 'gameplay' && 'Filterable ledger data'}
@@ -1245,6 +1248,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'tournaments' && <TournamentsAdminPanel adminToken={adminToken} />}
           {activeTab === 'otc' && <OtcLotteryAdminPanel adminToken={adminToken} />}
+          {activeTab === 'ipo_payouts' && <IpoPayoutsAdminPanel adminToken={adminToken} />}
           {activeTab === 'promotions' && <PromotionsAdminPanel adminToken={adminToken} />}
           {activeTab === 'kol' && <KolAllocationsAdminPanel adminToken={adminToken} />}
           {activeTab === 'streamers' && <StreamerRewardsAdminPanel adminToken={adminToken} />}

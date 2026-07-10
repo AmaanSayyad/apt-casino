@@ -21,9 +21,9 @@ import PlayerAvatar from '@/components/PlayerAvatar';
 import { normalizeTwitterHandle, resolvePlayerDisplayName, resolveLinkedTwitterHandle } from '@/lib/xProfile';
 
 const METRIC_TABS = [
+  { id: 'biggest', label: 'Biggest win', icon: <FaFire />, hint: 'Single biggest payout' },
   { id: 'pnl', label: 'Net P&L', icon: <FaTrophy />, hint: 'Highest net profit' },
   { id: 'wagered', label: 'Wagered', icon: <FaCoins />, hint: 'Most volume (SOL · APT)' },
-  { id: 'biggest', label: 'Biggest win', icon: <FaFire />, hint: 'Single biggest payout' },
   { id: 'winrate', label: 'Winrate', icon: <FaPercent />, hint: 'Min 10 bets' },
   { id: 'bets', label: 'Most bets', icon: <FaDice />, hint: 'Total plays' },
 ];
@@ -52,12 +52,17 @@ const explorerAddressUrl = (addr) =>
 function fmtApt(apt, { max = 4 } = {}) {
   const n = Number(apt);
   if (!Number.isFinite(n)) return '0';
-  return n.toLocaleString(undefined, { maximumFractionDigits: max });
+  const abs = Math.abs(n);
+  // Avoid showing "0" for dust amounts (was hiding real wagered on P&L rows)
+  const digits = abs > 0 && abs < 0.01 ? Math.max(max, 4) : abs > 0 && abs < 1 ? Math.max(max, 3) : max;
+  return n.toLocaleString(undefined, { maximumFractionDigits: digits });
 }
 
 function fmtSignedApt(apt) {
   const n = Number(apt) || 0;
-  return `${n > 0 ? '+' : ''}${fmtApt(n)} SOL · APT`;
+  if (n > 0) return `+${fmtApt(n)} SOL · APT`;
+  if (n < 0) return `−${fmtApt(Math.abs(n))} SOL · APT`;
+  return `${fmtApt(0)} SOL · APT`;
 }
 
 function fmtPct(n, digits = 1) {
@@ -74,7 +79,7 @@ export default function LeaderboardPage() {
   const { account, connected } = useWallet();
   const userWallet = account?.address ? String(account.address).toLowerCase() : null;
 
-  const [metric, setMetric] = useState('pnl');
+  const [metric, setMetric] = useState('biggest');
   const [period, setPeriod] = useState('all');
   const [game, setGame] = useState('all');
   const [data, setData] = useState(null);
@@ -115,7 +120,8 @@ export default function LeaderboardPage() {
 
   const board = data?.leaderboard || [];
   const topThree = board.slice(0, 3);
-  const rest = board.slice(3);
+  // Full ranked list in the table (including #1–#3) so Net P&L order is obvious
+  const tableRows = board;
 
   const comingSoonChains = useMemo(
     () => CHAINS.filter((c) => c.status !== 'live').map((c) => c.label),
@@ -129,14 +135,16 @@ export default function LeaderboardPage() {
         <header className="text-center">
           
           <h1 className="text-3xl md:text-4xl font-display font-bold">Leaderboard</h1>
-          <p className="text-white/55 text-sm max-w-2xl mx-auto mt-2">
-            Aggregated from on-chain play (Solana · Aptos). Every row here is
-            backed by a verifiable on-chain transaction.
+          <p className="text-white/55 text-sm max-w-5xl mx-auto mt-2 text-balance sm:whitespace-nowrap">
+            Aggregated from on-chain play (Solana · Aptos). Every row here is backed by a verifiable on-chain transaction.
             {comingSoonChains.length > 0 && (
-              <span className="block text-white/35 text-xs mt-1">
+              <span className="block text-white/35 text-xs mt-1 whitespace-normal">
                 Other chains will appear here when enabled ({comingSoonChains.join(', ')}).
               </span>
             )}
+          </p>
+          <p className="text-white/35 text-xs mt-2 max-w-3xl mx-auto">
+            Net P&L = total returns − total wagered. Biggest win is the best single bet — you can still be down overall.
           </p>
         </header>
 
@@ -219,11 +227,27 @@ export default function LeaderboardPage() {
                   <tr>
                     <th className="px-4 py-3 w-14">Rank</th>
                     <th className="px-4 py-3">Player</th>
-                    <th className="px-4 py-3 text-right">Net P&L</th>
-                    <th className="px-4 py-3 text-right">Wagered</th>
-                    <th className="px-4 py-3 text-right">Bets</th>
-                    <th className="px-4 py-3 text-right">Winrate</th>
-                    <th className="px-4 py-3 text-right">Biggest win</th>
+                    <th
+                      className={`px-4 py-3 text-right ${metric === 'pnl' ? 'text-fuchsia-200' : ''}`}
+                      title="Total returns minus total wagered · default sort"
+                    >
+                      Net P&L{metric === 'pnl' ? ' ↓' : ''}
+                    </th>
+                    <th className={`px-4 py-3 text-right ${metric === 'wagered' ? 'text-fuchsia-200' : ''}`}>
+                      Wagered{metric === 'wagered' ? ' ↓' : ''}
+                    </th>
+                    <th className={`px-4 py-3 text-right ${metric === 'bets' ? 'text-fuchsia-200' : ''}`}>
+                      Bets{metric === 'bets' ? ' ↓' : ''}
+                    </th>
+                    <th className={`px-4 py-3 text-right ${metric === 'winrate' ? 'text-fuchsia-200' : ''}`}>
+                      Winrate{metric === 'winrate' ? ' ↓' : ''}
+                    </th>
+                    <th
+                      className={`px-4 py-3 text-right ${metric === 'biggest' ? 'text-fuchsia-200' : ''}`}
+                      title="Largest single-bet profit (not overall P&L)"
+                    >
+                      Biggest win{metric === 'biggest' ? ' ↓' : ''}
+                    </th>
                     <th className="px-4 py-3 w-10"></th>
                   </tr>
                 </thead>
@@ -231,7 +255,7 @@ export default function LeaderboardPage() {
                   {loading && !data && (
                     <SkeletonRows />
                   )}
-                  {!loading && rest.length === 0 && topThree.length === 0 && (
+                  {!loading && tableRows.length === 0 && (
                     <tr>
                       <td colSpan={8} className="px-6 py-10 text-center text-white/50">
                         No games match these filters yet.{' '}
@@ -240,7 +264,7 @@ export default function LeaderboardPage() {
                       </td>
                     </tr>
                   )}
-                  {rest.map((row) => (
+                  {tableRows.map((row) => (
                     <LeaderboardRow
                       key={row.wallet}
                       row={row}
@@ -371,9 +395,8 @@ function LeaderboardRow({ row, metric, isYou }) {
     twitterHandle: row.twitterHandle,
     avatarUrl: row.avatarUrl,
   });
-  const pnlClass = row.pnlApt > 0 ? 'text-emerald-300' : row.pnlApt < 0 ? 'text-rose-300' : 'text-white/70';
-  const winrateClass =
-    row.winrate >= 0.55 ? 'text-emerald-300' : row.winrate <= 0.4 ? 'text-rose-300' : 'text-white/70';
+  // Profit = green, loss = muted (not alarm-red). Winrate stays neutral — low % isn't an error.
+  const pnlClass = row.pnlApt > 0 ? 'text-emerald-300' : row.pnlApt < 0 ? 'text-white/55' : 'text-white/70';
 
   return (
     <tr
@@ -388,8 +411,8 @@ function LeaderboardRow({ row, metric, isYou }) {
       <td className={`px-4 py-3 text-right font-bold ${pnlClass}`}>{fmtSignedApt(row.pnlApt)}</td>
       <td className="px-4 py-3 text-right">{fmtApt(row.wageredApt, { max: 2 })} SOL · APT</td>
       <td className="px-4 py-3 text-right">{row.bets.toLocaleString()}</td>
-      <td className={`px-4 py-3 text-right ${winrateClass}`}>{fmtPct(row.winrate, 1)}</td>
-      <td className="px-4 py-3 text-right text-amber-300">
+      <td className="px-4 py-3 text-right text-white/70">{fmtPct(row.winrate, 1)}</td>
+      <td className="px-4 py-3 text-right text-white/70">
         {row.biggestWinApt > 0 ? `+${fmtApt(row.biggestWinApt)} SOL · APT` : '—'}
       </td>
       <td className="px-4 py-3">
@@ -429,15 +452,15 @@ function PrimaryStat({ row, metric, large = false }) {
   const cls = large ? 'text-2xl font-bold' : 'text-lg font-bold';
   switch (metric) {
     case 'wagered':
-      return <p className={`${cls} text-amber-300`}>{fmtApt(row.wageredApt, { max: 2 })} SOL · APT wagered</p>;
+      return <p className={`${cls} text-white`}>{fmtApt(row.wageredApt, { max: 2 })} SOL · APT wagered</p>;
     case 'bets':
-      return <p className={`${cls} text-pink-300`}>{row.bets.toLocaleString()} bets</p>;
+      return <p className={`${cls} text-white`}>{row.bets.toLocaleString()} bets</p>;
     case 'winrate':
-      return <p className={`${cls} text-emerald-300`}>{fmtPct(row.winrate, 1)} winrate</p>;
+      return <p className={`${cls} text-white`}>{fmtPct(row.winrate, 1)} winrate</p>;
     case 'biggest':
-      return <p className={`${cls} text-amber-300`}>+{fmtApt(row.biggestWinApt)} SOL · APT</p>;
+      return <p className={`${cls} text-white`}>+{fmtApt(row.biggestWinApt)} SOL · APT</p>;
     default: {
-      const pnlClass = row.pnlApt >= 0 ? 'text-emerald-300' : 'text-rose-300';
+      const pnlClass = row.pnlApt > 0 ? 'text-emerald-300' : row.pnlApt < 0 ? 'text-white/70' : 'text-white';
       return <p className={`${cls} ${pnlClass}`}>{fmtSignedApt(row.pnlApt)}</p>;
     }
   }
@@ -539,7 +562,7 @@ function SkeletonRows() {
 // Tiny helpers
 
 function metricHighlightsRank(metric) {
-  return metric === 'pnl' || metric === 'winrate';
+  return metric === 'biggest' || metric === 'pnl' || metric === 'winrate';
 }
 
 function periodLabel(period) {

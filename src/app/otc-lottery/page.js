@@ -25,6 +25,7 @@ import {
   FaHandshake,
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { SolscanLink } from '@/components/ui/SolscanMark';
 
 const OtcSavingsCalculator = dynamic(() => import('@/components/OtcSavingsCalculator'), {
   ssr: false,
@@ -590,14 +591,13 @@ export default function OtcLotteryPage() {
                             after admin review.
                           </p>
                           {registeredEntry.solTxSignature ? (
-                            <a
+                            <SolscanLink
                               href={`https://solscan.io/tx/${registeredEntry.solTxSignature}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-cyan-300 hover:underline"
+                              size={13}
+                              className="mt-2 text-xs font-medium text-cyan-300 hover:underline"
                             >
-                              View transaction on Solscan <FaExternalLinkAlt className="text-[9px]" />
-                            </a>
+                              View transaction on Solscan
+                            </SolscanLink>
                           ) : null}
                           <p className="mt-2 text-[11px] text-white/45">
                             Scroll to <strong className="text-white/60">Your entries</strong> below for status and
@@ -789,14 +789,13 @@ function EntryCard({ entry, highlight }) {
         </p>
         <p>
           <span className="text-white/30 block mb-0.5">Transaction</span>
-          <a
+          <SolscanLink
             href={`https://solscan.io/tx/${entry.solTxSignature}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-cyan-300 hover:underline inline-flex items-center gap-1"
+            size={12}
+            className="text-cyan-300 hover:underline"
           >
-            View <FaExternalLinkAlt className="text-[9px]" />
-          </a>
+            View tx
+          </SolscanLink>
         </p>
       </div>
 

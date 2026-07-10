@@ -11,7 +11,7 @@ import {
 const REFERENCE_EXCLUDED_WALLET_IDS = new Set(['glow', 'metamask', 'conservative']);
 
 export const OTC_ADVANTAGES = [
-  'Skip Pump.fun trade fees and wallet swap markup on every DEX buy.',
+  'Skip DEX pool fees and wallet swap markup on every secondary APTC buy.',
   'Skip wallet swap markup (e.g. Phantom 0.85% on select pairs).',
   'One SOL transfer instead of many small swaps — lower network fees when you DCA often.',
   'No price impact from splitting size across repeated market buys.',

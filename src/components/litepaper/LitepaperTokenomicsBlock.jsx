@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { IPO_SALE } from '@/lib/config/ipo';
 import {
   APTC_LAUNCH_METRICS,
   APTC_LAUNCH_PHASES,
@@ -13,6 +14,7 @@ import {
   truncateAddress,
 } from '@/lib/config/tokenomics';
 import LitepaperBuybackRails from './LitepaperBuybackRails';
+import { SolscanLink } from '@/components/ui/SolscanMark';
 
 const AllocationDonut = dynamic(
   () => import('@/components/tokenomics/TokenomicsCharts').then((m) => m.AllocationDonut),
@@ -56,7 +58,7 @@ export default function LitepaperTokenomicsBlock() {
           at a glance
         </h2>
         <p className="mx-auto mt-2 max-w-2xl text-sm text-white/55">
-          {APTC_TOKENOMICS.maxSupply} max supply · {APTC_TOKENOMICS.chain} · Pump.fun bonding curve ·
+          {APTC_TOKENOMICS.maxSupply} max supply · {APTC_TOKENOMICS.chain} · Public IPO → Raydium ·
           mint & freeze revoked
         </p>
         <p className="mx-auto mt-2 max-w-2xl text-xs text-white/45">{getAllocationSummary()}</p>
@@ -76,16 +78,16 @@ export default function LitepaperTokenomicsBlock() {
 
       <div className="mb-5 grid gap-3 sm:grid-cols-3">
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Dev hold</p>
-          <p className="mt-1 text-xl font-bold text-white">~{m.devHoldPct}%</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">IPO raise</p>
+          <p className="mt-1 text-xl font-bold text-white">${(IPO_SALE.raiseTargetUsd / 1000).toFixed(0)}K</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Graduation</p>
-          <p className="mt-1 text-xl font-bold text-white">~{m.graduationSol} SOL → PumpSwap</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">IPO price</p>
+          <p className="mt-1 text-xl font-bold text-white">${IPO_SALE.tokenPriceUsd}</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Launch mode</p>
-          <p className="mt-1 text-xl font-bold text-white">Pump.fun default</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Opens</p>
+          <p className="mt-1 text-lg font-bold text-white">{IPO_SALE.launchLabel}</p>
         </div>
       </div>
 
@@ -95,7 +97,7 @@ export default function LitepaperTokenomicsBlock() {
             Full supply allocation
           </p>
           <p className="mb-4 text-xs text-white/40">
-            ~1% dev hold · bonding curve · 0% team / founder · no wash · no fake FDV · no dumps
+            25% public IPO · Raydium LP · 0% team / founder · no wash · no fake FDV · no dumps
           </p>
           <AllocationDonut variant="litepaper" />
         </div>
@@ -130,14 +132,13 @@ export default function LitepaperTokenomicsBlock() {
                 <td className="py-2 pr-3 text-white/85 font-medium">{w.label}</td>
                 <td className="py-2 pr-3 font-mono text-cyan-200/80">{w.amountShort}</td>
                 <td className="py-2">
-                  <a
+                  <SolscanLink
                     href={solscanAccountUrl(w.address)}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    size={12}
                     className="font-mono text-fuchsia-300/70 hover:text-fuchsia-200"
                   >
-                    {truncateAddress(w.address, 5)} ↗
-                  </a>
+                    {truncateAddress(w.address, 5)}
+                  </SolscanLink>
                 </td>
               </tr>
             ))}
@@ -145,8 +146,8 @@ export default function LitepaperTokenomicsBlock() {
         </table>
         ) : (
           <p className="text-xs leading-6 text-white/55">
-            Single operations wallet receives the ~1% creator dev buy and 100% Pump.fun creator fee
-            claims (@aptcasinofun). Address published at TGE on Solscan and pump.fun.
+            Protocol treasury (@aptcasinofun) funds listings, community rewards, staking, and ops.
+            Address published at TGE on Solscan.
           </p>
         )}
       </div>

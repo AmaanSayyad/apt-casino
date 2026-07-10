@@ -244,20 +244,23 @@ async function sendSignedTransactionAndConfirmPolling(
 
 /**
  * Verifies a native SOL or SPL deposit to the configured treasury (signature = tx id).
+ * @param treasuryOverride — when set, credits deposits to this address instead of env treasury.
  */
 export async function verifySolanaDepositTx(
     signature: string,
     userAddress: string,
     expectedAmount: number,
     tokenMint?: string,
+    treasuryOverride?: string,
 ): Promise<boolean> {
     if (!Number.isFinite(expectedAmount) || expectedAmount <= 0) return false;
 
     try {
         const config = getSolanaConfig();
-        if (!config.treasuryAddress) return false;
+        const treasuryAddr = treasuryOverride?.trim() || config.treasuryAddress;
+        if (!treasuryAddr) return false;
 
-        const treasuryPub = new PublicKey(config.treasuryAddress);
+        const treasuryPub = new PublicKey(treasuryAddr);
         const userPub = new PublicKey(userAddress);
 
         const parsed = await fetchParsedDepositTransaction(signature, config.rpcEndpoint);
@@ -600,12 +603,13 @@ export async function transferSOLFromTreasury(
     }
 }
 /**
- * Transfer SPL Token from treasury to a user
+ * Transfer SPL Token from an arbitrary signer (e.g. casino treasury or IPO APTC distributor).
  */
-export async function transferTokenFromTreasury(
+export async function transferTokenFromSigner(
+    signer: Keypair,
     toAddress: string,
     amount: number,
-    mintAddress: string
+    mintAddress: string,
 ): Promise<string> {
     try {
         const {
@@ -616,23 +620,19 @@ export async function transferTokenFromTreasury(
 
         const config = getSolanaConfig();
         const connection = new Connection(config.rpcEndpoint, 'confirmed');
-        const treasuryKeypair = getTreasuryKeypair();
         const toPublicKey = new PublicKey(toAddress);
         const mintPublicKey = new PublicKey(mintAddress);
 
-        // Get mint info to handle decimals
         const mintInfo = await getMint(connection, mintPublicKey);
         const decimals = mintInfo.decimals;
 
-        // Get or create ATA for treasury (source)
         const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
             connection,
-            treasuryKeypair,
+            signer,
             mintPublicKey,
-            treasuryKeypair.publicKey
+            signer.publicKey
         );
 
-        // Pre-check treasury token balance
         const tokenBalance = Number(fromTokenAccount.amount);
         const requiredRaw = Math.floor(amount * Math.pow(10, decimals));
         if (tokenBalance < requiredRaw) {
@@ -641,12 +641,9 @@ export async function transferTokenFromTreasury(
             );
         }
 
-        // Get or create ATA for receiver (destination)
-        // Note: receiver might need to pay for account creation if it doesn't exist,
-        // but typically the sender (treasury) pays for it here.
         const toTokenAccount = await getOrCreateAssociatedTokenAccount(
             connection,
-            treasuryKeypair,
+            signer,
             mintPublicKey,
             toPublicKey
         );
@@ -659,11 +656,11 @@ export async function transferTokenFromTreasury(
                     createTransferInstruction(
                         fromTokenAccount.address,
                         toTokenAccount.address,
-                        treasuryKeypair.publicKey,
+                        signer.publicKey,
                         transferAmount,
                     ),
                 ),
-            [treasuryKeypair],
+            [signer],
         );
         console.log(`Token Withdrawal transaction confirmed: ${signature}`);
         return signature;
@@ -677,6 +674,17 @@ export async function transferTokenFromTreasury(
         }
         throw error;
     }
+}
+
+/**
+ * Transfer SPL Token from casino treasury to a user
+ */
+export async function transferTokenFromTreasury(
+    toAddress: string,
+    amount: number,
+    mintAddress: string
+): Promise<string> {
+    return transferTokenFromSigner(getTreasuryKeypair(), toAddress, amount, mintAddress);
 }
 
 /**

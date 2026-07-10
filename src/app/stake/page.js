@@ -338,6 +338,7 @@ export default function StakePage() {
       badge="Solana · APTC"
       title="Stake APTC"
       description="Fixed-term APTC staking pools on Solana. Stake APTC, earn yield at lock, claim principal + rewards at maturity."
+      descriptionClassName="max-w-none md:whitespace-nowrap"
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Stake' }]}
       maxWidth="7xl"
     >
@@ -346,9 +347,9 @@ export default function StakePage() {
             <div className="flex items-start gap-2">
               <FaHourglassHalf className="mt-0.5 shrink-0" />
               <div>
-                <p className="font-semibold">$APTC Launching Soon on Solana</p>
+                <p className="font-semibold">$APTC IPO on Solana</p>
                 <p className="text-amber-200/80 mt-1">
-                  Staking pools and market data will go live when APTC launches on Pump.fun. All UI elements below show placeholder values until launch.
+                  Staking pools and live market data activate during the IPO window and after Raydium listing. Values below may show pre-launch placeholders until the pair is indexed.
                 </p>
               </div>
             </div>

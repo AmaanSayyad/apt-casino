@@ -9,6 +9,7 @@ import {
 
 const QUICK_LINKS = [
   { label: 'Play', href: '/game', primary: true },
+  { label: 'IPO', href: '/ipo' },
   { label: 'Stake', href: '/stake' },
   { label: 'Pitch deck', href: PITCH_DECK_URL, external: true },
   { label: 'GitHub', href: PROJECT_GITHUB, external: true },
@@ -75,15 +76,15 @@ export default function LitepaperHero() {
               <p className="text-[10px] font-black uppercase tracking-[0.35em] text-white/40">
                 Official technical document
               </p>
-              <h1 className="font-display mt-2.5 text-[2.5rem] font-black uppercase leading-[1.02] tracking-tight sm:text-5xl lg:text-[3.15rem]">
+              <h1 className="font-display mt-2.5 text-[2.15rem] font-black uppercase leading-[1.05] tracking-tight sm:text-4xl lg:text-[2.85rem] xl:text-[3.15rem]">
                 <span className="bg-gradient-to-r from-red-magic via-fuchsia-400 to-blue-magic bg-clip-text text-transparent">
                   APT-Casino
-                </span>
-                <span className="mt-0.5 block text-white">Litepaper</span>
+                </span>{' '}
+                <span className="text-white">Litepaper</span>
               </h1>
-              <p className="mt-4 max-w-lg text-[15px] leading-relaxed text-white/60 sm:text-base">
-                Multichain GambleFi with provably fair games, gasless play, and APTC — a transparent value
-                loop from wagers to buyback, burn, and staking.
+              <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-white/60 sm:text-base lg:max-w-none">
+                Multichain GambleFi with provably fair games, gasless play, and $APTC.
+          
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {QUICK_LINKS.map(({ label, href, primary, external }) => {

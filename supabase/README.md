@@ -81,6 +81,10 @@ Or paste into Supabase → **SQL Editor** one file at a time from `migrations/`.
 | `20260525120000_stream_rewards.sql` | Live stream rewards |
 | `20260527160000_kol_portal_password_plain.sql` | Admin-visible latest KOL portal password |
 | `20260527190000_promotions_engine.sql` | Coupons, deposit deals, and claim/deal audit logs |
+| `20260709120000_ipo_tables.sql` | IPO purchases, referrals, affiliates, `IPO_30D` stake pool |
+| `20260709200000_ipo_payout_tracking.sql` | IPO staking reward payout tracking |
+| `20260709210000_ipo_oversubscribe.sql` | Oversubscription / pending supply columns |
+| `20260710150000_roadmap_ipo_replace_pumpfun.sql` | Roadmap copy: public IPO → Raydium (replaces Pump.fun) |
 
 Skip any file whose changes you already applied manually.
 
@@ -104,7 +108,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 Server routes use the **service role** key. The anon key is for client-side reads where RLS allows.
 
-Referrals, OTC lottery, staking, streams, and admin APIs do not require extra SQL beyond the migrations above — only the corresponding env flags in `.env.example`.
+Referrals, OTC lottery, staking, streams, **$APTC IPO**, and admin APIs do not require extra SQL beyond the migrations above — only the corresponding env flags in `.env.example` (`IPO_*`, `NEXT_PUBLIC_IPO_*`).
 
 ## Local CLI tips
 
