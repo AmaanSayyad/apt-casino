@@ -3,6 +3,7 @@ import {
   IPO_SALE,
   getIpoAptcDistributor,
   getIpoSolTreasury,
+  getIpoStakingVault,
 } from '@/lib/config/ipo';
 
 export function getIpoServerConfig() {
@@ -10,6 +11,7 @@ export function getIpoServerConfig() {
     process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || IPO_APTC_MINT_DEFAULT;
   const treasury = getIpoSolTreasury();
   const aptcDistributor = getIpoAptcDistributor();
+  const stakingVault = getIpoStakingVault();
   const aptcPriceUsd =
     Number(process.env.IPO_APTC_PRICE_USD) > 0
       ? Number(process.env.IPO_APTC_PRICE_USD)
@@ -41,6 +43,7 @@ export function getIpoServerConfig() {
     mint,
     treasury,
     aptcDistributor,
+    stakingVault,
     aptcPriceUsd,
     saleCapAptc,
     raiseTargetUsd,

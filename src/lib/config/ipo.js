@@ -105,10 +105,16 @@ export const IPO_STACK = [
 export const IPO_SOL_TREASURY_DEFAULT = 'F4DhxeQstwTBiaNdoeAwM7DEcUmSzJpC6HFWNi6cE9RV';
 
 /**
- * Hot wallet that holds IPO APTC inventory + fee SOL and signs buyer payouts.
+ * Hot wallet that holds IPO APTC inventory + fee SOL and signs vault lock transfers.
  * Overridable via NEXT_PUBLIC_IPO_APTC_DISTRIBUTOR.
  */
 export const IPO_APTC_DISTRIBUTOR_DEFAULT = '81JYyenNM7RsoDgmxgM1JxDx9243F2fVi9q7bR4rgycw';
+
+/**
+ * Staking vault that receives IPO APTC (locked to buyer in DB — not sent to buyer wallet).
+ * Overridable via NEXT_PUBLIC_APTC_STAKING_VAULT / NEXT_PUBLIC_IPO_STAKING_VAULT.
+ */
+export const IPO_STAKING_VAULT_DEFAULT = '2dcYoCY2Z9qkyFzWzExpg34WCKMjw5cCUduiNJL27TpB';
 
 /** Default APTC mint for IPO inventory */
 export const IPO_APTC_MINT_DEFAULT = 'APTcsX9vXMbhVdH4aKNbzNqrVoj6M1En2eVK4hFP9sAh';
@@ -120,6 +126,14 @@ export function getIpoSolTreasury() {
 export function getIpoAptcDistributor() {
   return (
     process.env.NEXT_PUBLIC_IPO_APTC_DISTRIBUTOR?.trim() || IPO_APTC_DISTRIBUTOR_DEFAULT
+  );
+}
+
+export function getIpoStakingVault() {
+  return (
+    process.env.NEXT_PUBLIC_APTC_STAKING_VAULT?.trim() ||
+    process.env.NEXT_PUBLIC_IPO_STAKING_VAULT?.trim() ||
+    IPO_STAKING_VAULT_DEFAULT
   );
 }
 
@@ -228,7 +242,7 @@ export const IPO_COPY = {
   ],
   swapLabel: 'Buy APTC with SOL',
   swapIntro:
-    'Send SOL to the IPO treasury — APTC hits your wallet instantly. Auto-staked for 30 days: your idle APTC earns 30% APY from day one through the full vesting lock.',
+    'Send SOL to the IPO treasury — APTC is locked in the staking vault for 30 days at 30% APY. Track your position under My position; tokens unlock to your wallet after the lock.',
   affiliateHeadline: '3-level IPO referrals',
   affiliateIntro:
     'Share your referral link — earn on every referred SOL deposit. Rewards accrue in APTC; Payout after the 10-day cliff.',

@@ -22,7 +22,6 @@ import {
 import {
   IpoLiveCountdown,
   IpoFaq,
-  IpoAddToken,
   IpoSharePurchase,
 } from '@/components/IpoExtras';
 import { SolscanLink } from '@/components/ui/SolscanMark';
@@ -332,6 +331,7 @@ export default function IpoPurchasePanel({
                   bare
                   treasury={config?.treasury}
                   distributor={config?.aptcDistributor}
+                  stakingVault={config?.stakingVault}
                   mint={config?.mint}
                 />
               ) : null}
@@ -401,9 +401,8 @@ export default function IpoPurchasePanel({
                   {!hasPurchases ? (
                     <div className="space-y-4">
                       <p className="text-xs text-white/45 border border-dashed border-white/10 rounded-xl p-4">
-                        No IPO purchases linked to this wallet yet. Use the buy panel to deposit SOL → APTC.
+                        No IPO purchases linked to this wallet yet. Use the buy panel to deposit SOL → locked APTC.
                       </p>
-                      <IpoAddToken mint={config?.mint} />
                       <IpoSharePurchase />
                     </div>
                   ) : (
@@ -415,8 +414,9 @@ export default function IpoPurchasePanel({
                           value={`${fmt(me?.summary?.totalSolDeposited, { maximumFractionDigits: 4 })} SOL`}
                         />
                         <Stat
-                          label="APTC purchased"
+                          label="APTC locked"
                           value={fmt(me?.summary?.totalAptcPurchased, { maximumFractionDigits: 2 })}
+                          sub="In staking vault · attributed to you"
                         />
                         <Stat
                           label="Est. staking reward"
@@ -432,7 +432,7 @@ export default function IpoPurchasePanel({
                             me?.summary?.nextUnlockAt
                               ? new Date(me.summary.nextUnlockAt).toLocaleDateString()
                               : me?.summary?.purchaseCount > 0
-                                ? 'Staked'
+                                ? 'Locked'
                                 : '—'
                           }
                           sub={
@@ -447,7 +447,7 @@ export default function IpoPurchasePanel({
                             me?.summary?.pendingPurchases > 0
                               ? 'Settling…'
                               : me?.summary?.purchaseCount > 0
-                                ? 'Fulfilled'
+                                ? 'Locked'
                                 : 'No purchases'
                           }
                         />
@@ -457,7 +457,6 @@ export default function IpoPurchasePanel({
                           sub="Payout after cliff"
                         />
                       </div>
-                      <IpoAddToken mint={config?.mint} />
                       <IpoSharePurchase
                         aptcAmount={me?.summary?.totalAptcPurchased}
                         solAmount={me?.summary?.totalSolDeposited}

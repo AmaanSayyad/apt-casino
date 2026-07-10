@@ -190,7 +190,7 @@ export default function IpoPayoutsAdminPanel({ adminToken }) {
       <Panel className="p-0 overflow-hidden">
         <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
           <h4 className="text-sm font-semibold text-white">IPO staking rewards</h4>
-          <p className="text-xs text-white/45 mt-1">30-day lock positions · reward only (principal already in buyer wallet)</p>
+          <p className="text-xs text-white/45 mt-1">30-day lock positions · principal in staking vault · pay reward (+ principal on claim) after unlock</p>
         </div>
         {loading && !data ? (
           <EmptyState title="Loading payout queue…" />

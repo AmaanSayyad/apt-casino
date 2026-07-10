@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getIpoServerConfig } from './config';
 import { estimateStakingReward } from './pricing';
-import { sendAptcToBuyer } from './settlement';
+import { sendIpoAptcToStakingVault } from './settlement';
 
 function isInsufficientInventory(err: unknown): boolean {
   if (!(err instanceof Error)) return false;
@@ -29,7 +29,7 @@ export async function fulfillPendingSupplyPurchases(db: SupabaseClient): Promise
     try {
       const aptcAmount = Number(row.aptc_amount);
       const wallet = row.buyer_wallet;
-      const aptcTxHash = await sendAptcToBuyer(wallet, aptcAmount, cfg.mint);
+      const { signature: aptcTxHash } = await sendIpoAptcToStakingVault(aptcAmount, cfg.mint);
 
       const startAt = new Date();
       const unlockAt = new Date(startAt.getTime() + cfg.stakingLockDays * 86_400_000);

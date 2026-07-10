@@ -7,7 +7,7 @@ import {
 } from '@/lib/server/ipo/affiliate';
 import { getIpoPhaseAt, getIpoServerConfig } from '@/lib/server/ipo/config';
 import { estimateStakingReward, getSolUsdPrice, solToAptc } from '@/lib/server/ipo/pricing';
-import { sendAptcToBuyer, verifyIpoSolDeposit } from '@/lib/server/ipo/settlement';
+import { sendIpoAptcToStakingVault, verifyIpoSolDeposit } from '@/lib/server/ipo/settlement';
 import { fulfillPendingSupplyPurchases } from '@/lib/server/ipo/fulfillment';
 
 export const dynamic = 'force-dynamic';
@@ -186,9 +186,12 @@ export async function POST(req: NextRequest) {
 
   let aptcTxHash: string | null = null;
   let finalStatus: 'fulfilled' | 'pending_supply' = 'fulfilled';
+  let stakingVault: string | null = null;
 
   try {
-    aptcTxHash = await sendAptcToBuyer(wallet, aptcAmount, cfg.mint);
+    const sent = await sendIpoAptcToStakingVault(aptcAmount, cfg.mint);
+    aptcTxHash = sent.signature;
+    stakingVault = sent.stakingVault;
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'APTC transfer failed';
     const queued = /insufficient token balance|insufficient APTC/i.test(msg);
@@ -198,7 +201,8 @@ export async function POST(req: NextRequest) {
         .from('ipo_purchases')
         .update({
           status: 'pending_supply',
-          error_message: 'Queued — APTC will be sent automatically when treasury inventory is replenished.',
+          error_message:
+            'Queued — APTC will be locked in the staking vault automatically when treasury inventory is replenished.',
         })
         .eq('id', purchaseId);
 
@@ -219,7 +223,7 @@ export async function POST(req: NextRequest) {
         solUsdPrice: solUsd,
         status: 'pending_supply',
         message:
-          'SOL received. APTC is queued — your allocation will be sent automatically once additional supply is added to treasury.',
+          'SOL received. APTC is queued — your locked allocation will be funded in the staking vault once inventory is replenished.',
       });
     }
 
@@ -297,8 +301,12 @@ export async function POST(req: NextRequest) {
     aptcPriceUsd: cfg.aptcPriceUsd,
     solUsdPrice: solUsd,
     aptcTxHash,
+    stakingVault,
+    locked: true,
     unlockAt: stakePos?.unlock_at ?? unlockAt.toISOString(),
     estimatedRewardAptc: estReward,
     stakingApyPct: cfg.stakingApyBps / 100,
+    message:
+      'APTC locked in the staking vault for 30 days. Track your position under My position — tokens unlock to your wallet after the lock.',
   });
 }

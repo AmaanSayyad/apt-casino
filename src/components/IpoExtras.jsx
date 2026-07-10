@@ -207,7 +207,7 @@ const FAQ_ITEMS = [
   {
     id: 'lock',
     q: 'Can I sell during the 30-day lock?',
-    a: 'No. Purchased APTC is auto-staked for 30 days at 30% APY. You can trade freely on Raydium after unlock / post-IPO listing.',
+    a: 'No. Purchased APTC goes to the staking vault (not your wallet) and stays locked 30 days at 30% APY. After unlock, claim to your wallet — then trade on Raydium.',
   },
   {
     id: 'raydium',
@@ -222,7 +222,7 @@ const FAQ_ITEMS = [
   {
     id: 'wallet',
     q: 'Which wallet should I use?',
-    a: 'Use Any Solana wallet for deposit and receive. Connect that same wallet later to see My position, unlock time, and history.',
+    a: 'Use any Solana wallet to deposit SOL. APTC locks in the vault under that wallet’s address — connect the same wallet to see My position, unlock time, and history.',
   },
 ];
 
@@ -317,7 +317,7 @@ export function IpoSharePurchase({ aptcAmount, solAmount, className = '' }) {
         'yo $APTC IPO on @aptcasinofun is actually live',
         '',
         'fixed price SOL → APTC, no bonding curve games',
-        '30d auto stake @ 30% APY from day 1',
+        '30d lock in staking vault @ 30% APY',
         'oversub allowed, Raydium after',
         '',
         "not gatekeeping ↓",

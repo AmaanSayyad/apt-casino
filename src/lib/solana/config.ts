@@ -50,7 +50,10 @@ export function getSolanaConfig() {
 }
 
 export function getSolanaStakingVaultConfig() {
-  const address = process.env.NEXT_PUBLIC_APTC_STAKING_VAULT?.trim() || '';
+  const address =
+    process.env.NEXT_PUBLIC_APTC_STAKING_VAULT?.trim() ||
+    process.env.NEXT_PUBLIC_IPO_STAKING_VAULT?.trim() ||
+    '2dcYoCY2Z9qkyFzWzExpg34WCKMjw5cCUduiNJL27TpB';
   return { address };
 }
 

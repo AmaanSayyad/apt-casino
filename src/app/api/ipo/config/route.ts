@@ -27,6 +27,7 @@ export async function GET() {
     phase,
     treasury: cfg.treasury,
     aptcDistributor: cfg.aptcDistributor,
+    stakingVault: cfg.stakingVault,
     mint: cfg.mint,
     aptcPriceUsd: cfg.aptcPriceUsd,
     saleCapAptc: cfg.saleCapAptc,

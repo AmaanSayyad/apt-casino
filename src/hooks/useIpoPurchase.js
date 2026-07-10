@@ -67,7 +67,8 @@ export function useIpoPurchase(treasuryAddress, referrerWallet) {
                 if (ok && data.success) {
                   window.sessionStorage.removeItem(PENDING_KEY);
                   toast.success(
-                    `Swap complete — ${Number(data.aptcAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })} APTC sent to your wallet`,
+                    data.message ||
+                      `Buy complete — ${Number(data.aptcAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })} APTC locked in staking vault`,
                   );
                   return { success: true, ...data };
                 }
@@ -104,10 +105,14 @@ export function useIpoPurchase(treasuryAddress, referrerWallet) {
         }
 
         if (data.queued) {
-          toast.info(data.message || 'SOL received — APTC queued for automatic delivery when supply is added.');
+          toast.info(
+            data.message ||
+              'SOL received — APTC queued to lock in the staking vault when supply is added.',
+          );
         } else {
           toast.success(
-            `Swap complete — ${Number(data.aptcAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })} APTC sent instantly`,
+            data.message ||
+              `Buy complete — ${Number(data.aptcAmount).toLocaleString(undefined, { maximumFractionDigits: 2 })} APTC locked in staking vault`,
           );
         }
         return { success: true, ...data };

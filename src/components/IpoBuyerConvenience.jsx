@@ -8,8 +8,10 @@ import {
   IPO_APTC_MINT_DEFAULT,
   IPO_SALE,
   IPO_SOL_TREASURY_DEFAULT,
+  IPO_STAKING_VAULT_DEFAULT,
   getIpoAptcDistributor,
   getIpoSolTreasury,
+  getIpoStakingVault,
 } from '@/lib/config/ipo';
 
 import { SolscanLink, SolscanMark, SOLSCAN_LOGO_SRC } from '@/components/ui/SolscanMark';
@@ -82,28 +84,28 @@ export function IpoWhatHappensNext({
       id: 'buy',
       Icon: ArrowLeftRight,
       title: 'Buy APTC with SOL',
-      body: 'Deposit SOL. Collector receives it; distributor sends APTC.',
+      body: 'Deposit SOL. Collector receives it; distributor funds your lock.',
       tone: 'from-fuchsia-500/20 to-fuchsia-500/5 border-fuchsia-400/25 text-fuchsia-100',
     },
     {
-      id: 'wallet',
-      Icon: Wallet,
-      title: 'APTC in your wallet',
-      body: 'Same connected wallet. Add the mint if the token isn’t listed yet.',
+      id: 'vault',
+      Icon: Lock,
+      title: 'Locked in staking vault',
+      body: 'APTC goes to the vault — not your wallet. Position is attributed to you.',
       tone: 'from-violet-500/20 to-violet-500/5 border-violet-400/25 text-violet-100',
     },
     {
       id: 'stake',
-      Icon: Lock,
-      title: `Staked ${lockDays}d @ ${apyPct}%`,
-      body: 'Auto-staked from day one. Unlock date lives under My position.',
+      Icon: Wallet,
+      title: `${lockDays}d @ ${apyPct}% · My position`,
+      body: 'Track unlock date and rewards under My position while tokens stay locked.',
       tone: 'from-amber-500/20 to-amber-500/5 border-amber-400/25 text-amber-100',
     },
     {
       id: 'raydium',
       Icon: ChartCandlestick,
-      title: 'Trade on Raydium',
-      body: 'After the sale closes, APTC/SOL lists — Jupiter & DexScreener follow.',
+      title: 'Unlock → trade on Raydium',
+      body: 'After the lock, claim to your wallet — then trade on Raydium / Jupiter.',
       tone: 'from-emerald-500/20 to-emerald-500/5 border-emerald-400/25 text-emerald-100',
     },
   ];
@@ -116,7 +118,7 @@ export function IpoWhatHappensNext({
         <div className="mb-4">
           <p className="text-base font-semibold text-white">From deposit to Raydium</p>
           <p className="mt-1 text-[12px] text-white/45 leading-relaxed">
-            Four steps. You sign once — APTC lands, stakes, then trades after IPO.
+            Four steps. You sign once — APTC locks in the vault, then unlocks to trade after IPO.
           </p>
         </div>
       )}
@@ -185,12 +187,15 @@ export function IpoWhatHappensNext({
 export function IpoVerifyWallets({
   treasury,
   distributor,
+  stakingVault,
   mint,
   className = '',
   bare = false,
 }) {
   const solCollector = treasury || getIpoSolTreasury() || IPO_SOL_TREASURY_DEFAULT;
   const aptcDist = distributor || getIpoAptcDistributor() || IPO_APTC_DISTRIBUTOR_DEFAULT;
+  const vault =
+    stakingVault || getIpoStakingVault() || IPO_STAKING_VAULT_DEFAULT;
   const aptcMint = mint || process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || IPO_APTC_MINT_DEFAULT;
 
   const rows = [
@@ -204,14 +209,21 @@ export function IpoVerifyWallets({
     {
       id: 'aptc',
       label: 'APTC distributor',
-      hint: 'Sends your APTC after deposit verifies',
+      hint: 'Signs the lock transfer after deposit verifies',
       value: aptcDist,
       href: `${SOLSCAN_ACCOUNT}${aptcDist}`,
     },
     {
+      id: 'vault',
+      label: 'Staking vault',
+      hint: 'Where your IPO APTC is locked (not your wallet)',
+      value: vault,
+      href: `${SOLSCAN_ACCOUNT}${vault}`,
+    },
+    {
       id: 'mint',
       label: 'APTC mint',
-      hint: 'Add this token in your wallet → Tokens to import',
+      hint: 'Token mint — claim to wallet after unlock',
       value: aptcMint,
       href: `${SOLSCAN_TOKEN}${aptcMint}`,
       logo: APTC_LOGO_SRC,
