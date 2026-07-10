@@ -79,9 +79,9 @@ export function IpoWhatHappensNext({
 }) {
   const steps = [
     {
-      id: 'swap',
+      id: 'buy',
       Icon: ArrowLeftRight,
-      title: 'Swap SOL → APTC',
+      title: 'Buy APTC with SOL',
       body: 'Deposit SOL. Collector receives it; distributor sends APTC.',
       tone: 'from-fuchsia-500/20 to-fuchsia-500/5 border-fuchsia-400/25 text-fuchsia-100',
     },
@@ -211,7 +211,7 @@ export function IpoVerifyWallets({
     {
       id: 'mint',
       label: 'APTC mint',
-      hint: 'Add this token in your wallet',
+      hint: 'Add this token in your wallet → Tokens to import',
       value: aptcMint,
       href: `${SOLSCAN_TOKEN}${aptcMint}`,
       logo: APTC_LOGO_SRC,

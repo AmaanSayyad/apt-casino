@@ -1,17 +1,11 @@
 import {
   APTC_LAUNCH_METRICS,
-  APTC_LAUNCH_PHASES,
   APTC_TOKENOMICS,
-  APTC_TRANSPARENCY,
-  APTC_UTILITY,
-  APTC_WALLETS,
-  CREATOR_BUY_PURPOSE,
   GGR_FLYWHEEL_STEPS,
   getAllocationSummary,
   getCreatorBuyDeploymentLines,
-  truncateAddress,
 } from '@/lib/config/tokenomics';
-import { IPO_SALE } from '@/lib/config/ipo';
+import { IPO_SALE, IPO_PRICE_LADDER_COPY, IPO_OVERSUB_COPY } from '@/lib/config/ipo';
 
 export { PITCH_DECK_EMBED, PITCH_DECK_URL } from '@/lib/pitchDeck';
 export {
@@ -64,7 +58,6 @@ export const APPLIED_PROGRAMS = [
   },
 ];
 
-const utilityText = APTC_UTILITY.map((u) => `${u.title}: ${u.body}`).join(' ');
 const flywheelText = GGR_FLYWHEEL_STEPS.map((s) => `${s.step}. ${s.title} — ${s.desc}`).join(' ');
 
 /** @type {Array<{ id: string; title: string; body: string[]; mermaid?: string; chart?: string }>} */
@@ -225,12 +218,12 @@ export const LITEPAPER_SECTIONS = [
     title: '8. APTC Token',
     body: [
       `Native ecosystem token: ${APTC_TOKENOMICS.name} (${APTC_TOKENOMICS.symbol}) on ${APTC_TOKENOMICS.chain}.`,
-      `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint and freeze authorities revoked at creation — fixed metadata, fixed supply.`,
-      `Public IPO on ${APTC_TOKENOMICS.launchVenue}: ${APTC_TOKENOMICS.feeModeLabel} · ${IPO_SALE.saleTokensShort} APTC · $${IPO_SALE.raiseTargetUsd.toLocaleString()} raise · $${IPO_SALE.tokenPriceUsd}/APTC · ${IPO_SALE.launchLabel} → ${IPO_SALE.endLabel}.`,
-      'Settlement inspired by Metaplex Genesis presale · MetaDAO launch architecture · PinkSale-style 3-level affiliates (3% / 1.5% / 0.5%). Post-IPO liquidity seeds Raydium APTC/SOL pool.',
-      'Transparency pledge: no wash volume, no fake FDV, no dumps. One public ops wallet — no bundled launch clusters, no team/founder allocation, no hidden treasuries.',
+      `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint and freeze authorities revoked at creation.`,
+      `Public IPO → Raydium: ${IPO_SALE.saleTokensShort} APTC (${IPO_SALE.saleSupplyPct}%) at $${IPO_SALE.tokenPriceUsd} · $${IPO_SALE.raiseTargetUsd.toLocaleString()} raise target · ${IPO_SALE.launchLabel} → ${IPO_SALE.endLabel}.`,
+      IPO_PRICE_LADDER_COPY,
+      'Settlement inspired by Metaplex Genesis · MetaDAO launch architecture · PinkSale-style 3-level affiliates (3% / 1.5% / 0.5%). Post-IPO liquidity seeds Raydium APTC/SOL.',
       `Mint: ${APTC_TOKENOMICS.mint}.`,
-      utilityText,
+      'Utility: GGR buybacks on Jupiter / Raydium, IPO auto-stake (30d @ 30% APY), /stake pools, referrals, and Volume Cup prizes.',
       'APTC is not required to place bets in native SOL/APT — it is the rewards, staking, referral, and value-accrual layer on top of core casino play.',
     ],
   },
@@ -238,14 +231,12 @@ export const LITEPAPER_SECTIONS = [
     id: 'aptc-allocation',
     title: '9. APTC Allocation',
     body: [
-      `${getAllocationSummary()}`,
-      `Creator dev buy (~${APTC_LAUNCH_METRICS.devHoldPct}% supply / ${APTC_LAUNCH_METRICS.devBuyTokensShort}) at launch — single @aptcasinofun operations wallet. Listings-first: the largest share funds Tier 1 DEX & trader tools, Tier 2 aggregators (CoinGecko, CoinMarketCap), and Tier 3 CEX roadmap. Remaining allocation → community rewards, staking emissions, and protocol ops.`,
+      getAllocationSummary(),
+      'Listings-first: the largest share funds Tier 1 DEX & trader tools, Tier 2 aggregators (CoinGecko, CoinMarketCap), and Tier 3 CEX. Remainder → community rewards, staking emissions, and protocol ops.',
       ...getCreatorBuyDeploymentLines(),
-      CREATOR_BUY_PURPOSE,
-      `Public IPO (${IPO_SALE.saleTokensShort} APTC, ${IPO_SALE.saleSupplyPct}% of supply) at fixed $${IPO_SALE.tokenPriceUsd}/APTC — oversubscription queued until treasury replenished. ~${APTC_LAUNCH_METRICS.migrationLpPct}% seeds Raydium LP after IPO closes.`,
-      'Secondary trading uses standard Raydium AMM fees post-TGE. IPO buyers auto-stake 30 days @ 30% APY.',
-      APTC_TRANSPARENCY.opsWalletRule,
-      ...APTC_LAUNCH_PHASES.map((p) => `${p.title}: ${p.detail}`),
+      `Public IPO buyers receive APTC instantly; ~${APTC_LAUNCH_METRICS.migrationLpPct}% of supply seeds Raydium LP after the window closes.`,
+      IPO_OVERSUB_COPY,
+      'One public ops wallet (@aptcasinofun). No team / founder allocation.',
     ],
     chart: 'allocation-donut',
   },

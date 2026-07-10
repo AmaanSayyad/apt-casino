@@ -6,6 +6,7 @@ import {
   getLaunchStyles,
   getLaunchStatusText,
   getLaunchCtaText,
+  getLaunchCtaHref,
   getLaunchTeaserEmbedUrl,
 } from "@/lib/config/launchStatus";
 
@@ -14,6 +15,7 @@ export default function HeroSection() {
   const styles = getLaunchStyles();
   const statusText = getLaunchStatusText();
   const ctaText = getLaunchCtaText();
+  const ctaHref = getLaunchCtaHref();
   const teaserEmbedUrl = getLaunchTeaserEmbedUrl();
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export default function HeroSection() {
     >
       <div className="font-display z-10 mx-auto flex w-full max-w-7xl flex-col items-center gap-4 sm:gap-6 text-center text-white">
         <Link
-          href="#tokenomics"
+          href={ctaHref}
           className={`group inline-flex flex-wrap items-center justify-center gap-2.5 rounded-full px-4 py-2 sm:px-5 sm:py-2.5 transition-all border ${styles.badgeBorder} ${styles.badgeBg} ${styles.badgeShadow} ${styles.badgeHoverBorder} ${styles.badgeHoverBg}`}
         >
           <span className="relative flex h-2 w-2 shrink-0">

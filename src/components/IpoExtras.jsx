@@ -15,6 +15,10 @@ function copyText(value) {
   );
 }
 
+function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
 function splitCountdown(ms) {
   const total = Math.max(0, Math.floor(ms / 1000));
   return {
@@ -25,8 +29,49 @@ function splitCountdown(ms) {
   };
 }
 
-function pad(n) {
-  return String(n).padStart(2, '0');
+/** Shared live countdown for IPO CTA / panels */
+export function useIpoCountdown({ phase: phaseProp, startAt, endAt } = {}) {
+  const scheduleStart = startAt || process.env.NEXT_PUBLIC_IPO_START_AT_ISO?.trim() || IPO_SALE.startAtIso;
+  const scheduleEnd = endAt || process.env.NEXT_PUBLIC_IPO_END_AT_ISO?.trim() || IPO_SALE.endAtIso;
+  const startIso = scheduleStart;
+  const endIso = scheduleEnd;
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const phase =
+    phaseProp ||
+    (() => {
+      const s = Date.parse(startIso);
+      const e = Date.parse(endIso);
+      if (now < s) return 'upcoming';
+      if (now <= e) return 'live';
+      return 'ended';
+    })();
+
+  const ms =
+    phase === 'upcoming'
+      ? Math.max(0, Date.parse(startIso) - now)
+      : phase === 'live'
+        ? Math.max(0, Date.parse(endIso) - now)
+        : 0;
+
+  const parts = splitCountdown(ms);
+
+  const compactLabel = useMemo(() => {
+    if (phase === 'ended') return 'Sale ended';
+    if (phase === 'live') {
+      if (parts.days > 0) return `Ends in ${parts.days}d ${pad(parts.hours)}h ${pad(parts.mins)}m`;
+      return `Ends in ${pad(parts.hours)}:${pad(parts.mins)}:${pad(parts.secs)}`;
+    }
+    if (parts.days > 0) return `Opens in ${parts.days}d ${pad(parts.hours)}h ${pad(parts.mins)}m ${pad(parts.secs)}s`;
+    return `Opens in ${pad(parts.hours)}:${pad(parts.mins)}:${pad(parts.secs)}`;
+  }, [phase, parts.days, parts.hours, parts.mins, parts.secs]);
+
+  return { phase, parts, ms, compactLabel, startIso, endIso };
 }
 
 function formatLocal(iso) {
@@ -57,8 +102,8 @@ export function IpoLiveCountdown({
   endLabel,
   className = '',
 }) {
-  const startIso = startAt || IPO_SALE.startAtIso;
-  const endIso = endAt || IPO_SALE.endAtIso;
+  const startIso = startAt || process.env.NEXT_PUBLIC_IPO_START_AT_ISO?.trim() || IPO_SALE.startAtIso;
+  const endIso = endAt || process.env.NEXT_PUBLIC_IPO_END_AT_ISO?.trim() || IPO_SALE.endAtIso;
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -147,7 +192,7 @@ export function IpoBuyGuidance({ className = '' }) {
         Keep ~0.01 SOL for fees · suggested 0.1–50000 SOL
       </p>
       <p className="text-[10px] text-white/30 leading-relaxed">
-        Max fills spendable balance minus a fee buffer so the swap doesn’t fail.
+        Max fills spendable balance minus a fee buffer so the purchase doesn’t fail.
       </p>
     </div>
   );
@@ -157,7 +202,7 @@ const FAQ_ITEMS = [
   {
     id: 'oversub',
     q: 'What is oversubscription?',
-    a: 'Buys past the soft cap are still accepted. Extra APTC is fulfilled automatically when distributor inventory is topped up.',
+    a: 'Buys past the 250M soft cap are still accepted. The next 100M APTC is then added for sale at $0.0008 (2× the IPO price).',
   },
   {
     id: 'lock',
@@ -186,7 +231,7 @@ export function IpoFaq({ className = '' }) {
 
   return (
     <div className={className}>
-      <p className="text-sm text-white/55 mb-3">Quick answers before you swap.</p>
+      <p className="text-sm text-white/55 mb-3">Quick answers before you buy.</p>
       <ul className="space-y-2">
         {FAQ_ITEMS.map((item) => {
           const isOpen = open === item.id;

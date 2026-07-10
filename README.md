@@ -230,7 +230,7 @@ APTC is the native GambleFi token — launching on **Solana via a fixed-price pu
 
 **Live sale UI:** [aptcasino.fun/ipo](https://aptcasino.fun/ipo)
 
-- **25% public sale** (250M APTC) · **$100K raise** @ **$0.0004** · July 11–14, 2026 3:30 AM ET
+- **25% public sale** (250M APTC) · **$100K raise** @ **$0.0004** · **LIVE now** through July 13, 2026
 - **Deposit SOL → receive APTC** instantly · auto-staked **30 days @ 30% APY**
 - **Split treasuries:** receive-only SOL collector + hot APTC distributor (see `.env.example`)
 - **Oversubscription** accepted · queued until distributor inventory is topped up

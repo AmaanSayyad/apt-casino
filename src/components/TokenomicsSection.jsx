@@ -9,13 +9,14 @@ import {
   APTC_TOKENOMICS,
   APTC_UTILITY,
   IPO_LAUNCH_MODE,
-  METAPLEX_LOGO,
+  APTC_LOGO,
   getTradeResearchTools,
   solscanTokenUrl,
 } from '@/lib/config/tokenomics';
-import { IPO_SALE } from '@/lib/config/ipo';
-import { isAptcLaunched, getLaunchStatusText } from '@/lib/config/launchStatus';
+import { IPO_SALE, getIpoPhase } from '@/lib/config/ipo';
+import { isAptcLaunched } from '@/lib/config/launchStatus';
 import IpoStackLogos from '@/components/IpoStackLogos';
+import IpoPriceLadder from '@/components/IpoPriceLadder';
 import { SolscanLink } from '@/components/ui/SolscanMark';
 
 const AllocationDonut = dynamic(
@@ -43,6 +44,18 @@ export default function TokenomicsSection() {
   const [market, setMarket] = useState(null);
   const [marketLoading, setMarketLoading] = useState(true);
   const launched = isAptcLaunched();
+  const ipoPhase = getIpoPhase();
+  const statusBadge =
+    launched
+      ? '$APTC · Live on Solana'
+      : ipoPhase === 'live'
+        ? '$APTC · IPO Live'
+        : ipoPhase === 'upcoming'
+          ? `$APTC · Opens ${IPO_SALE.launchLabel}`
+          : ipoPhase === 'ended'
+            ? '$APTC · IPO Complete'
+            : '$APTC · Launching Soon';
+  const statusLive = launched || ipoPhase === 'live';
   const mint = APTC_TOKENOMICS.mint;
   const TRADE_TOOLS = getTradeTools(); // Call at render time to get current launch status
 
@@ -95,9 +108,9 @@ export default function TokenomicsSection() {
         {/* Section heading */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 mb-4">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${launched ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400 animate-pulse'}`} />
+            <span className={`w-2 h-2 rounded-full shrink-0 ${statusLive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400 animate-pulse'}`} />
             <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-white/70">
-              {launched ? '$APTC · Live on Solana' : '$APTC · Launching Soon'}
+              {statusBadge}
             </span>
           </div>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-[1.08]">
@@ -116,7 +129,7 @@ export default function TokenomicsSection() {
           <div className="flex flex-wrap items-start gap-4">
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={METAPLEX_LOGO} alt="Metaplex" className="h-10 w-10 rounded-xl object-contain bg-white/5 p-1" />
+              <img src={APTC_LOGO} alt="APTC" className="h-10 w-10 rounded-xl object-cover bg-white/5 ring-1 ring-white/10" />
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-fuchsia-300/80">
                   {IPO_LAUNCH_MODE.label}
@@ -127,13 +140,13 @@ export default function TokenomicsSection() {
             </div>
             <div className="flex flex-wrap gap-2 flex-1 min-w-[200px]">
               <LaunchStat label="Raise target" value={`$${(IPO_SALE.raiseTargetUsd / 1000).toFixed(0)}K`} />
-              <LaunchStat label="IPO price" value={`$${IPO_SALE.tokenPriceUsd}`} />
+              <LaunchStat label="IPO entry" value={`$${IPO_SALE.tokenPriceUsd}`} />
               <LaunchStat label="Sale supply" value={`${IPO_SALE.saleTokensShort} APTC`} />
               <LaunchStat label="Window" value={`${IPO_SALE.durationDays} days`} />
-              <LaunchStat label="Timezone" value={IPO_SALE.timezoneLabel} />
               <LaunchStat label="Post-IPO" value="Raydium LP" />
             </div>
           </div>
+          <IpoPriceLadder className="mt-4" />
           <IpoStackLogos variant="compact" className="mt-4" />
         </div>
 
@@ -208,7 +221,7 @@ export default function TokenomicsSection() {
                     </SolscanLink>
                   </>
                 ) : (
-                  <span className="text-amber-200/90 font-medium">Token address: Launching soon</span>
+                  <span className="text-amber-200/90 font-medium">Contract Address (CA): Launching soon after IPO Sale Ends</span>
                 )}
               </div>
             </div>

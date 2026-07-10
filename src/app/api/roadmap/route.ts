@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PUBLIC_ROADMAP_ITEMS, mapPublicRoadmapToApi } from '@/lib/config/publicRoadmap';
+import { PUBLIC_ROADMAP_ITEMS, mapPublicRoadmapToApi, roadmapStatusLabel } from '@/lib/config/publicRoadmap';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +15,7 @@ type DbRow = {
   sort_order: number;
 };
 
-const UPCOMING = new Set(['planned', 'in_progress']);
+const VISIBLE = new Set(['planned', 'in_progress', 'shipped']);
 
 function mergeRoadmapItems(dbRows: DbRow[] | null) {
   const dbById = new Map((dbRows ?? []).map((r) => [r.id, r]));
@@ -26,7 +26,7 @@ function mergeRoadmapItems(dbRows: DbRow[] | null) {
   return PUBLIC_ROADMAP_ITEMS.map((staticRow) => {
     const db = dbById.get(staticRow.id);
     const status = db?.status ?? staticRow.status;
-    if (!UPCOMING.has(status)) return null;
+    if (!VISIBLE.has(status)) return null;
 
     return {
       id: staticRow.id,
@@ -34,7 +34,7 @@ function mergeRoadmapItems(dbRows: DbRow[] | null) {
       excerpt: staticRow.excerpt,
       category: staticRow.category,
       status,
-      statusLabel: status === 'in_progress' ? 'In progress' : 'Planned',
+      statusLabel: roadmapStatusLabel(status),
       link: staticRow.link,
     };
   })
@@ -44,7 +44,7 @@ function mergeRoadmapItems(dbRows: DbRow[] | null) {
 }
 
 /**
- * Returns upcoming roadmap items (status = planned | in_progress) ordered by sort_order.
+ * Returns roadmap items (planned | in_progress | shipped) ordered by sort_order.
  * Static config in publicRoadmap.js is canonical for milestone copy;
  * Supabase may override status only (after seed or admin edits).
  */

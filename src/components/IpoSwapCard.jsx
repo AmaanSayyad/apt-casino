@@ -1,16 +1,17 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowDown,
   Sparkles,
   Wallet,
   Zap,
+  Clock,
 } from 'lucide-react';
 import { IPO_COPY } from '@/lib/config/ipo';
 import { IpoLogoIcon } from '@/components/IpoStackLogos';
-import { IpoBuyGuidance } from '@/components/IpoExtras';
+import { IpoBuyGuidance, useIpoCountdown } from '@/components/IpoExtras';
 
 const SOL_PRESETS = ['5', '10', '50', '100', '500'];
 
@@ -38,6 +39,8 @@ export default function IpoSwapCard({
   isLive,
   isPurchasing,
   phase,
+  startAt,
+  endAt,
   connected,
   onConnect,
   onSwap,
@@ -48,6 +51,8 @@ export default function IpoSwapCard({
   onSetMaxSol,
 }) {
   const reduceMotion = useReducedMotion();
+  const amountInputRef = useRef(null);
+  const { compactLabel: countdownLabel } = useIpoCountdown({ phase, startAt, endAt });
 
   const estUsd = estAptc > 0 && aptcPrice ? estAptc * aptcPrice : 0;
   const exceedsBalance =
@@ -56,6 +61,38 @@ export default function IpoSwapCard({
     Number.isFinite(solAmount) &&
     solAmount > 0 &&
     solAmount > spendableSol + 1e-9;
+
+  const needsAmount = isLive && (!Number.isFinite(solAmount) || solAmount <= 0);
+  const highlightPay = isLive && connected && needsAmount;
+
+  useEffect(() => {
+    if (!isLive || !connected || isPurchasing) return;
+    const el = amountInputRef.current;
+    if (!el) return;
+    // Draw attention to the amount field once the wallet is ready.
+    const t = window.setTimeout(() => {
+      try {
+        el.focus({ preventScroll: true });
+        el.select?.();
+      } catch {
+        /* ignore */
+      }
+    }, 120);
+    return () => window.clearTimeout(t);
+  }, [isLive, connected, isPurchasing]);
+
+  const ctaLabel = isPurchasing
+    ? 'Buying…'
+    : exceedsBalance
+      ? 'Amount exceeds balance'
+      : needsAmount
+        ? 'Enter SOL amount'
+        : isLive
+          ? 'Buy APTC now'
+          : phase === 'upcoming'
+            ? countdownLabel
+            : 'Sale ended';
+  const CtaIcon = phase === 'upcoming' && !isPurchasing ? Clock : Zap;
 
   const upsideRows = useMemo(() => {
     if (estAptc <= 0 || !aptcPrice) return [];
@@ -100,7 +137,7 @@ export default function IpoSwapCard({
               </span>
             </h3>
             <p className="mt-1.5 text-xs text-white/45 whitespace-nowrap overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              Deposit SOL from your wallet — receive APTC at the fixed IPO price.
+              Deposit SOL — receive APTC at the fixed IPO price.
             </p>
           </div>
 
@@ -151,18 +188,34 @@ export default function IpoSwapCard({
                 </button>
               ))}
             </div>
-            <div className="group relative rounded-2xl border border-white/10 bg-black/40 p-[1px] focus-within:border-fuchsia-400/50 transition-colors">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-fuchsia-500/0 via-fuchsia-500/10 to-violet-500/0 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+            <div
+              className={`group relative rounded-2xl border bg-black/40 p-[1px] transition-colors ${
+                highlightPay
+                  ? 'border-fuchsia-400/55 shadow-[0_0_28px_-8px_rgba(217,70,239,0.75)]'
+                  : 'border-white/10 focus-within:border-fuchsia-400/50'
+              }`}
+            >
+              <div
+                className={`absolute inset-0 rounded-2xl bg-gradient-to-r from-fuchsia-500/0 via-fuchsia-500/15 to-violet-500/0 transition-opacity pointer-events-none ${
+                  highlightPay ? 'opacity-100' : 'opacity-0 group-focus-within:opacity-100'
+                }`}
+              />
               <div className="relative flex items-center gap-3 rounded-[15px] bg-[#0a0008] px-4 py-3.5">
                 <input
+                  ref={amountInputRef}
                   type="number"
                   min="0"
                   step="any"
                   value={solIn}
                   onChange={(e) => setSolIn(e.target.value)}
-                  placeholder="0.00"
+                  placeholder="Enter SOL amount"
                   disabled={!isLive || isPurchasing}
-                  className="flex-1 min-w-0 bg-transparent text-2xl font-bold text-white outline-none placeholder:text-white/15 tabular-nums"
+                  aria-label="SOL amount to pay"
+                  className={`flex-1 min-w-0 bg-transparent text-2xl font-bold outline-none tabular-nums ${
+                    highlightPay
+                      ? 'text-white placeholder:text-fuchsia-200/45'
+                      : 'text-white placeholder:text-white/25'
+                  }`}
                 />
                 <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5">
                   <IpoLogoIcon logoId="solana" size={22} />
@@ -295,15 +348,9 @@ export default function IpoSwapCard({
               whileTap={reduceMotion ? undefined : { scale: 0.98 }}
               className="group relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-fuchsia-600 py-4 text-sm font-bold uppercase tracking-[0.14em] text-white shadow-[0_0_40px_-8px_rgba(217,70,239,0.9)] hover:shadow-[0_0_50px_-6px_rgba(217,70,239,1)] transition-shadow disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
             >
-              <span className="relative z-10 inline-flex items-center justify-center gap-2">
-                <Zap className="h-4 w-4" aria-hidden />
-                {isPurchasing
-                  ? 'Swapping…'
-                  : isLive
-                    ? 'Swap SOL → APTC now'
-                    : phase === 'upcoming'
-                      ? 'Not open yet'
-                      : 'Sale ended'}
+              <span className="relative z-10 inline-flex items-center justify-center gap-2 tabular-nums">
+                <CtaIcon className="h-4 w-4 shrink-0" aria-hidden />
+                {ctaLabel}
               </span>
               {isLive && !isPurchasing && !reduceMotion ? (
                 <span className="ipo-swap-shimmer pointer-events-none absolute inset-0 opacity-40" aria-hidden />

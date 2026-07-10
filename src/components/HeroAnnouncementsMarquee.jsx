@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { PLATFORM_CREDENTIALS } from '@/lib/config/socialCredentials';
-import { isAptcLaunched, getLaunchStatusText, getLaunchBadgeVariant } from '@/lib/config/launchStatus';
+import { isAptcLaunched, getLaunchStatusText, getLaunchBadgeVariant, getLaunchCtaHref } from '@/lib/config/launchStatus';
 
 /**
  * Full-width infinite text marquee below the navbar.
@@ -12,11 +12,12 @@ export default function HeroAnnouncementsMarquee() {
   const launched = isAptcLaunched();
   const statusText = getLaunchStatusText();
   const badgeVariant = getLaunchBadgeVariant();
+  const ctaHref = getLaunchCtaHref();
   
   const ANNOUNCEMENT_ITEMS = useMemo(() => [
-    { text: statusText, primary: true, variant: badgeVariant },
+    { text: statusText, primary: true, variant: badgeVariant, href: ctaHref },
     ...PLATFORM_CREDENTIALS,
-  ], [statusText, badgeVariant]);
+  ], [statusText, badgeVariant, ctaHref]);
   
   const loopSegments = useMemo(() => [...ANNOUNCEMENT_ITEMS, ...ANNOUNCEMENT_ITEMS], [ANNOUNCEMENT_ITEMS]);
 
@@ -58,7 +59,7 @@ export default function HeroAnnouncementsMarquee() {
                 />
               )}
               {item.primary ? (
-                <Link href="/#tokenomics" className={`whitespace-nowrap transition-colors ${
+                <Link href={item.href || '/ipo'} className={`whitespace-nowrap transition-colors ${
                   item.variant === 'live' 
                     ? 'text-emerald-200 hover:text-emerald-100' 
                     : 'text-amber-200 hover:text-amber-100'

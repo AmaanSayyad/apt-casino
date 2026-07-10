@@ -76,7 +76,7 @@ export default function LitepaperTokenomicsBlock() {
         ))}
       </div>
 
-      <div className="mb-5 grid gap-3 sm:grid-cols-3">
+        <div className="mb-5 grid gap-3 sm:grid-cols-3">
         <div className="lp-glass rounded-xl p-4 text-center">
           <p className="text-[10px] uppercase tracking-widest text-white/40">IPO raise</p>
           <p className="mt-1 text-xl font-bold text-white">${(IPO_SALE.raiseTargetUsd / 1000).toFixed(0)}K</p>
@@ -84,11 +84,22 @@ export default function LitepaperTokenomicsBlock() {
         <div className="lp-glass rounded-xl p-4 text-center">
           <p className="text-[10px] uppercase tracking-widest text-white/40">IPO price</p>
           <p className="mt-1 text-xl font-bold text-white">${IPO_SALE.tokenPriceUsd}</p>
+          <p className="mt-1 text-[10px] text-emerald-300/70">Discounted entry</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Opens</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Status</p>
           <p className="mt-1 text-lg font-bold text-white">{IPO_SALE.launchLabel}</p>
         </div>
+      </div>
+
+      <div className="mb-5 lp-glass rounded-xl p-4">
+        <p className="text-[10px] font-black uppercase tracking-widest text-amber-200/70 mb-2">
+          Price ladder
+        </p>
+        <p className="text-xs leading-6 text-white/55">
+          This IPO is the discounted entry at ${IPO_SALE.tokenPriceUsd}. Listing targets $0.0012 (3×).
+          CEX targets $0.008 (20×). If oversubscribed, the next 100M APTC opens at $0.0008 (2×).
+        </p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
@@ -97,7 +108,7 @@ export default function LitepaperTokenomicsBlock() {
             Full supply allocation
           </p>
           <p className="mb-4 text-xs text-white/40">
-            25% public IPO · Raydium LP · 0% team / founder · no wash · no fake FDV · no dumps
+            25% public IPO · Raydium LP · 0% team / founder
           </p>
           <AllocationDonut variant="litepaper" />
         </div>

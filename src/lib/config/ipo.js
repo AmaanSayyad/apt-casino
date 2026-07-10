@@ -33,7 +33,7 @@ export const IPO_LOGOS = {
     src: METAPLEX_LOGO_SRC,
     alt: 'Metaplex',
     label: 'Metaplex Genesis',
-    role: 'Genesis presale settlement model — fixed-price swap rail',
+    role: 'Genesis presale settlement model — fixed-price purchase rail',
   },
   metadao: {
     src: METADAO_LOGO_SRC,
@@ -81,7 +81,7 @@ export const IPO_STACK = [
   {
     id: 'chain',
     phase: 'On Solana',
-    blurb: 'SPL token · Pyth oracle · wallet-native swap',
+    blurb: 'SPL token · Pyth oracle · wallet-native purchase',
     logos: ['solana', 'pyth'],
   },
   {
@@ -132,13 +132,17 @@ export const IPO_SALE = {
   tokenPriceUsd: 0.0004,
   softCapAptc: 250_000_000,
   oversubscriptionAllowed: true,
-  /** July 11, 2026 3:30 AM ET → July 14, 2026 3:30 AM ET (same instant as 1:00 PM IST) */
-  startAtIso: '2026-07-11T07:30:00.000Z',
-  endAtIso: '2026-07-14T07:30:00.000Z',
+  /** If soft cap fills, next tranche opens at this size / price (2× IPO). */
+  oversubTrancheTokens: 100_000_000,
+  oversubTrancheTokensShort: '100M',
+  oversubTranchePriceUsd: 0.0008,
+  /** Sale window — override with NEXT_PUBLIC_IPO_* / IPO_*_AT_ISO env vars. */
+  startAtIso: '2026-07-10T12:00:00.000Z',
+  endAtIso: '2026-07-13T12:00:00.000Z',
   durationDays: 3,
   timezoneLabel: 'Eastern Time (ET)',
-  launchLabel: 'July 11, 2026 · 3:30 AM ET',
-  endLabel: 'July 14, 2026 · 3:30 AM ET',
+  launchLabel: 'Live now',
+  endLabel: 'July 13, 2026',
   stakingLockDays: 30,
   stakingApyPct: 30,
   stakingApyBps: 3000,
@@ -154,16 +158,65 @@ export const IPO_SALE = {
   poweredBy: 'Metaplex',
 };
 
+/**
+ * Launchpad-style price ladder — IPO (discounted) → Listing (3×) → CEX (20×).
+ * Later tiers are planned targets for communication, not a guarantee of market price.
+ */
+export const IPO_PRICE_LADDER = [
+  {
+    id: 'ipo',
+    round: 1,
+    label: 'IPO',
+    priceUsd: 0.0004,
+    multiple: 1,
+    status: 'live',
+    blurb: 'Discounted entry',
+  },
+  {
+    id: 'listing',
+    round: 2,
+    label: 'Listing',
+    priceUsd: 0.0012,
+    multiple: 3,
+    status: 'planned',
+    blurb: '3× IPO price',
+  },
+  {
+    id: 'cex',
+    round: 3,
+    label: 'CEX',
+    priceUsd: 0.008,
+    multiple: 20,
+    status: 'planned',
+    blurb: '20× IPO price',
+  },
+];
+
+export const IPO_PRICE_LADDER_COPY =
+  'This IPO is the discounted entry at $0.0004. Listing targets $0.0012 (3×). CEX targets $0.008 (20×) — the standard IPO → Listing → CEX price ladder.';
+
+export const IPO_OVERSUB_COPY =
+  'If the IPO oversubscribes, the next 100M APTC is added for sale at $0.0008 (2×).';
+
+export function formatIpoPriceUsd(price) {
+  if (!Number.isFinite(Number(price))) return '—';
+  const n = Number(price);
+  if (n >= 0.01) return `$${n.toFixed(2)}`;
+  // Trim trailing zeros for ladder prices like $0.008
+  const fixed = n.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+  return `$${fixed}`;
+}
+
 export const IPO_COPY = {
   headline: '$APTC Public IPO',
   subheadLines: [
     {
       id: 'presale',
-      text: 'Fixed-price presale on Solana — deposit SOL, receive APTC instantly.',
+      text: 'Discounted IPO at $0.0004 — Listing $0.0012 (3×), CEX $0.008 (20×).',
     },
     {
       id: 'terms',
-      text: 'Oversubscription accepted · extra supply fulfilled automatically.',
+      text: 'If oversubscribed, next 100M APTC opens at $0.0008 (2×).',
       accent: true,
     },
   ],
@@ -173,7 +226,7 @@ export const IPO_COPY = {
     { id: 'idle', label: 'Idle supply still yields' },
     { id: 'stack', label: 'Rewards stack · only up' },
   ],
-  swapLabel: 'Swap SOL → APTC',
+  swapLabel: 'Buy APTC with SOL',
   swapIntro:
     'Send SOL to the IPO treasury — APTC hits your wallet instantly. Auto-staked for 30 days: your idle APTC earns 30% APY from day one through the full vesting lock.',
   affiliateHeadline: '3-level IPO referrals',
@@ -182,9 +235,22 @@ export const IPO_COPY = {
   connectHint: 'Connect the wallet you used to deposit to view your position, unlock time, and rewards.',
 };
 
+export function getIpoSchedule() {
+  const startAtIso =
+    process.env.NEXT_PUBLIC_IPO_START_AT_ISO?.trim() ||
+    process.env.IPO_START_AT_ISO?.trim() ||
+    IPO_SALE.startAtIso;
+  const endAtIso =
+    process.env.NEXT_PUBLIC_IPO_END_AT_ISO?.trim() ||
+    process.env.IPO_END_AT_ISO?.trim() ||
+    IPO_SALE.endAtIso;
+  return { startAtIso, endAtIso };
+}
+
 export function getIpoPhase(now = Date.now()) {
-  const start = Date.parse(IPO_SALE.startAtIso);
-  const end = Date.parse(IPO_SALE.endAtIso);
+  const { startAtIso, endAtIso } = getIpoSchedule();
+  const start = Date.parse(startAtIso);
+  const end = Date.parse(endAtIso);
   if (!Number.isFinite(start) || !Number.isFinite(end)) return 'unknown';
   if (now < start) return 'upcoming';
   if (now <= end) return 'live';
@@ -196,9 +262,10 @@ export function isIpoLive(now = Date.now()) {
 }
 
 export function getIpoCountdownMs(now = Date.now()) {
+  const { startAtIso, endAtIso } = getIpoSchedule();
   const phase = getIpoPhase(now);
-  if (phase === 'upcoming') return Math.max(0, Date.parse(IPO_SALE.startAtIso) - now);
-  if (phase === 'live') return Math.max(0, Date.parse(IPO_SALE.endAtIso) - now);
+  if (phase === 'upcoming') return Math.max(0, Date.parse(startAtIso) - now);
+  if (phase === 'live') return Math.max(0, Date.parse(endAtIso) - now);
   return 0;
 }
 

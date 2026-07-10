@@ -18,6 +18,7 @@ const MermaidDiagram = dynamic(() => import('@/components/ui/MermaidDiagram'), {
 const STATUS_STYLES = {
   in_progress: 'bg-cyan-500/20 text-cyan-200 border-cyan-400/30',
   planned: 'bg-white/5 text-white/60 border-white/15',
+  shipped: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
 };
 
 const CATEGORY_DOT = {

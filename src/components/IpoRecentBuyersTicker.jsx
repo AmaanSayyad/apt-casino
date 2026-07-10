@@ -39,9 +39,9 @@ function timeAgo(iso) {
 }
 
 const PLACEHOLDER_ITEMS = [
-  { id: 'wait-1', kind: 'placeholder', text: 'Watching for live swaps…' },
+  { id: 'wait-1', kind: 'placeholder', text: 'Watching for live buys…' },
   { id: 'wait-2', kind: 'placeholder', text: 'New buys appear here in real time' },
-  { id: 'wait-3', kind: 'placeholder', text: 'Every swap is on-chain · tap to verify on Solscan' },
+  { id: 'wait-3', kind: 'placeholder', text: 'Every purchase is on-chain · tap to verify on Solscan' },
 ];
 
 function ActivityChip({ item }) {
@@ -162,7 +162,7 @@ export default function IpoRecentBuyersTicker({ phase = 'upcoming', className = 
           </span>
           <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
             <Activity className="h-3.5 w-3.5 text-fuchsia-300/80" aria-hidden />
-            {isLive ? 'Live activity' : phase === 'ended' ? 'Final swaps' : 'IPO feed'}
+            {isLive ? 'Live activity' : phase === 'ended' ? 'Final buys' : 'IPO feed'}
           </span>
           <span className="sm:hidden text-[9px] font-bold uppercase tracking-[0.16em] text-white/60">Live</span>
         </div>

@@ -7,7 +7,7 @@
 import { getLitepaperUrl } from '../siteMetadata.js';
 
 /** @typedef {'Platform'|'Governance'|'Partnership'|'Security'|'Community'|'Tournaments'} RoadmapCategory */
-/** @typedef {'planned'|'in_progress'} RoadmapStatus */
+/** @typedef {'planned'|'in_progress'|'shipped'} RoadmapStatus */
 
 /**
  * @type {Array<{
@@ -25,7 +25,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000001',
     title: '$APTC public IPO on Solana',
     excerpt:
-      'Fixed-price IPO · 250M APTC · $100K raise target · Metaplex Genesis settlement · MetaDAO-inspired architecture · PinkSale-style 3-level affiliates · Pyth oracle · opens July 11, 2026 3:30 AM ET.',
+      'Fixed-price IPO · discounted entry $0.0004 · Listing $0.0012 (3×) · CEX $0.008 (20×) · oversub +100M @ $0.0008 (2×) · LIVE now.',
     category: 'Platform',
     status: 'in_progress',
     link: '/ipo',
@@ -67,7 +67,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     excerpt:
       'One connect flow for Petra, Phantom, and Solana wallets — play chain switcher, house balances, and deposits without Aptos-only friction.',
     category: 'Platform',
-    status: 'in_progress',
+    status: 'shipped',
     link: null,
     sortOrder: 15,
   },
@@ -77,7 +77,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     excerpt:
       'Move modules live on mainnet for Plinko, Mines, Roulette, and Wheel — bootstrap house state, relayer gasless UX, and production monitoring.',
     category: 'Platform',
-    status: 'in_progress',
+    status: 'shipped',
     link: '/game',
     sortOrder: 18,
   },
@@ -87,7 +87,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     excerpt:
       'Public 30-day GGR estimates, buyback split (burn / stakers / treasury), and env-driven economics — no black-box treasury moves.',
     category: 'Platform',
-    status: 'in_progress',
+    status: 'shipped',
     link: '/dashboard',
     sortOrder: 20,
   },
@@ -333,16 +333,24 @@ export const PUBLIC_ROADMAP_ITEMS = [
   },
 ];
 
+export function roadmapStatusLabel(status) {
+  if (status === 'in_progress') return 'In progress';
+  if (status === 'shipped') return 'Completed';
+  return 'Planned';
+}
+
 export function mapPublicRoadmapToApi(items = PUBLIC_ROADMAP_ITEMS) {
-  return items.map((r) => ({
-    id: r.id,
-    title: r.title,
-    excerpt: r.excerpt,
-    category: r.category,
-    status: r.status,
-    statusLabel: r.status === 'in_progress' ? 'In progress' : 'Planned',
-    link: r.link,
-  }));
+  return items
+    .filter((r) => r.status !== 'cancelled')
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      excerpt: r.excerpt,
+      category: r.category,
+      status: r.status,
+      statusLabel: roadmapStatusLabel(r.status),
+      link: r.link,
+    }));
 }
 
 export function mapPublicRoadmapToDbRows(items = PUBLIC_ROADMAP_ITEMS) {

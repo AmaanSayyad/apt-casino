@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
@@ -11,6 +11,7 @@ import { IPO_COPY } from '@/lib/config/ipo';
 import IpoBanner from '@/components/IpoBanner';
 import IpoAffiliateExplainer from '@/components/IpoAffiliateExplainer';
 import IpoSwapCard from '@/components/IpoSwapCard';
+import IpoPriceLadder from '@/components/IpoPriceLadder';
 import IpoRecentBuyersTicker from '@/components/IpoRecentBuyersTicker';
 import {
   IpoWhatHappensNext,
@@ -24,6 +25,7 @@ import {
   IpoAddToken,
   IpoSharePurchase,
 } from '@/components/IpoExtras';
+import { SolscanLink } from '@/components/ui/SolscanMark';
 
 function fmt(n, opts = {}) {
   if (n === null || n === undefined || !Number.isFinite(Number(n))) return '—';
@@ -47,13 +49,24 @@ function Stat({ label, value, sub }) {
   );
 }
 
+function formatProgressPct(pct) {
+  const n = Number(pct);
+  if (!Number.isFinite(n) || n <= 0) return '0%';
+  if (n < 0.01) return '<0.01%';
+  if (n < 1) return `${n.toFixed(2)}%`;
+  if (n < 10) return `${n.toFixed(2)}%`;
+  return `${n.toFixed(1)}%`;
+}
+
 function ProgressBar({ pct, label }) {
-  const w = Math.min(100, Math.max(0, pct || 0));
+  const raw = Math.min(100, Math.max(0, Number(pct) || 0));
+  // Early raises are tiny vs $100K / 250M — keep a visible sliver when > 0.
+  const w = raw > 0 ? Math.max(raw, 1.25) : 0;
   return (
     <div>
       <div className="flex justify-between text-[11px] text-white/50 mb-2">
         <span>{label}</span>
-        <span className="tabular-nums">{w.toFixed(1)}%</span>
+        <span className="tabular-nums">{formatProgressPct(raw)}</span>
       </div>
       <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
         <div
@@ -82,6 +95,7 @@ export default function IpoPurchasePanel({
   const [solIn, setSolIn] = useState('');
   const [infoPanel, setInfoPanel] = useState('how'); // how | verify | faq | refer | board | me
   const [loading, setLoading] = useState(true);
+  const autoFilledWalletRef = useRef(null);
 
   const { purchase, isPurchasing } = useIpoPurchase(config?.treasury, referrer);
   const { balance: walletSolBalance, spendable: spendableSol, loading: balanceLoading, refresh: refreshSolBalance } =
@@ -92,6 +106,23 @@ export default function IpoPurchasePanel({
     const v = Math.floor(spendableSol * 1e6) / 1e6;
     setSolIn(String(v));
   }, [spendableSol]);
+
+  // After connect, default the pay field to max spendable SOL (fee buffer reserved).
+  useEffect(() => {
+    if (!connected || !address) {
+      autoFilledWalletRef.current = null;
+      return;
+    }
+    if (autoFilledWalletRef.current === address) return;
+    if (balanceLoading || spendableSol == null || spendableSol <= 0) return;
+    const v = Math.floor(spendableSol * 1e6) / 1e6;
+    setSolIn(String(v));
+    autoFilledWalletRef.current = address;
+  }, [connected, address, spendableSol, balanceLoading]);
+
+  useEffect(() => {
+    if (!connected) setSolIn('');
+  }, [connected]);
 
   const refresh = useCallback(async () => {
     try {
@@ -186,6 +217,7 @@ export default function IpoPurchasePanel({
     const result = await purchase(solAmount);
     if (result?.success) {
       setSolIn('');
+      autoFilledWalletRef.current = null;
       await Promise.all([refresh(), refreshMe(), refreshSolBalance()]);
     }
   };
@@ -213,6 +245,8 @@ export default function IpoPurchasePanel({
           isLive={isLive}
           isPurchasing={isPurchasing}
           phase={phase}
+          startAt={config?.startAt}
+          endAt={config?.endAt}
           connected={connected}
           onConnect={() => openWalletModal(true)}
           onSwap={onSwap}
@@ -243,6 +277,8 @@ export default function IpoPurchasePanel({
             <ProgressBar pct={stats?.pctOfRaise} label={`Raise progress · target ${fmtUsd(stats?.raiseTargetUsd)}`} />
             <ProgressBar pct={stats?.pctOfCap} label={`Allocation progress${stats?.oversubscribed ? ' · oversubscribed' : ''}`} />
           </div>
+
+          <IpoPriceLadder />
 
           <div className="flex flex-wrap items-center gap-2">
             {infoTabs.map((tab) => {
@@ -292,15 +328,12 @@ export default function IpoPurchasePanel({
               ) : null}
 
               {infoPanel === 'verify' ? (
-                <div className="space-y-4">
-                  <IpoVerifyWallets
-                    bare
-                    treasury={config?.treasury}
-                    distributor={config?.aptcDistributor}
-                    mint={config?.mint}
-                  />
-                  <IpoAddToken mint={config?.mint} />
-                </div>
+                <IpoVerifyWallets
+                  bare
+                  treasury={config?.treasury}
+                  distributor={config?.aptcDistributor}
+                  mint={config?.mint}
+                />
               ) : null}
 
               {infoPanel === 'faq' ? <IpoFaq /> : null}
@@ -334,7 +367,15 @@ export default function IpoPurchasePanel({
                         leaderboard.map((row) => (
                           <tr key={row.wallet} className="text-white/80">
                             <td className="px-4 py-2.5 tabular-nums text-white/50">{row.rank}</td>
-                            <td className="px-4 py-2.5 font-mono text-xs break-all">{row.wallet}</td>
+                            <td className="px-4 py-2.5 font-mono text-xs break-all">
+                              <SolscanLink
+                                href={`https://solscan.io/account/${row.wallet}`}
+                                size={12}
+                                className="text-fuchsia-300/80 hover:text-fuchsia-200 transition-colors"
+                              >
+                                {row.wallet}
+                              </SolscanLink>
+                            </td>
                             <td className="px-4 py-2.5 text-right tabular-nums">{fmtUsd(row.totalUsd)}</td>
                             <td className="px-4 py-2.5 text-right tabular-nums hidden sm:table-cell">
                               {fmt(row.totalAptc, { maximumFractionDigits: 0 })}
@@ -360,7 +401,7 @@ export default function IpoPurchasePanel({
                   {!hasPurchases ? (
                     <div className="space-y-4">
                       <p className="text-xs text-white/45 border border-dashed border-white/10 rounded-xl p-4">
-                        No IPO purchases linked to this wallet yet. Use the swap panel to deposit SOL → APTC.
+                        No IPO purchases linked to this wallet yet. Use the buy panel to deposit SOL → APTC.
                       </p>
                       <IpoAddToken mint={config?.mint} />
                       <IpoSharePurchase />

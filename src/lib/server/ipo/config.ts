@@ -23,8 +23,14 @@ export function getIpoServerConfig() {
       ? Number(process.env.IPO_RAISE_TARGET_USD)
       : IPO_SALE.raiseTargetUsd;
 
-  const startAt = process.env.IPO_START_AT_ISO?.trim() || IPO_SALE.startAtIso;
-  const endAt = process.env.IPO_END_AT_ISO?.trim() || IPO_SALE.endAtIso;
+  const startAt =
+    process.env.NEXT_PUBLIC_IPO_START_AT_ISO?.trim() ||
+    process.env.IPO_START_AT_ISO?.trim() ||
+    IPO_SALE.startAtIso;
+  const endAt =
+    process.env.NEXT_PUBLIC_IPO_END_AT_ISO?.trim() ||
+    process.env.IPO_END_AT_ISO?.trim() ||
+    IPO_SALE.endAtIso;
 
   const enabled =
     (process.env.IPO_ENABLED || process.env.NEXT_PUBLIC_IPO_ENABLED || 'true').toLowerCase() ===

@@ -1,8 +1,3 @@
-/**
- * Central launch status configuration
- * Controls marketing / trading UI. IPO inventory may use a configured mint before public DEX listing.
- */
-
 import { getIpoPhase, IPO_SALE } from './ipo';
 
 /**
@@ -59,11 +54,13 @@ export function getLaunchStatusText() {
 }
 
 /**
- * Get launch status badge variant
- * Returns 'live' or 'soon'
+ * Badge variant for ticker / hero — IPO live counts as Live (not only post-DEX)
  */
 export function getLaunchBadgeVariant() {
-  return isAptcLaunched() ? 'live' : 'soon';
+  if (isAptcLaunched()) return 'live';
+  const phase = getIpoPhase();
+  if (phase === 'live') return 'live';
+  return 'soon';
 }
 
 /**
@@ -127,10 +124,21 @@ export function getHeroImageDimensions() {
 }
 
 /**
+ * Primary CTA target for launch badges
+ */
+export function getLaunchCtaHref() {
+  if (isAptcLaunched()) return '/#tokenomics';
+  const phase = getIpoPhase();
+  if (phase === 'live' || phase === 'upcoming') return '/ipo';
+  return '/#tokenomics';
+}
+
+/**
  * Get CTA link text based on launch status
  */
 export function getLaunchCtaText() {
   if (isAptcLaunched()) return 'Trade now →';
   if (getIpoPhase() === 'live') return 'Buy APTC →';
+  if (getIpoPhase() === 'upcoming') return 'IPO page →';
   return 'Learn more →';
 }

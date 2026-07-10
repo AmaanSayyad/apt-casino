@@ -23,7 +23,7 @@ Native SPL token for AptCasino.fun — **fixed-price public IPO** on Solana, the
 | **Sale** | Fixed-price SOL → APTC swap at `/ipo` |
 | **Sale supply** | **25%** (250M APTC) |
 | **Raise target** | **$100,000** at **$0.0004 / APTC** |
-| **Window** | July 11–14, 2026 · 3:30 AM ET |
+| **Window** | LIVE now → July 13, 2026 |
 | **Settlement** | Metaplex Genesis–style rails · MetaDAO-inspired architecture |
 | **Affiliates** | PinkSale-style 3-level IPO referrals |
 | **Oracle** | Pyth SOL/USD for settlement |

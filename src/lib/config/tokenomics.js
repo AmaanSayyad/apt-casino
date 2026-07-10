@@ -4,14 +4,15 @@
  */
 
 import { getAptcMint, isAptcLaunched, getAptcPairAddress } from './launchStatus';
-import { IPO_SALE, METAPLEX_LOGO_SRC, RAYDIUM_LOGO_SRC, METADAO_LOGO_SRC, PINKSALE_LOGO_SRC, PYTH_LOGO_SRC } from './ipo';
+import { IPO_SALE, APTC_LOGO_SRC, METAPLEX_LOGO_SRC, RAYDIUM_LOGO_SRC, METADAO_LOGO_SRC, PINKSALE_LOGO_SRC, PYTH_LOGO_SRC } from './ipo';
 import { SOLSCAN_LOGO_SRC } from './solscan';
 
 export const METAPLEX_LOGO = METAPLEX_LOGO_SRC;
+export const APTC_LOGO = APTC_LOGO_SRC;
 
 export const IPO_LAUNCH_MODE = {
   label: 'Public IPO',
-  tagline: 'Fixed-price SOL swap · Raydium post-TGE',
+  tagline: 'Fixed-price SOL purchase · Raydium post-TGE',
   quotePair: 'SOL',
   createUrl: '/ipo',
   feesDocsUrl: 'https://docs.metaplex.com/genesis',
@@ -39,12 +40,12 @@ export const APTC_TOKENOMICS = {
   get mint() {
     return getAptcMint();
   },
-  launchVenue: 'IPO → Raydium',
+  launchVenue: 'Public IPO → Raydium',
   launchPlatformUrl: '/ipo',
   feeMode: 'IPO_FIXED',
   feeModeLabel: 'Fixed-price IPO',
   launch:
-    '25% public IPO — deposit SOL, receive APTC instantly. Auto-staked 30 days @ 30% APY. Post-IPO Raydium liquidity. Powered by Metaplex.',
+    '25% public IPO — deposit SOL, receive APTC instantly. Auto-staked 30 days @ 30% APY. Post-IPO Raydium liquidity.',
   authorities: {
     mintRevoked: true,
     freezeRevoked: true,
@@ -95,7 +96,7 @@ export const APTC_ALLOCATION = [
     fill: '#d946ef',
     color: 'from-fuchsia-500 to-violet-600',
     detail:
-      'Fixed-price presale on aptcasino.fun — swap SOL for APTC instantly. Target raise $100K at $0.0004/APTC. Oversubscription accepted.',
+      'Fixed-price presale on aptcasino.fun — buy APTC with SOL instantly. Target raise $100K at $0.0004/APTC. Oversubscription accepted.',
   },
   {
     label: 'Raydium LP (post-TGE)',
@@ -154,16 +155,15 @@ export const CREATOR_BUY_DEPLOYMENT = [
 ];
 
 export const CREATOR_BUY_PURPOSE =
-  'Protocol treasury tokens fund Tier 1, 2 & 3 listings (DEX → aggregators → CEX), community rewards, staking, and ops. No founder allocation. No team allocation. No wash volume. No fake FDV. No dumps.';
+  'Protocol treasury funds listings, community rewards, staking, and ops — 0% team / founder allocation.';
 
 export const APTC_TRANSPARENCY = {
   headline: 'The green flag checklist',
   subhead:
     'What snipers, bots, agents, and degens scan before they buy — and how APTC answers each one.',
   pledge:
-    'We are not hiding supply behind clusters, bundles, or fake metrics. APTC is a live GambleFi product with a fixed-price public IPO, revoked mint/freeze authorities, one public ops wallet, and on-chain casino revenue.',
-  opsWalletRule:
-    'Treasury → @aptcasinofun only · listings-first deployment · no wash · no fake FDV · no dumps',
+    'Fixed-price public IPO, revoked mint/freeze authorities, one public ops wallet, and on-chain casino revenue — no bundled clusters or hidden treasuries.',
+  opsWalletRule: 'Treasury → @aptcasinofun only · listings-first deployment',
 };
 
 export const APTC_TRADER_GREEN_FLAGS = [
@@ -180,7 +180,7 @@ export const APTC_TRADER_GREEN_FLAGS = [
   {
     term: 'Launch venue',
     status: 'Public IPO',
-    detail: 'Fixed-price SOL → APTC swap on aptcasino.fun · Powered by Metaplex.',
+    detail: 'Fixed-price SOL → APTC purchase on aptcasino.fun.',
   },
   {
     term: 'Team / founder allocation',
@@ -210,7 +210,7 @@ export const APTC_TRADER_GREEN_FLAGS = [
   {
     term: 'FDV / market cap',
     status: 'IPO-priced',
-    detail: 'Fixed $0.0004/APTC during IPO — oversubscription queued until supply added.',
+    detail: 'Fixed $0.0004/APTC during IPO — if oversubscribed, next 100M APTC opens at $0.0008 (2×).',
   },
   {
     term: 'Supply dumps',
@@ -264,17 +264,17 @@ export const APTC_WALLETS = [
   },
 ];
 
-export const APTC_LAUNCH_STEPS = ['IPO live', 'Swap SOL→APTC', 'Raydium LP', 'DexScreener'];
+export const APTC_LAUNCH_STEPS = ['IPO live', 'Buy APTC with SOL', 'Raydium LP', 'DexScreener'];
 
 export const APTC_LAUNCH_PHASES = [
   {
     step: '1',
     title: 'IPO opens',
-    detail: '250M APTC soft cap · $0.0004/APTC · instant SOL swap · oversubscription queued · auto-stake 30d @ 30% APY',
+    detail: '250M APTC soft cap · $0.0004/APTC · oversubscription queued · auto-stake 30d @ 30% APY',
   },
   {
     step: '2',
-    title: 'Swap rail',
+    title: 'Buy APTC',
     detail: 'Deposit SOL → receive APTC immediately from treasury inventory',
   },
   {
@@ -323,7 +323,7 @@ export const APTC_UTILITY = [
 ];
 
 export function getAllocationSummary() {
-  return '1B APTC fixed supply · 25% public IPO · Raydium post-TGE · 0% team/founder · treasury → ops · no wash · no fake FDV · no dumps.';
+  return '1B fixed supply · 25% public IPO · Raydium post-TGE · 0% team / founder.';
 }
 
 export function getCreatorBuyDeploymentLines() {
@@ -410,7 +410,7 @@ export function getAptcTradeLinks(options = {}) {
   const dexscreenerHref = pairUrl || 'https://dexscreener.com/solana';
 
   return [
-    { id: 'ipo', label: 'IPO', sub: 'Swap SOL→APTC', href: '/ipo', external: false, logo: '/APTC_logo_1000x1000.png' },
+    { id: 'ipo', label: 'IPO', sub: 'Buy APTC with SOL', href: '/ipo', external: false, logo: '/APTC_logo_1000x1000.png' },
     { id: 'metaplex', label: 'Metaplex', sub: 'Genesis presale', href: 'https://docs.metaplex.com/genesis/presale', external: true, logo: METAPLEX_LOGO_SRC },
     { id: 'metadao', label: 'MetaDAO', sub: 'Launch architecture', href: 'https://metadao.fi/', external: true, logo: METADAO_LOGO_SRC },
     { id: 'pinksale', label: 'PinkSale', sub: 'Affiliate model', href: 'https://www.pinksale.finance/', external: true, logo: PINKSALE_LOGO_SRC },
