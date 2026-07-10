@@ -5,6 +5,7 @@ import {
   APTC_LOGO_SRC,
   IPO_APTC_MINT_DEFAULT,
   IPO_SALE,
+  resolveIpoSaleState,
 } from '@/lib/config/ipo';
 import { SolscanLink } from '@/components/ui/SolscanMark';
 
@@ -31,10 +32,6 @@ function splitCountdown(ms) {
 
 /** Shared live countdown for IPO CTA / panels */
 export function useIpoCountdown({ phase: phaseProp, startAt, endAt } = {}) {
-  const scheduleStart = startAt || process.env.NEXT_PUBLIC_IPO_START_AT_ISO?.trim() || IPO_SALE.startAtIso;
-  const scheduleEnd = endAt || process.env.NEXT_PUBLIC_IPO_END_AT_ISO?.trim() || IPO_SALE.endAtIso;
-  const startIso = scheduleStart;
-  const endIso = scheduleEnd;
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -42,21 +39,23 @@ export function useIpoCountdown({ phase: phaseProp, startAt, endAt } = {}) {
     return () => clearInterval(id);
   }, []);
 
-  const phase =
-    phaseProp ||
-    (() => {
-      const s = Date.parse(startIso);
-      const e = Date.parse(endIso);
-      if (now < s) return 'upcoming';
-      if (now <= e) return 'live';
-      return 'ended';
-    })();
+  const saleState = resolveIpoSaleState(now);
+  const phase = phaseProp || saleState.phase;
+
+  const startIso =
+    startAt ||
+    (phase === 'live' ? saleState.activeRound?.startAtIso : saleState.nextRound?.startAtIso) ||
+    IPO_SALE.startAtIso;
+  const endIso =
+    endAt ||
+    (phase === 'live' ? saleState.activeRound?.endAtIso : saleState.nextRound?.endAtIso) ||
+    IPO_SALE.endAtIso;
 
   const ms =
-    phase === 'upcoming'
-      ? Math.max(0, Date.parse(startIso) - now)
-      : phase === 'live'
-        ? Math.max(0, Date.parse(endIso) - now)
+    phase === 'live'
+      ? Math.max(0, Date.parse(endIso) - now)
+      : phase === 'upcoming' || phase === 'between_rounds'
+        ? Math.max(0, Date.parse(startIso) - now)
         : 0;
 
   const parts = splitCountdown(ms);
@@ -67,11 +66,15 @@ export function useIpoCountdown({ phase: phaseProp, startAt, endAt } = {}) {
       if (parts.days > 0) return `Ends in ${parts.days}d ${pad(parts.hours)}h ${pad(parts.mins)}m`;
       return `Ends in ${pad(parts.hours)}:${pad(parts.mins)}:${pad(parts.secs)}`;
     }
+    if (phase === 'between_rounds') {
+      if (parts.days > 0) return `Next round in ${parts.days}d ${pad(parts.hours)}h`;
+      return `Next round in ${pad(parts.hours)}:${pad(parts.mins)}:${pad(parts.secs)}`;
+    }
     if (parts.days > 0) return `Opens in ${parts.days}d ${pad(parts.hours)}h ${pad(parts.mins)}m ${pad(parts.secs)}s`;
     return `Opens in ${pad(parts.hours)}:${pad(parts.mins)}:${pad(parts.secs)}`;
   }, [phase, parts.days, parts.hours, parts.mins, parts.secs]);
 
-  return { phase, parts, ms, compactLabel, startIso, endIso };
+  return { phase, parts, ms, compactLabel, startIso, endIso, saleState };
 }
 
 function formatLocal(iso) {
@@ -79,7 +82,8 @@ function formatLocal(iso) {
   const t = Date.parse(iso);
   if (!Number.isFinite(t)) return null;
   try {
-    return new Date(t).toLocaleString(undefined, {
+    return new Date(t).toLocaleString('en-US', {
+      timeZone: 'America/New_York',
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -89,7 +93,7 @@ function formatLocal(iso) {
       timeZoneName: 'short',
     });
   } catch {
-    return new Date(t).toLocaleString();
+    return new Date(t).toLocaleString('en-US', { timeZone: 'America/New_York' });
   }
 }
 
@@ -102,45 +106,35 @@ export function IpoLiveCountdown({
   endLabel,
   className = '',
 }) {
-  const startIso = startAt || process.env.NEXT_PUBLIC_IPO_START_AT_ISO?.trim() || IPO_SALE.startAtIso;
-  const endIso = endAt || process.env.NEXT_PUBLIC_IPO_END_AT_ISO?.trim() || IPO_SALE.endAtIso;
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const phase =
-    phaseProp ||
-    (() => {
-      const s = Date.parse(startIso);
-      const e = Date.parse(endIso);
-      if (now < s) return 'upcoming';
-      if (now <= e) return 'live';
-      return 'ended';
-    })();
-
-  const ms =
-    phase === 'upcoming'
-      ? Math.max(0, Date.parse(startIso) - now)
-      : phase === 'live'
-        ? Math.max(0, Date.parse(endIso) - now)
-        : 0;
-
-  const parts = splitCountdown(ms);
+  const { phase, parts, startIso, endIso, saleState } = useIpoCountdown({
+    phase: phaseProp,
+    startAt,
+    endAt,
+  });
   const localStart = formatLocal(startIso);
   const localEnd = formatLocal(endIso);
   const label =
-    phase === 'upcoming' ? 'Starts in' : phase === 'live' ? 'Ends in' : 'Sale closed';
+    phase === 'upcoming'
+      ? 'Starts in'
+      : phase === 'live'
+        ? 'Ends in'
+        : phase === 'between_rounds'
+          ? 'Next round in'
+          : 'Sale closed';
+  const subLabel =
+    phase === 'ended'
+      ? endLabel || IPO_SALE.endLabel
+      : phase === 'live' && saleState?.activeRound
+        ? saleState.activeRound.label
+        : phase === 'between_rounds' && saleState?.nextRound
+          ? saleState.nextRound.label
+          : launchLabel || IPO_SALE.launchLabel;
 
   return (
     <div className={`rounded-2xl border border-white/10 bg-gradient-to-br from-fuchsia-950/30 via-[#0c000a] to-[#080008] p-4 md:p-5 ${className}`}>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-fuchsia-200/70">{label}</p>
-        <p className="text-[10px] text-white/35">
-          {phase === 'ended' ? endLabel || IPO_SALE.endLabel : launchLabel || IPO_SALE.launchLabel}
-        </p>
+        <p className="text-[10px] text-white/35">{subLabel}</p>
       </div>
 
       {phase === 'ended' ? (
@@ -168,13 +162,13 @@ export function IpoLiveCountdown({
         <div className="mt-3 space-y-1 border-t border-white/[0.06] pt-3">
           {localStart ? (
             <p className="text-[11px] text-white/45">
-              <span className="text-white/30">Opens (your time) · </span>
+              <span className="text-white/30">Opens (New York) · </span>
               {localStart}
             </p>
           ) : null}
           {localEnd ? (
             <p className="text-[11px] text-white/45">
-              <span className="text-white/30">Ends (your time) · </span>
+              <span className="text-white/30">Ends (New York) · </span>
               {localEnd}
             </p>
           ) : null}
@@ -200,9 +194,14 @@ export function IpoBuyGuidance({ className = '' }) {
 
 const FAQ_ITEMS = [
   {
+    id: 'rounds',
+    q: 'How do the 3 IPO rounds work?',
+    a: 'Round 1 (11–14 Jul ET) at 1× ($0.0004), Round 2 (20–23 Jul) at 2×, Round 3 (27–30 Jul) at 3×. Each soft-caps at $25k. After soft cap, buys keep filling at 1.5× / 2.5× / 3.5× until that window ends or 250M sells out. Times are Eastern (New York).',
+  },
+  {
     id: 'oversub',
     q: 'What is oversubscription?',
-    a: 'Buys past the 250M soft cap are still accepted. The next 100M APTC is then added for sale at $0.0008 (2× the IPO price).',
+    a: 'When a round hits its $25k soft cap, further buys in that window fill at the oversub multiple (1.5× / 2.5× / 3.5×) until the round ends — or until the full 250M APTC inventory is sold.',
   },
   {
     id: 'lock',
@@ -212,7 +211,7 @@ const FAQ_ITEMS = [
   {
     id: 'raydium',
     q: 'When does Raydium listing happen?',
-    a: 'After the IPO window closes. Secondary APTC/SOL liquidity is seeded on Raydium; Jupiter and DexScreener follow.',
+    a: 'After Round 3 closes. Listing targets 5× the IPO base ($0.002). CEX Tier 3 targets 20× ($0.008).',
   },
   {
     id: 'affiliate',
@@ -317,8 +316,8 @@ export function IpoSharePurchase({ aptcAmount, solAmount, className = '' }) {
         'yo $APTC IPO on @aptcasinofun is actually live',
         '',
         'fixed price SOL → APTC, no bonding curve games',
-        '30d lock in staking vault @ 30% APY',
-        'oversub allowed, Raydium after',
+        '3 rounds · $25k soft · oversub fills rest',
+        'Raydium after Round 3',
         '',
         "not gatekeeping ↓",
       ].join('\n');

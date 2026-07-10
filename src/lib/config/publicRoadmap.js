@@ -25,7 +25,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000001',
     title: '$APTC public IPO on Solana',
     excerpt:
-      'Fixed-price IPO · discounted entry $0.0004 · Listing $0.0012 (3×) · CEX $0.008 (20×) · oversub +100M @ $0.0008 (2×) · LIVE now.',
+      '3 timed rounds · $25k soft each at 1× / 2× / 3× · oversub 1.5× / 2.5× / 3.5× · Listing 5× · CEX Tier 3 20×.',
     category: 'Platform',
     status: 'in_progress',
     link: '/ipo',

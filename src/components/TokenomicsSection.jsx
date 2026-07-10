@@ -139,14 +139,14 @@ export default function TokenomicsSection() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2 flex-1 min-w-[200px]">
-              <LaunchStat label="Raise target" value={`$${(IPO_SALE.raiseTargetUsd / 1000).toFixed(0)}K`} />
-              <LaunchStat label="IPO entry" value={`$${IPO_SALE.tokenPriceUsd}`} />
-              <LaunchStat label="Sale supply" value={`${IPO_SALE.saleTokensShort} APTC`} />
-              <LaunchStat label="Window" value={`${IPO_SALE.durationDays} days`} />
-              <LaunchStat label="Post-IPO" value="Raydium LP" />
+              <LaunchStat label="Raise target" value={`$${(IPO_SALE.raiseTargetUsd / 1000).toFixed(0)}K soft`} />
+              <LaunchStat label="IPO base" value={`$${IPO_SALE.basePriceUsd}`} />
+              <LaunchStat label="Rounds" value={`${IPO_SALE.roundCount} × $25k`} />
+              <LaunchStat label="Window" value="11–30 Jul ET" />
+              <LaunchStat label="Post-IPO" value="Listing 5×" />
             </div>
           </div>
-          <IpoPriceLadder className="mt-4" />
+          <IpoPriceLadder variant="card" className="mt-4" />
           <IpoStackLogos variant="compact" className="mt-4" />
         </div>
 

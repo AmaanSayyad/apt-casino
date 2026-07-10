@@ -7,11 +7,12 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useIpoPurchase } from '@/hooks/useIpoPurchase';
 import { useWalletSolBalance } from '@/hooks/useWalletSolBalance';
 import { getStoredIpoReferrer } from '@/components/IpoRefCapture';
-import { IPO_COPY } from '@/lib/config/ipo';
+import { IPO_COPY, IPO_SALE } from '@/lib/config/ipo';
 import IpoBanner from '@/components/IpoBanner';
 import IpoAffiliateExplainer from '@/components/IpoAffiliateExplainer';
 import IpoSwapCard from '@/components/IpoSwapCard';
 import IpoPriceLadder from '@/components/IpoPriceLadder';
+import IpoRoundsPanel from '@/components/IpoRoundsPanel';
 import IpoRecentBuyersTicker from '@/components/IpoRecentBuyersTicker';
 import {
   IpoWhatHappensNext,
@@ -177,7 +178,11 @@ export default function IpoPurchasePanel({
 
   const solAmount = Number(solIn);
   const solUsd = config?.solUsdPrice ?? stats?.solUsdPrice;
-  const aptcPrice = config?.aptcPriceUsd ?? stats?.aptcPriceUsd ?? 0.0004;
+  const aptcPrice =
+    stats?.activeRound?.livePriceUsd ??
+    config?.aptcPriceUsd ??
+    stats?.aptcPriceUsd ??
+    0.0004;
   const estAptc =
     Number.isFinite(solAmount) && solAmount > 0 && solUsd
       ? (solAmount * solUsd) / aptcPrice
@@ -191,16 +196,25 @@ export default function IpoPurchasePanel({
   const isLive = phase === 'live';
   const hasPurchases = Boolean(me?.summary?.purchaseCount || me?.summary?.pendingPurchases);
   const togglePanel = (id) => setInfoPanel((cur) => (cur === id ? null : id));
+  const focusRound =
+    stats?.rounds?.find((r) => r.status === 'live') ||
+    stats?.rounds?.find((r) => r.status === 'upcoming') ||
+    stats?.activeRound ||
+    null;
+  const roundProgressPct = focusRound?.pctOfSoftCap ?? 0;
+  const roundProgressLabel = focusRound
+    ? `${focusRound.shortLabel || `R${focusRound.id}`} · ${fmtUsd(focusRound.committedUsd)} / ${fmtUsd(focusRound.softCapUsd)}${
+        focusRound.oversubscribed ? ' · oversub' : ''
+      }`
+    : 'Current round';
 
   const infoTabs = [
     { id: 'how', label: 'How it works' },
+    { id: 'me', label: 'My position', badge: hasPurchases ? 'Live' : null },
     { id: 'verify', label: 'Verify wallets' },
-    { id: 'faq', label: 'FAQ' },
-    { id: 'refer', label: 'Referrals' },
     { id: 'board', label: 'Leaderboard' },
-    ...(connected
-      ? [{ id: 'me', label: 'My position', badge: hasPurchases ? 'Live' : null }]
-      : []),
+    { id: 'refer', label: 'Referrals' },
+    { id: 'faq', label: 'FAQ' },
   ];
 
   // After a successful buy, surface the position panel.
@@ -241,9 +255,10 @@ export default function IpoPurchasePanel({
           estReward={estReward}
           solUsd={solUsd}
           aptcPrice={aptcPrice}
-          isLive={isLive}
+          isLive={isLive && !stats?.soldOut}
           isPurchasing={isPurchasing}
-          phase={phase}
+          phase={stats?.soldOut ? 'ended' : phase}
+          soldOut={Boolean(stats?.soldOut)}
           startAt={config?.startAt}
           endAt={config?.endAt}
           connected={connected}
@@ -268,16 +283,52 @@ export default function IpoPurchasePanel({
 
           <div className="grid grid-cols-3 gap-3">
             <Stat label="Raised" value={fmtUsd(stats?.totalUsdRaised)} sub={`${fmt(stats?.totalSolRaised, { maximumFractionDigits: 2 })} SOL`} />
-            <Stat label="APTC sold" value={fmt(stats?.aptcSold, { maximumFractionDigits: 0 })} sub={`of ${fmt(stats?.aptcCap, { maximumFractionDigits: 0 })}`} />
+            <Stat
+              label="Live price"
+              value={
+                stats?.activeRound
+                  ? `$${Number(aptcPrice).toFixed(4)}`
+                  : config?.nextRound
+                    ? `R${config.nextRound.id} soon`
+                    : '—'
+              }
+              sub={
+                stats?.activeRound
+                  ? `${stats.activeRound.liveMultiple}× · ${stats.activeRound.shortLabel}`
+                  : `${(IPO_SALE.raiseTargetUsd / 1000).toFixed(0)}k soft total`
+              }
+            />
             <Stat label="Buyers" value={fmt(stats?.uniqueBuyers, { maximumFractionDigits: 0 })} sub="unique wallets" />
           </div>
 
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
-            <ProgressBar pct={stats?.pctOfRaise} label={`Raise progress · target ${fmtUsd(stats?.raiseTargetUsd)}`} />
-            <ProgressBar pct={stats?.pctOfCap} label={`Allocation progress${stats?.oversubscribed ? ' · oversubscribed' : ''}`} />
+            <ProgressBar pct={roundProgressPct} label={roundProgressLabel} />
+            {stats?.inventoryCapAptc ? (
+              <p className="text-[11px] text-white/35 tabular-nums">
+                Inventory{' '}
+                <span className="text-white/60">
+                  {fmt(stats.aptcCommitted, { maximumFractionDigits: 0 })} /{' '}
+                  {fmt(stats.inventoryCapAptc, { maximumFractionDigits: 0 })} APTC
+                </span>
+                {stats.soldOut ? (
+                  <span className="text-amber-200/90"> · sold out</span>
+                ) : Number.isFinite(stats.remainingAptc) ? (
+                  <span>
+                    {' '}
+                    · {fmt(stats.remainingAptc, { maximumFractionDigits: 0 })} left
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
           </div>
 
-          <IpoPriceLadder />
+          <IpoRoundsPanel rounds={stats?.rounds || config?.rounds} />
+
+          <IpoPriceLadder
+            variant="strip"
+            ladder={config?.priceLadder}
+            activeRound={stats?.activeRound}
+          />
 
           <div className="flex flex-wrap items-center gap-2">
             {infoTabs.map((tab) => {
@@ -388,7 +439,8 @@ export default function IpoPurchasePanel({
                 </div>
               ) : null}
 
-              {infoPanel === 'me' && connected && address ? (
+              {infoPanel === 'me' ? (
+                connected && address ? (
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-200/80">
@@ -465,11 +517,16 @@ export default function IpoPurchasePanel({
                     </>
                   )}
                 </div>
+                ) : (
+                  <p className="text-xs text-white/45 border border-dashed border-white/10 rounded-xl p-4">
+                    Connect your Solana wallet to view your locked APTC position, unlock time, and rewards.
+                  </p>
+                )
               ) : null}
             </div>
           ) : (
             <p className="text-[11px] text-white/35 px-1">
-              Tap a button above for how it works, verify wallets, FAQ, referrals, or your position.
+              Tap a button above for how it works, my position, verify wallets, leaderboard, referrals, or FAQ.
             </p>
           )}
         </div>

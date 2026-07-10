@@ -11,8 +11,9 @@ const TONE_CLASS = {
 };
 
 function phaseBadgeFor(phase) {
-  if (phase === 'live') return { text: 'Live · Purchase open', tone: 'emerald' };
+  if (phase === 'live') return { text: 'Live · Round open', tone: 'emerald' };
   if (phase === 'upcoming') return { text: 'Opens soon', tone: 'amber' };
+  if (phase === 'between_rounds') return { text: 'Between rounds', tone: 'amber' };
   return { text: 'Sale ended', tone: 'white' };
 }
 

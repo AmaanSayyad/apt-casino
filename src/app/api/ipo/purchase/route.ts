@@ -5,7 +5,11 @@ import {
   attributeIpoReferrer,
   isValidSolanaWallet,
 } from '@/lib/server/ipo/affiliate';
-import { getIpoPhaseAt, getIpoServerConfig } from '@/lib/server/ipo/config';
+import {
+  getIpoServerConfig,
+  resolveIpoPurchasePricing,
+} from '@/lib/server/ipo/config';
+import { getIpoInventoryState } from '@/lib/server/ipo/inventory';
 import { estimateStakingReward, getSolUsdPrice, solToAptc } from '@/lib/server/ipo/pricing';
 import { sendIpoAptcToStakingVault, verifyIpoSolDeposit } from '@/lib/server/ipo/settlement';
 import { fulfillPendingSupplyPurchases } from '@/lib/server/ipo/fulfillment';
@@ -25,20 +29,50 @@ async function verifyWithRetries(
   return false;
 }
 
+async function getRoundCommittedUsd(
+  db: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
+  roundId: number,
+): Promise<number> {
+  const { data: rows } = await db
+    .from('ipo_purchases')
+    .select('usd_value')
+    .eq('round_id', roundId)
+    .in('status', ['fulfilled', 'pending_supply', 'pending']);
+
+  let total = 0;
+  for (const r of rows || []) total += Number(r.usd_value) || 0;
+  return total;
+}
+
+function phaseErrorMessage(phase: string, nextRound: { label?: string; startAtIso?: string } | null) {
+  if (phase === 'upcoming') {
+    return nextRound?.label
+      ? `${nextRound.label} has not started yet.`
+      : 'IPO has not started yet.';
+  }
+  if (phase === 'between_rounds') {
+    return nextRound?.label
+      ? `Round closed — ${nextRound.label} opens next.`
+      : 'No IPO round is live right now.';
+  }
+  if (phase === 'ended') return 'IPO sale has ended.';
+  return 'IPO purchases are not available right now.';
+}
+
 export async function POST(req: NextRequest) {
   const cfg = getIpoServerConfig();
   if (!cfg.enabled) {
     return NextResponse.json({ error: 'IPO is not enabled.' }, { status: 503 });
   }
 
-  const phase = getIpoPhaseAt(Date.now(), cfg.startAt, cfg.endAt);
-  if (phase !== 'live') {
+  if (cfg.phase !== 'live' || !cfg.activeRound) {
     return NextResponse.json(
-      { error: phase === 'upcoming' ? 'IPO has not started yet.' : 'IPO sale has ended.' },
+      { error: phaseErrorMessage(cfg.phase, cfg.nextRound) },
       { status: 400 },
     );
   }
 
+  const activeRound = cfg.activeRound;
   const db = getSupabaseAdmin();
   if (!db) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
@@ -104,6 +138,22 @@ export async function POST(req: NextRequest) {
 
   await fulfillPendingSupplyPurchases(db);
 
+  // Fail fast if the 250M public inventory is already spoken for.
+  {
+    const inv = await getIpoInventoryState(db, existing?.id ?? null);
+    if (inv.soldOut) {
+      return NextResponse.json(
+        {
+          error: `IPO sold out — ${inv.inventoryCapAptc.toLocaleString()} APTC inventory is fully allocated.`,
+          soldOut: true,
+          inventoryCapAptc: inv.inventoryCapAptc,
+          remainingAptc: 0,
+        },
+        { status: 400 },
+      );
+    }
+  }
+
   if (referrerWallet && isValidSolanaWallet(referrerWallet) && referrerWallet !== wallet) {
     await attributeIpoReferrer(db, wallet, referrerWallet);
   }
@@ -129,9 +179,28 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const aptcAmount = solToAptc(solAmount, solUsd, cfg.aptcPriceUsd);
+  const committedUsd = await getRoundCommittedUsd(db, activeRound.id);
+  const pricing = resolveIpoPurchasePricing(activeRound, committedUsd);
+  const aptcPriceUsd = pricing.priceUsd;
+  const aptcAmount = solToAptc(solAmount, solUsd, aptcPriceUsd);
   if (aptcAmount <= 0) {
     return NextResponse.json({ error: 'Purchase amount too small.' }, { status: 400 });
+  }
+
+  const inventory = await getIpoInventoryState(db, existing?.id ?? null);
+  if (inventory.soldOut || aptcAmount > inventory.remainingAptc + 1e-6) {
+    return NextResponse.json(
+      {
+        error: inventory.soldOut
+          ? `IPO sold out — ${inventory.inventoryCapAptc.toLocaleString()} APTC inventory is fully allocated.`
+          : `Only ${inventory.remainingAptc.toLocaleString(undefined, { maximumFractionDigits: 2 })} APTC left in the 250M sale. Reduce your SOL amount and try again.`,
+        soldOut: inventory.soldOut,
+        inventoryCapAptc: inventory.inventoryCapAptc,
+        remainingAptc: inventory.remainingAptc,
+        requestedAptc: aptcAmount,
+      },
+      { status: 400 },
+    );
   }
 
   const usdValue = solAmount * solUsd;
@@ -142,36 +211,30 @@ export async function POST(req: NextRequest) {
     .eq('wallet', wallet)
     .maybeSingle();
 
+  const purchaseFields = {
+    buyer_wallet: wallet,
+    sol_amount: solAmount,
+    sol_usd_price: solUsd,
+    usd_value: usdValue,
+    aptc_amount: aptcAmount,
+    aptc_price_usd: aptcPriceUsd,
+    referrer_wallet: chain?.referrer_wallet ?? null,
+    round_id: activeRound.id,
+    tranche: pricing.tranche,
+    status: 'pending' as const,
+    error_message: null as string | null,
+  };
+
   let purchaseId: number;
   if (existing?.id) {
     purchaseId = existing.id;
-    await db
-      .from('ipo_purchases')
-      .update({
-        buyer_wallet: wallet,
-        sol_amount: solAmount,
-        sol_usd_price: solUsd,
-        usd_value: usdValue,
-        aptc_amount: aptcAmount,
-        aptc_price_usd: cfg.aptcPriceUsd,
-        referrer_wallet: chain?.referrer_wallet ?? null,
-        status: 'pending',
-        error_message: null,
-      })
-      .eq('id', purchaseId);
+    await db.from('ipo_purchases').update(purchaseFields).eq('id', purchaseId);
   } else {
     const { data: inserted, error: insErr } = await db
       .from('ipo_purchases')
       .insert({
-        buyer_wallet: wallet,
-        sol_amount: solAmount,
-        sol_usd_price: solUsd,
-        usd_value: usdValue,
-        aptc_amount: aptcAmount,
-        aptc_price_usd: cfg.aptcPriceUsd,
+        ...purchaseFields,
         sol_tx_hash: txHash,
-        referrer_wallet: chain?.referrer_wallet ?? null,
-        status: 'pending',
       })
       .select('id')
       .single();
@@ -182,6 +245,30 @@ export async function POST(req: NextRequest) {
       );
     }
     purchaseId = inserted.id;
+  }
+
+  // Re-check after insert to catch concurrent oversell races.
+  {
+    const after = await getIpoInventoryState(db);
+    if (after.committedAptc > after.inventoryCapAptc + 1e-3) {
+      await db
+        .from('ipo_purchases')
+        .update({
+          status: 'failed',
+          error_message: 'Rejected — would exceed 250M APTC IPO inventory cap.',
+        })
+        .eq('id', purchaseId);
+      return NextResponse.json(
+        {
+          error:
+            'IPO inventory filled while settling. This purchase was not allocated — contact support if SOL was sent.',
+          soldOut: true,
+          inventoryCapAptc: after.inventoryCapAptc,
+          remainingAptc: Math.max(0, after.inventoryCapAptc - (after.committedAptc - aptcAmount)),
+        },
+        { status: 409 },
+      );
+    }
   }
 
   let aptcTxHash: string | null = null;
@@ -208,8 +295,8 @@ export async function POST(req: NextRequest) {
 
       try {
         await accrueAffiliateRewards(db, purchaseId, aptcAmount, wallet);
-      } catch (e) {
-        console.error('[ipo/purchase] affiliate accrual failed (queued)', e);
+      } catch (err) {
+        console.error('[ipo/purchase] affiliate accrual failed (queued)', err);
       }
 
       return NextResponse.json({
@@ -219,8 +306,11 @@ export async function POST(req: NextRequest) {
         solAmount,
         aptcAmount,
         usdValue,
-        aptcPriceUsd: cfg.aptcPriceUsd,
+        aptcPriceUsd,
         solUsdPrice: solUsd,
+        roundId: activeRound.id,
+        tranche: pricing.tranche,
+        multiple: pricing.multiple,
         status: 'pending_supply',
         message:
           'SOL received. APTC is queued — your locked allocation will be funded in the staking vault once inventory is replenished.',
@@ -298,8 +388,11 @@ export async function POST(req: NextRequest) {
     solAmount,
     aptcAmount,
     usdValue,
-    aptcPriceUsd: cfg.aptcPriceUsd,
+    aptcPriceUsd,
     solUsdPrice: solUsd,
+    roundId: activeRound.id,
+    tranche: pricing.tranche,
+    multiple: pricing.multiple,
     aptcTxHash,
     stakingVault,
     locked: true,
@@ -307,6 +400,8 @@ export async function POST(req: NextRequest) {
     estimatedRewardAptc: estReward,
     stakingApyPct: cfg.stakingApyBps / 100,
     message:
-      'APTC locked in the staking vault for 30 days. Track your position under My position — tokens unlock to your wallet after the lock.',
+      pricing.tranche === 'oversub'
+        ? `APTC locked at ${pricing.multiple}× oversub price in the staking vault for 30 days. Track under My position.`
+        : `APTC locked at ${pricing.multiple}× in the staking vault for 30 days. Track under My position.`,
   });
 }

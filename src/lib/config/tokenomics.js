@@ -12,7 +12,7 @@ export const APTC_LOGO = APTC_LOGO_SRC;
 
 export const IPO_LAUNCH_MODE = {
   label: 'Public IPO',
-  tagline: 'Fixed-price SOL purchase · Raydium post-TGE',
+  tagline: '3 timed rounds · $25k soft each · Raydium after Round 3',
   quotePair: 'SOL',
   createUrl: '/ipo',
   feesDocsUrl: 'https://docs.metaplex.com/genesis',
@@ -96,7 +96,7 @@ export const APTC_ALLOCATION = [
     fill: '#d946ef',
     color: 'from-fuchsia-500 to-violet-600',
     detail:
-      'Fixed-price presale on aptcasino.fun — buy APTC with SOL instantly. Target raise $100K at $0.0004/APTC. Oversubscription accepted.',
+      '3 timed rounds on aptcasino.fun — $25k soft cap each at 1× / 2× / 3×. Oversub fills the rest at 1.5× / 2.5× / 3.5×. Up to 250M APTC reserved for public sale.',
   },
   {
     label: 'Raydium LP (post-TGE)',
@@ -210,7 +210,8 @@ export const APTC_TRADER_GREEN_FLAGS = [
   {
     term: 'FDV / market cap',
     status: 'IPO-priced',
-    detail: 'Fixed $0.0004/APTC during IPO — if oversubscribed, next 100M APTC opens at $0.0008 (2×).',
+    detail:
+      '3 rounds at 1× / 2× / 3× from $0.0004 base · $25k soft each · oversub at 1.5× / 2.5× / 3.5× · Listing 5× · CEX T3 20×.',
   },
   {
     term: 'Supply dumps',
@@ -264,18 +265,18 @@ export const APTC_WALLETS = [
   },
 ];
 
-export const APTC_LAUNCH_STEPS = ['IPO live', 'Buy APTC with SOL', 'Raydium LP', 'DexScreener'];
+export const APTC_LAUNCH_STEPS = ['Round 1–3 IPO', 'Buy APTC with SOL', 'Raydium LP', 'DexScreener'];
 
 export const APTC_LAUNCH_PHASES = [
   {
     step: '1',
-    title: 'IPO opens',
-    detail: '250M APTC soft cap · $0.0004/APTC · oversubscription queued · auto-stake 30d @ 30% APY',
+    title: 'Round 1 opens',
+    detail: '11–14 Jul ET · 1× ($0.0004) · $25k soft · oversub 1.5× · auto-stake 30d @ 30% APY',
   },
   {
     step: '2',
     title: 'Buy APTC',
-    detail: 'Deposit SOL → receive APTC immediately from treasury inventory',
+    detail: 'Deposit SOL in a live round → APTC locks in staking vault under your wallet',
   },
   {
     step: '3',

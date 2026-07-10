@@ -39,6 +39,7 @@ export default function IpoSwapCard({
   isLive,
   isPurchasing,
   phase,
+  soldOut = false,
   startAt,
   endAt,
   connected,
@@ -83,7 +84,9 @@ export default function IpoSwapCard({
 
   const ctaLabel = isPurchasing
     ? 'Buying…'
-    : exceedsBalance
+    : soldOut
+      ? 'Sold out'
+      : exceedsBalance
       ? 'Amount exceeds balance'
       : needsAmount
         ? 'Enter SOL amount'
@@ -91,8 +94,15 @@ export default function IpoSwapCard({
           ? 'Buy APTC now'
           : phase === 'upcoming'
             ? countdownLabel
-            : 'Sale ended';
-  const CtaIcon = phase === 'upcoming' && !isPurchasing ? Clock : Zap;
+            : phase === 'between_rounds'
+              ? countdownLabel
+              : 'Sale ended';
+  const CtaIcon =
+    soldOut
+      ? Sparkles
+      : (phase === 'upcoming' || phase === 'between_rounds') && !isPurchasing
+        ? Clock
+        : Zap;
 
   const upsideRows = useMemo(() => {
     if (estAptc <= 0 || !aptcPrice) return [];

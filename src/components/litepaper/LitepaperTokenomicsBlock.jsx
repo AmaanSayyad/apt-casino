@@ -78,13 +78,13 @@ export default function LitepaperTokenomicsBlock() {
 
         <div className="mb-5 grid gap-3 sm:grid-cols-3">
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">IPO raise</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Soft raise</p>
           <p className="mt-1 text-xl font-bold text-white">${(IPO_SALE.raiseTargetUsd / 1000).toFixed(0)}K</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">IPO price</p>
-          <p className="mt-1 text-xl font-bold text-white">${IPO_SALE.tokenPriceUsd}</p>
-          <p className="mt-1 text-[10px] text-emerald-300/70">Discounted entry</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Base (1×)</p>
+          <p className="mt-1 text-xl font-bold text-white">${IPO_SALE.basePriceUsd}</p>
+          <p className="mt-1 text-[10px] text-emerald-300/70">R1 entry</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
           <p className="text-[10px] uppercase tracking-widest text-white/40">Status</p>
@@ -97,8 +97,10 @@ export default function LitepaperTokenomicsBlock() {
           Price ladder
         </p>
         <p className="text-xs leading-6 text-white/55">
-          This IPO is the discounted entry at ${IPO_SALE.tokenPriceUsd}. Listing targets $0.0012 (3×).
-          CEX targets $0.008 (20×). If oversubscribed, the next 100M APTC opens at $0.0008 (2×).
+          Three timed rounds at 1× / 2× / 3× from ${IPO_SALE.basePriceUsd} base ($25k soft each).
+          Oversub fills the rest at 1.5× / 2.5× / 3.5×. Listing targets {IPO_SALE.listingMultiple}× ($
+          {IPO_SALE.listingPriceUsd}). CEX Tier 3 targets {IPO_SALE.cexMultiple}× ($
+          {IPO_SALE.cexPriceUsd}).
         </p>
       </div>
 
