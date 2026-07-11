@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useIpoPurchase } from '@/hooks/useIpoPurchase';
+import { useConnectSolanaWallet } from '@/hooks/useConnectSolanaWallet';
 import { useWalletSolBalance } from '@/hooks/useWalletSolBalance';
 import { getStoredIpoReferrer } from '@/components/IpoRefCapture';
 import { IPO_COPY, IPO_SALE } from '@/lib/config/ipo';
@@ -13,6 +12,7 @@ import IpoAffiliateExplainer from '@/components/IpoAffiliateExplainer';
 import IpoSwapCard from '@/components/IpoSwapCard';
 import IpoPriceLadder from '@/components/IpoPriceLadder';
 import IpoRoundsPanel from '@/components/IpoRoundsPanel';
+import IpoRaiseBomb from '@/components/IpoRaiseBomb';
 import IpoRecentBuyersTicker from '@/components/IpoRecentBuyersTicker';
 import {
   IpoWhatHappensNext,
@@ -49,42 +49,12 @@ function Stat({ label, value, sub }) {
   );
 }
 
-function formatProgressPct(pct) {
-  const n = Number(pct);
-  if (!Number.isFinite(n) || n <= 0) return '0%';
-  if (n < 0.01) return '<0.01%';
-  if (n < 1) return `${n.toFixed(2)}%`;
-  if (n < 10) return `${n.toFixed(2)}%`;
-  return `${n.toFixed(1)}%`;
-}
-
-function ProgressBar({ pct, label }) {
-  const raw = Math.min(100, Math.max(0, Number(pct) || 0));
-  // Early raises are tiny vs $100K / 250M — keep a visible sliver when > 0.
-  const w = raw > 0 ? Math.max(raw, 1.25) : 0;
-  return (
-    <div>
-      <div className="flex justify-between text-[11px] text-white/50 mb-2">
-        <span>{label}</span>
-        <span className="tabular-nums">{formatProgressPct(raw)}</span>
-      </div>
-      <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-500 transition-all duration-500"
-          style={{ width: `${w}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 export default function IpoPurchasePanel({
   compact = false,
   showBanner = true,
   showFullPageCta = true,
 }) {
-  const { publicKey, connected } = useWallet();
-  const { setVisible: openWalletModal } = useWalletModal();
+  const { connect: connectWallet, connected, publicKey } = useConnectSolanaWallet();
   const address = publicKey?.toBase58() || null;
   const referrer = typeof window !== 'undefined' ? getStoredIpoReferrer() : null;
 
@@ -201,13 +171,6 @@ export default function IpoPurchasePanel({
     stats?.rounds?.find((r) => r.status === 'upcoming') ||
     stats?.activeRound ||
     null;
-  const roundProgressPct = focusRound?.pctOfSoftCap ?? 0;
-  const roundProgressLabel = focusRound
-    ? `${focusRound.shortLabel || `R${focusRound.id}`} · ${fmtUsd(focusRound.committedUsd)} / ${fmtUsd(focusRound.softCapUsd)}${
-        focusRound.oversubscribed ? ' · oversub' : ''
-      }`
-    : 'Current round';
-
   const infoTabs = [
     { id: 'how', label: 'How it works' },
     { id: 'me', label: 'My position', badge: hasPurchases ? 'Live' : null },
@@ -224,7 +187,7 @@ export default function IpoPurchasePanel({
 
   const onSwap = async () => {
     if (!connected) {
-      openWalletModal(true);
+      await connectWallet();
       return;
     }
     const result = await purchase(solAmount);
@@ -262,7 +225,7 @@ export default function IpoPurchasePanel({
           startAt={config?.startAt}
           endAt={config?.endAt}
           connected={connected}
-          onConnect={() => openWalletModal(true)}
+          onConnect={connectWallet}
           onSwap={onSwap}
           solAmount={solAmount}
           walletSolBalance={walletSolBalance}
@@ -273,6 +236,14 @@ export default function IpoPurchasePanel({
 
         {/* Stats + on-demand info — right on desktop */}
         <div className="space-y-4 order-2">
+          <IpoRaiseBomb
+            focusRound={focusRound}
+            aptcCommitted={stats?.aptcCommitted}
+            inventoryCapAptc={stats?.inventoryCapAptc}
+            remainingAptc={stats?.remainingAptc}
+            soldOut={Boolean(stats?.soldOut)}
+          />
+
           <IpoLiveCountdown
             phase={phase}
             startAt={config?.startAt}
@@ -299,27 +270,6 @@ export default function IpoPurchasePanel({
               }
             />
             <Stat label="Buyers" value={fmt(stats?.uniqueBuyers, { maximumFractionDigits: 0 })} sub="unique wallets" />
-          </div>
-
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
-            <ProgressBar pct={roundProgressPct} label={roundProgressLabel} />
-            {stats?.inventoryCapAptc ? (
-              <p className="text-[11px] text-white/35 tabular-nums">
-                Inventory{' '}
-                <span className="text-white/60">
-                  {fmt(stats.aptcCommitted, { maximumFractionDigits: 0 })} /{' '}
-                  {fmt(stats.inventoryCapAptc, { maximumFractionDigits: 0 })} APTC
-                </span>
-                {stats.soldOut ? (
-                  <span className="text-amber-200/90"> · sold out</span>
-                ) : Number.isFinite(stats.remainingAptc) ? (
-                  <span>
-                    {' '}
-                    · {fmt(stats.remainingAptc, { maximumFractionDigits: 0 })} left
-                  </span>
-                ) : null}
-              </p>
-            ) : null}
           </div>
 
           <IpoRoundsPanel rounds={stats?.rounds || config?.rounds} />
