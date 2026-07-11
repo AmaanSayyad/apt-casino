@@ -63,7 +63,7 @@ export default function IpoPurchasePanel({
   const [me, setMe] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [solIn, setSolIn] = useState('');
-  const [infoPanel, setInfoPanel] = useState('how'); // how | verify | faq | refer | board | me
+  const [infoPanel, setInfoPanel] = useState('board'); // board | how | me | verify | refer | faq
   const [loading, setLoading] = useState(true);
   const autoFilledWalletRef = useRef(null);
 
@@ -172,10 +172,10 @@ export default function IpoPurchasePanel({
     stats?.activeRound ||
     null;
   const infoTabs = [
+    { id: 'board', label: 'Leaderboard' },
     { id: 'how', label: 'How it works' },
     { id: 'me', label: 'My position', badge: hasPurchases ? 'Live' : null },
     { id: 'verify', label: 'Verify wallets' },
-    { id: 'board', label: 'Leaderboard' },
     { id: 'refer', label: 'Referrals' },
     { id: 'faq', label: 'FAQ' },
   ];
