@@ -44,6 +44,7 @@ const GAME_TABS = [
 ];
 
 const NETWORK = (process.env.NEXT_PUBLIC_APTOS_NETWORK || 'mainnet').toLowerCase();
+const PAGE_SIZE = 10;
 const explorerAddressUrl = (addr) =>
   addr
     ? `https://explorer.aptoslabs.com/account/${addr}${NETWORK !== 'mainnet' ? `?network=${NETWORK}` : ''}`
@@ -86,6 +87,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastFetched, setLastFetched] = useState(null);
+  const [page, setPage] = useState(1);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -115,13 +117,19 @@ export default function LeaderboardPage() {
   }, [metric, period, game]);
 
   useEffect(() => {
+    setPage(1);
+  }, [metric, period, game]);
+
+  useEffect(() => {
     void refresh();
   }, [refresh]);
 
   const board = data?.leaderboard || [];
   const topThree = board.slice(0, 3);
-  // Full ranked list in the table (including #1–#3) so Net P&L order is obvious
-  const tableRows = board;
+  const totalPages = Math.max(1, Math.ceil(board.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const tableRows = board.slice(pageStart, pageStart + PAGE_SIZE);
 
   const comingSoonChains = useMemo(
     () => CHAINS.filter((c) => c.status !== 'live').map((c) => c.label),
@@ -276,12 +284,83 @@ export default function LeaderboardPage() {
               </table>
             </div>
           </div>
+          {board.length > 0 && (
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              totalRows={board.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+              disabled={loading}
+            />
+          )}
           {data?.eligibilityThreshold && (
             <p className="mt-2 text-[11px] text-white/40">
               Winrate ranking requires at least {data.eligibilityThreshold} bets in the selected window.
             </p>
           )}
         </section>
+      </div>
+    </div>
+  );
+}
+
+function Pagination({ page, totalPages, totalRows, pageSize, onPageChange, disabled }) {
+  const from = totalRows === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, totalRows);
+
+  const pages = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const set = new Set([1, totalPages, page, page - 1, page + 1]);
+    return [...set].filter((p) => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+  }, [page, totalPages]);
+
+  return (
+    <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-xs text-white/45">
+        Showing <span className="text-white/70">{from}–{to}</span> of{' '}
+        <span className="text-white/70">{totalRows}</span>
+      </p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          disabled={disabled || page <= 1}
+          onClick={() => onPageChange(page - 1)}
+          className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/70 transition-colors hover:border-white/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Prev
+        </button>
+        {pages.map((p, i) => {
+          const prev = pages[i - 1];
+          const showEllipsis = prev != null && p - prev > 1;
+          return (
+            <span key={p} className="inline-flex items-center gap-1.5">
+              {showEllipsis && <span className="px-1 text-white/35">…</span>}
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onPageChange(p)}
+                className={`min-w-[2rem] rounded-md border px-2.5 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${
+                  p === page
+                    ? 'border-transparent bg-gradient-to-r from-red-magic to-blue-magic text-white'
+                    : 'border-white/15 text-white/70 hover:border-white/40 hover:text-white'
+                }`}
+              >
+                {p}
+              </button>
+            </span>
+          );
+        })}
+        <button
+          type="button"
+          disabled={disabled || page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+          className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-semibold text-white/70 transition-colors hover:border-white/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Next
+        </button>
       </div>
     </div>
   );

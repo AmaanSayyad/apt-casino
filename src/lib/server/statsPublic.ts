@@ -3,8 +3,8 @@ import { aggregatePlayEventsSince } from '@/lib/server/gamePlayEvents';
 import { getSupabaseAdmin } from '@/lib/server/supabaseAdmin';
 
 const CACHE_TTL_MS = 120_000;
-/** All-time homepage counters are shown at 10× raw protocol totals. */
-const ALL_TIME_STATS_SCALE = 10;
+/** Public counters use raw protocol totals (no artificial inflation). */
+const ALL_TIME_STATS_SCALE = 1;
 
 type PublicStatsPayload = Record<string, unknown>;
 
