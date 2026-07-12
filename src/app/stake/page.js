@@ -25,9 +25,7 @@ import { isAptcLaunched } from '@/lib/config/launchStatus';
 const STAKING_ENABLED =
   (process.env.NEXT_PUBLIC_APTC_STAKING_ENABLED || 'false').toLowerCase() === 'true';
 const APTC_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT || '';
-const STAKING_VAULT =
-  process.env.NEXT_PUBLIC_APTC_STAKING_VAULT ||
-  '2dcYoCY2Z9qkyFzWzExpg34WCKMjw5cCUduiNJL27TpB';
+const STAKING_VAULT = process.env.NEXT_PUBLIC_APTC_STAKING_VAULT || '2ei9VY2TtJ6GkvVMs1su5b348p98ajLaU45MzvE6gYaq';
 
 function fmtUsd(n) {
   if (n === null || n === undefined || !Number.isFinite(n)) return '—';
@@ -349,9 +347,9 @@ export default function StakePage() {
             <div className="flex items-start gap-2">
               <FaHourglassHalf className="mt-0.5 shrink-0" />
               <div>
-                <p className="font-semibold">$APTC IPO on Solana</p>
+                <p className="font-semibold">$APTC Launching Soon on Pump.fun</p>
                 <p className="text-amber-200/80 mt-1">
-                  Staking pools and live market data activate during the IPO window and after Raydium listing. Values below may show pre-launch placeholders until the pair is indexed.
+                  Staking pools and market data will go live when APTC launches on Pump.fun. All UI elements below show placeholder values until launch.
                 </p>
               </div>
             </div>

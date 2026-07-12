@@ -1,7 +1,14 @@
-import { getIpoPhase, IPO_SALE } from './ipo';
+/**
+ * Central launch status configuration
+ * Controls conditional UI across the site for APTC pre-launch vs live trading.
+ *
+ * IMPORTANT: A mint address alone does NOT mean launched.
+ * "Live" = public trading (DexScreener pair set, or NEXT_PUBLIC_APTC_LAUNCHED=true).
+ */
 
 /**
- * Mint address configured (IPO treasury inventory, Solscan links, etc.)
+ * Mint address configured (treasury / Solscan / post-create prep).
+ * Distinct from public trading being live.
  */
 export function hasAptcMintConfigured() {
   const mint = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim();
@@ -9,16 +16,18 @@ export function hasAptcMintConfigured() {
 }
 
 /**
- * Public trading live on a DEX (DexScreener pair configured).
- * Distinct from mint existing for IPO — hero teaser stays until this is true.
+ * Public trading live (Pump.fun coin live + indexed pair, or explicit flag).
  */
 export function isAptcLaunched() {
+  const forced = process.env.NEXT_PUBLIC_APTC_LAUNCHED?.trim().toLowerCase();
+  if (forced === 'true' || forced === '1') return true;
+  if (forced === 'false' || forced === '0') return false;
   return Boolean(getAptcPairAddress());
 }
 
 /**
- * Get the current token mint address
- * Returns the mint address when configured, otherwise 'Launching soon'
+ * Get the current token mint address for display / links.
+ * Returns the mint when configured, otherwise 'Launching soon'.
  */
 export function getAptcMint() {
   const mint = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim();
@@ -37,30 +46,17 @@ export function getAptcPairAddress() {
  * Get launch status text for badges and announcements
  */
 export function getLaunchStatusText() {
-  if (isAptcLaunched()) {
-    return '$APTC is now Live on Solana';
-  }
-  const phase = getIpoPhase();
-  if (phase === 'upcoming') {
-    return `$APTC IPO · ${IPO_SALE.launchLabel}`;
-  }
-  if (phase === 'live') {
-    return '$APTC IPO is Live — Buy at aptcasino.fun/ipo';
-  }
-  if (phase === 'ended') {
-    return '$APTC IPO Complete — Raydium listing soon';
-  }
-  return '$APTC Launching Soon on Solana';
+  return isAptcLaunched()
+    ? '$APTC is now Live on Solana'
+    : '$APTC Launching Soon on Pump.fun';
 }
 
 /**
- * Badge variant for ticker / hero — IPO live counts as Live (not only post-DEX)
+ * Get launch status badge variant
+ * Returns 'live' or 'soon'
  */
 export function getLaunchBadgeVariant() {
-  if (isAptcLaunched()) return 'live';
-  const phase = getIpoPhase();
-  if (phase === 'live') return 'live';
-  return 'soon';
+  return isAptcLaunched() ? 'live' : 'soon';
 }
 
 /**
@@ -68,7 +64,7 @@ export function getLaunchBadgeVariant() {
  */
 export function getLaunchStyles() {
   const variant = getLaunchBadgeVariant();
-  
+
   if (variant === 'live') {
     return {
       badgeColor: 'emerald',
@@ -84,7 +80,7 @@ export function getLaunchStyles() {
       textColorSecondaryHover: 'group-hover:text-emerald-200',
     };
   }
-  
+
   return {
     badgeColor: 'amber',
     badgeBg: 'bg-amber-500/[0.1]',
@@ -127,9 +123,13 @@ export function getHeroImageDimensions() {
  * Primary CTA target for launch badges
  */
 export function getLaunchCtaHref() {
-  if (isAptcLaunched()) return '/#tokenomics';
-  const phase = getIpoPhase();
-  if (phase === 'live' || phase === 'upcoming') return '/ipo';
+  if (isAptcLaunched()) {
+    const pair = getAptcPairAddress();
+    if (pair) return `https://dexscreener.com/solana/${pair}`;
+    const mint = getAptcMint();
+    if (hasAptcMintConfigured()) return `https://pump.fun/coin/${mint}`;
+    return '/#tokenomics';
+  }
   return '/#tokenomics';
 }
 
@@ -137,8 +137,5 @@ export function getLaunchCtaHref() {
  * Get CTA link text based on launch status
  */
 export function getLaunchCtaText() {
-  if (isAptcLaunched()) return 'Trade now →';
-  if (getIpoPhase() === 'live') return 'Buy APTC →';
-  if (getIpoPhase() === 'upcoming') return 'IPO page →';
-  return 'Learn more →';
+  return isAptcLaunched() ? 'Trade now →' : 'Pump.fun launch →';
 }

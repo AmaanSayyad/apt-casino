@@ -9,7 +9,7 @@ const FEE_FLOW_MERMAID = `flowchart LR
     DEP[Deposit 100%] --> FEE1[Platform fee 10%]
     DEP --> PLAY[House balance 90%]
     PLAY --> GGR[GGR from house edge]
-    GGR --> BB[Buyback on Jupiter / Raydium]
+    GGR --> BB[Buyback on Jupiter / PumpSwap]
     BB --> B1[Burn 50%]
     BB --> B2[Stakers 35%]
     BB --> B3[Treasury 15%]`;

@@ -101,25 +101,23 @@ export const IPO_STACK = [
 ];
 
 /**
- * Receive-only IPO SOL collector (no hot key on server).
- * Overridable via NEXT_PUBLIC_IPO_SOL_TREASURY.
+ * IPO SOL collector — set via NEXT_PUBLIC_IPO_SOL_TREASURY when IPO is enabled.
+ * No hardcoded address (Pump.fun launch path; IPO dormant).
  */
-export const IPO_SOL_TREASURY_DEFAULT = 'F4DhxeQstwTBiaNdoeAwM7DEcUmSzJpC6HFWNi6cE9RV';
+export const IPO_SOL_TREASURY_DEFAULT = '';
 
 /**
- * Hot wallet that holds IPO APTC inventory + fee SOL and signs vault lock transfers.
- * Overridable via NEXT_PUBLIC_IPO_APTC_DISTRIBUTOR.
+ * IPO APTC distributor — set via NEXT_PUBLIC_IPO_APTC_DISTRIBUTOR when IPO is enabled.
  */
-export const IPO_APTC_DISTRIBUTOR_DEFAULT = '81JYyenNM7RsoDgmxgM1JxDx9243F2fVi9q7bR4rgycw';
+export const IPO_APTC_DISTRIBUTOR_DEFAULT = '';
 
 /**
- * Staking vault that receives IPO APTC (locked to buyer in DB — not sent to buyer wallet).
- * Overridable via NEXT_PUBLIC_APTC_STAKING_VAULT / NEXT_PUBLIC_IPO_STAKING_VAULT.
+ * Staking vault — set via NEXT_PUBLIC_APTC_STAKING_VAULT when staking/IPO lock is enabled.
  */
-export const IPO_STAKING_VAULT_DEFAULT = '2dcYoCY2Z9qkyFzWzExpg34WCKMjw5cCUduiNJL27TpB';
+export const IPO_STAKING_VAULT_DEFAULT = '2ei9VY2TtJ6GkvVMs1su5b348p98ajLaU45MzvE6gYaq';
 
-/** Default APTC mint for IPO inventory */
-export const IPO_APTC_MINT_DEFAULT = 'APTcsX9vXMbhVdH4aKNbzNqrVoj6M1En2eVK4hFP9sAh';
+/** APTC mint — set via NEXT_PUBLIC_APTC_SOLANA_MINT after Pump.fun create. */
+export const IPO_APTC_MINT_DEFAULT = '';
 
 /** Base IPO price (1×). All round multiples derive from this. */
 export const IPO_BASE_PRICE_USD = 0.0004;

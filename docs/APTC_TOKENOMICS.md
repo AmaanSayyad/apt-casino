@@ -11,7 +11,7 @@ Native SPL token for AptCasino.fun — **fixed-price public IPO** on Solana, the
 | **Name** | AptCasino.fun |
 | **Symbol** | APTC |
 | **Chain** | Solana (SPL · Token-2022) |
-| **Mint** | `APTcsX9vXMbhVdH4aKNbzNqrVoj6M1En2eVK4hFP9sAh` (override via `NEXT_PUBLIC_APTC_SOLANA_MINT`) |
+| **Mint** | Published at Pump.fun TGE (`NEXT_PUBLIC_APTC_SOLANA_MINT`) |
 | **Max supply** | 1,000,000,000 (6 decimals) |
 | **Mint authority** | Revoked at creation |
 | **Freeze authority** | Revoked at creation |
@@ -28,7 +28,7 @@ Native SPL token for AptCasino.fun — **fixed-price public IPO** on Solana, the
 | **Affiliates** | PinkSale-style 3-level IPO referrals |
 | **Oracle** | Pyth SOL/USD for settlement |
 | **Auto-stake** | 30 days @ 30% APY on purchased APTC |
-| **Wallets** | Split: receive-only SOL collector + hot APTC distributor (`NEXT_PUBLIC_IPO_SOL_TREASURY` / `NEXT_PUBLIC_IPO_APTC_DISTRIBUTOR`) |
+| **Wallets** | Not published pre-launch · Pump.fun create wallet at TGE |
 | **Post-IPO** | Raydium APTC/SOL pool · Jupiter routing · DexScreener charts |
 
 Canonical constants live in `src/lib/config/ipo.js` and `src/lib/config/tokenomics.js`.

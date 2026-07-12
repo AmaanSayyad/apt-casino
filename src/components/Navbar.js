@@ -396,7 +396,6 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", path: "/" },
-    { name: "IPO", path: "/ipo" },
     { name: "Litepaper", path: LITEPAPER_PATH },
     { name: "Games", path: "/game" },
     { name: "Live", path: "/live" },

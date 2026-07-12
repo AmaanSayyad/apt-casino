@@ -12,7 +12,7 @@ export const ROADMAP_PHASES_SEQUENCE = `sequenceDiagram
 
   Note over L: 4 games · Sol + Aptos
   Note over L: Live · GGR · referrals
-  L->>N: APTC IPO on Solana
+  L->>N: Pump.fun TGE
   Note over N: Tier 1 DEX · Tier 2 CG/CMC
   N->>M: Tier 3 CEX · staking · farms
   Note over M: Sui · EVM · audit
@@ -25,7 +25,7 @@ export const ROADMAP_VALUE_SEQUENCE = `sequenceDiagram
   actor P as Players
   participant X as Protocol
   participant G as Games
-  participant M as Jupiter + Raydium
+  participant M as Jupiter + PumpSwap
   participant H as Holders
 
   Note over P,H: Live today
@@ -48,14 +48,14 @@ export const ROADMAP_DIAGRAM_CARDS = [
   {
     id: 'phases',
     title: 'Delivery phases',
-    caption: 'From APTC IPO to the open GambleFi hub.',
+    caption: 'From Pump.fun TGE to the open GambleFi hub.',
     chart: ROADMAP_PHASES_SEQUENCE,
     layout: 'default',
   },
   {
     id: 'sequence',
     title: 'Value delivery sequence',
-    caption: 'How play, GGR, Jupiter/Raydium, and APTC holders connect.',
+    caption: 'How play, GGR, Jupiter/PumpSwap, and APTC holders connect.',
     chart: ROADMAP_VALUE_SEQUENCE,
     layout: 'default',
   },

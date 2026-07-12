@@ -23,22 +23,22 @@ import { getLitepaperUrl } from '../siteMetadata.js';
 export const PUBLIC_ROADMAP_ITEMS = [
   {
     id: 'a1000001-0001-4001-8001-000000000001',
-    title: '$APTC public IPO on Solana',
+    title: 'APTC TGE on Pump.fun',
     excerpt:
-      '3 timed rounds · $25k soft each at 1× / 2× / 3× · oversub 1.5× / 2.5× / 3.5× · Listing 5× · CEX Tier 3 20×.',
+      'Default Pump.fun launch · SOL bonding curve · ~1% creator dev buy · 1.25% curve trade fee · ~85 SOL graduation → PumpSwap (LP burned) · 100% creator fees to @aptcasinofun.',
     category: 'Platform',
     status: 'in_progress',
-    link: '/ipo',
+    link: getLitepaperUrl('aptc-token'),
     sortOrder: 10,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000037',
     title: 'Tier 1 — DEX & trader listings',
     excerpt:
-      'Raydium · DexScreener · Jupiter · Birdeye · GeckoTerminal — IPO launch and chart visibility at TGE.',
+      'Pump.fun · PumpSwap · DexScreener Enhanced · Jupiter · Birdeye · GeckoTerminal — bonding curve launch and chart visibility at TGE.',
     category: 'Partnership',
     status: 'in_progress',
-    link: '/ipo',
+    link: 'https://pump.fun/create',
     sortOrder: 21,
   },
   {
@@ -103,19 +103,19 @@ export const PUBLIC_ROADMAP_ITEMS = [
   },
   {
     id: 'a1000001-0001-4001-8001-000000000008',
-    title: 'Raydium post-IPO trading',
+    title: 'PumpSwap post-graduation trading',
     excerpt:
-      'Canonical APTC/SOL pool on Raydium after IPO closes — treasury support buys and MM coordination as secondary volume scales.',
+      'Post-graduation canonical pool depth on PumpSwap — LP burned at migration, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
     category: 'Partnership',
     status: 'planned',
-    link: 'https://raydium.io/',
+    link: 'https://pump.fun/docs/fees',
     sortOrder: 35,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000009',
     title: 'Automated GGR → APTC buyback pipeline',
     excerpt:
-      'Scheduled open-market buys on Jupiter & Raydium from gross gaming revenue — burn, staker, treasury splits published live.',
+      'Scheduled open-market buys on Jupiter & PumpSwap from gross gaming revenue — burn, staker, treasury splits published live.',
     category: 'Platform',
     status: 'planned',
     link: getLitepaperUrl('ggr-flywheel'),
@@ -325,7 +325,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000030',
     title: 'Ecosystem wallet & data partners',
     excerpt:
-      'Deeper integrations with Raydium, DexScreener, Jupiter, CoinGecko, and major wallets — co-marketing with Aptos & Solana ecosystems.',
+      'Deeper integrations with Pump.fun, PumpSwap, DexScreener, Jupiter, CoinGecko, and major wallets — co-marketing with Aptos & Solana ecosystems.',
     category: 'Partnership',
     status: 'planned',
     link: null,

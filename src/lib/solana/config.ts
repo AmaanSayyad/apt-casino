@@ -53,7 +53,7 @@ export function getSolanaStakingVaultConfig() {
   const address =
     process.env.NEXT_PUBLIC_APTC_STAKING_VAULT?.trim() ||
     process.env.NEXT_PUBLIC_IPO_STAKING_VAULT?.trim() ||
-    '2dcYoCY2Z9qkyFzWzExpg34WCKMjw5cCUduiNJL27TpB';
+    '2ei9VY2TtJ6GkvVMs1su5b348p98ajLaU45MzvE6gYaq';
   return { address };
 }
 

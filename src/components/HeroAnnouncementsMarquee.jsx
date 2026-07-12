@@ -59,7 +59,7 @@ export default function HeroAnnouncementsMarquee() {
                 />
               )}
               {item.primary ? (
-                <Link href={item.href || '/ipo'} className={`whitespace-nowrap transition-colors ${
+                <Link href={item.href || '/#tokenomics'} className={`whitespace-nowrap transition-colors ${
                   item.variant === 'live' 
                     ? 'text-emerald-200 hover:text-emerald-100' 
                     : 'text-amber-200 hover:text-amber-100'

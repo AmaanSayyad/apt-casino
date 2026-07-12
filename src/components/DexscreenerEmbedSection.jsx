@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { isAptcLaunched, getLaunchStyles } from '@/lib/config/launchStatus';
-import IpoStackLogos from '@/components/IpoStackLogos';
 
 const EMBED_PARAMS =
   'embed=1&loadChartSettings=0&chartLeftToolbar=0&chartDefaultOnMobile=1&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15';
@@ -53,7 +52,6 @@ export default function DexscreenerEmbedSection() {
   const embedUrl = buildEmbedUrl(pairUrl, pairAddress);
   const dexLabel = formatDexLabel(stats?.dexId);
   const hasLivePair = Boolean(embedUrl && launched); // Only show embed if launched AND pair exists
-  const mintConfigured = Boolean(stats?.mint);
 
   return (
     <section className="apt-dex-section border-y border-white/[0.06] bg-[#070005] py-16 md:py-20 site-page-pad-x">
@@ -63,7 +61,7 @@ export default function DexscreenerEmbedSection() {
             <div className={`inline-flex items-center gap-2.5 rounded-full border ${styles.badgeBorder} ${styles.badgeBg} px-4 py-2 mb-4`}>
               <span className={`w-2 h-2 rounded-full ${styles.dotColor} ${hasLivePair ? styles.dotShadow : ''}`} />
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/55">
-                {hasLivePair ? '$APTC live on Dexscreener' : launched ? '$APTC Live' : '$APTC Launching Soon'}
+                {hasLivePair ? 'Live chart' : 'Chart'}
               </span>
             </div>
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold font-display text-white tracking-tight">
@@ -75,12 +73,9 @@ export default function DexscreenerEmbedSection() {
               )}
             </h2>
             <p className="mt-3 w-full max-w-none text-sm md:text-base text-white/50 md:whitespace-nowrap">
-              {hasLivePair 
-                ? 'Real-time chart, liquidity, and trade activity for the $APTC pair — the same feed used on Stake page and GGR buyback estimates.'
-                : launched
-                ? 'Live chart and trading data will appear here once indexed on DexScreener.'
-                : 'Live chart and trading data will appear here once APTC lists on Raydium after the IPO.'
-              }
+              {hasLivePair
+                ? 'Real-time chart, liquidity, and trade activity for the $APTC pair.'
+                : 'Live chart appears here after Pump.fun launch and DexScreener indexing.'}
             </p>
           </div>
 
@@ -106,10 +101,6 @@ export default function DexscreenerEmbedSection() {
           )}
         </div>
 
-        <div className="mb-6">
-          <IpoStackLogos variant="compact" />
-        </div>
-
         <div className="apt-dex-embed-slot rounded-2xl border border-white/10 overflow-hidden bg-[#0a0008] shadow-[0_24px_80px_rgba(0,0,0,0.45)] min-h-0">
           {loading ? (
             <div className="apt-dex-embed-placeholder flex items-center justify-center text-white/40 text-sm">
@@ -127,19 +118,18 @@ export default function DexscreenerEmbedSection() {
           ) : (
             <div className="apt-dex-embed-placeholder flex flex-col items-center justify-center gap-4 px-6 text-center">
               <p className="text-white/70 font-medium text-lg">
-                {launched ? '$APTC is Live - Chart loading' : '$APTC Launching Soon on Solana'}
+                {launched ? 'Indexing DexScreener…' : 'Chart unlocks at launch'}
               </p>
               <p className="w-full max-w-none text-sm text-white/45 md:whitespace-nowrap">
-                {launched 
-                  ? 'DexScreener is indexing the pool. Refresh in a few moments to see live data.'
-                  : 'Live chart and trading data will appear here once APTC lists on Raydium after the IPO.'
-                }
+                {launched
+                  ? 'Refresh in a few moments once the pool is indexed.'
+                  : 'See launch params under Tokenomics.'}
               </p>
               <Link
                 href="/#tokenomics"
                 className="text-sm text-purple-300 hover:text-white transition-colors"
               >
-                Learn more about APTC →
+                APTC tokenomics →
               </Link>
             </div>
           )}

@@ -9,7 +9,6 @@ import {
 
 const QUICK_LINKS = [
   { label: 'Play', href: '/game', primary: true },
-  { label: 'IPO', href: '/ipo' },
   { label: 'Stake', href: '/stake' },
   { label: 'Pitch deck', href: PITCH_DECK_URL, external: true },
   { label: 'GitHub', href: PROJECT_GITHUB, external: true },

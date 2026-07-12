@@ -3,14 +3,7 @@
  * Logo files live in /public/logos (shared with chain connect modal).
  */
 
-import {
-  METAPLEX_LOGO_SRC,
-  METADAO_LOGO_SRC,
-  RAYDIUM_LOGO_SRC,
-  APTC_LOGO_SRC,
-  PINKSALE_LOGO_SRC,
-  PYTH_LOGO_SRC,
-} from './ipo';
+import { PUMP_LOGO_SRC } from './tokenomics';
 
 export type EcosystemLogo = {
   key: string;
@@ -36,12 +29,7 @@ export const ECOSYSTEM_CHAIN_LOGOS: EcosystemLogo[] = [
 
 /** DEX, analytics & launch tooling */
 export const ECOSYSTEM_DEX_LOGOS: EcosystemLogo[] = [
-  { key: 'aptc', src: APTC_LOGO_SRC, alt: 'APTC' },
-  { key: 'metaplex', src: METAPLEX_LOGO_SRC, alt: 'Metaplex Genesis' },
-  { key: 'metadao', src: METADAO_LOGO_SRC, alt: 'MetaDAO' },
-  { key: 'pinksale', src: PINKSALE_LOGO_SRC, alt: 'PinkSale' },
-  { key: 'pyth', src: PYTH_LOGO_SRC, alt: 'Pyth Network' },
-  { key: 'raydium', src: RAYDIUM_LOGO_SRC, alt: 'Raydium' },
+  { key: 'pumpfun', src: PUMP_LOGO_SRC, alt: 'Pump.fun' },
   { key: 'jupiter', src: '/logos/jupiter.jpg', alt: 'Jupiter' },
   { key: 'meteora', src: '/logos/meteora-logo.png', alt: 'Meteora' },
   { key: 'pancakeswap', src: '/logos/pancakeswap-logo.png', alt: 'PancakeSwap' },
@@ -51,10 +39,10 @@ export const ECOSYSTEM_DEX_LOGOS: EcosystemLogo[] = [
   { key: 'coingecko', src: '/logos/coingecko-logo.png', alt: 'CoinGecko' },
   { key: 'cmc', src: '/logos/cmc.png', alt: 'CoinMarketCap' },
   { key: 'gecko', src: '/logos/gecko.png', alt: 'GeckoTerminal' },
+  { key: 'pumpfun', src: '/logos/pumpfun-logo.png', alt: 'Pump.fun' },
   { key: 'axiom', src: '/logos/axiom.jpeg', alt: 'Axiom' },
   { key: 'photon', src: '/logos/photon.png', alt: 'Photon' },
   { key: 'gmgn', src: '/logos/gmgn.png', alt: 'GMGN' },
-  { key: 'solscan', src: '/Solscan.png', alt: 'Solscan' },
   { key: 'bubblemaps', src: '/logos/bubblemaps.png', alt: 'Bubblemaps' },
   { key: 'rugcheck', src: '/logos/rugcheck.jpg', alt: 'RugCheck' },
 ];

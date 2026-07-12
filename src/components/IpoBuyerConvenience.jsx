@@ -4,11 +4,7 @@ import { useCallback, useState } from 'react';
 import { ArrowLeftRight, Wallet, Lock, ChartCandlestick } from 'lucide-react';
 import {
   APTC_LOGO_SRC,
-  IPO_APTC_DISTRIBUTOR_DEFAULT,
-  IPO_APTC_MINT_DEFAULT,
   IPO_SALE,
-  IPO_SOL_TREASURY_DEFAULT,
-  IPO_STAKING_VAULT_DEFAULT,
   getIpoAptcDistributor,
   getIpoSolTreasury,
   getIpoStakingVault,
@@ -192,11 +188,10 @@ export function IpoVerifyWallets({
   className = '',
   bare = false,
 }) {
-  const solCollector = treasury || getIpoSolTreasury() || IPO_SOL_TREASURY_DEFAULT;
-  const aptcDist = distributor || getIpoAptcDistributor() || IPO_APTC_DISTRIBUTOR_DEFAULT;
-  const vault =
-    stakingVault || getIpoStakingVault() || IPO_STAKING_VAULT_DEFAULT;
-  const aptcMint = mint || process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || IPO_APTC_MINT_DEFAULT;
+  const solCollector = treasury || getIpoSolTreasury() || '';
+  const aptcDist = distributor || getIpoAptcDistributor() || '';
+  const vault = stakingVault || getIpoStakingVault() || '';
+  const aptcMint = mint || process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || '';
 
   const rows = [
     {
@@ -204,31 +199,46 @@ export function IpoVerifyWallets({
       label: 'SOL collector',
       hint: 'Receive-only — buyers send SOL here',
       value: solCollector,
-      href: `${SOLSCAN_ACCOUNT}${solCollector}`,
+      href: solCollector ? `${SOLSCAN_ACCOUNT}${solCollector}` : null,
     },
     {
       id: 'aptc',
       label: 'APTC distributor',
       hint: 'Signs the lock transfer after deposit verifies',
       value: aptcDist,
-      href: `${SOLSCAN_ACCOUNT}${aptcDist}`,
+      href: aptcDist ? `${SOLSCAN_ACCOUNT}${aptcDist}` : null,
     },
     {
       id: 'vault',
       label: 'Staking vault',
       hint: 'Where your IPO APTC is locked (not your wallet)',
       value: vault,
-      href: `${SOLSCAN_ACCOUNT}${vault}`,
+      href: vault ? `${SOLSCAN_ACCOUNT}${vault}` : null,
     },
     {
       id: 'mint',
       label: 'APTC mint',
       hint: 'Token mint — claim to wallet after unlock',
       value: aptcMint,
-      href: `${SOLSCAN_TOKEN}${aptcMint}`,
+      href: aptcMint ? `${SOLSCAN_TOKEN}${aptcMint}` : null,
       logo: APTC_LOGO_SRC,
     },
-  ];
+  ].filter((row) => Boolean(row.value));
+
+  if (!rows.length) {
+    return (
+      <div className={className}>
+        {!bare ? (
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/40 mb-1">
+            Verify before you send
+          </p>
+        ) : null}
+        <p className="text-[11px] text-white/45 leading-relaxed">
+          IPO wallets and mint are not published. Launch path is Pump.fun — addresses appear here only when configured.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={className}>
