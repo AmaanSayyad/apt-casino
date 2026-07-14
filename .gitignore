@@ -75,6 +75,7 @@ supabase/.temp
 
 # Misc local / scratch
 *.local
+.local/
 .cache/
 .turbo/
 .env.vercel.check

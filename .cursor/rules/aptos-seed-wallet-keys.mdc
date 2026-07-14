@@ -1,0 +1,21 @@
+---
+description: Persist Aptos seed/play wallet private keys under .local (never /tmp)
+alwaysApply: true
+---
+
+# Aptos seed wallet key storage
+
+When creating Aptos wallets for seeding, play simulation, sweeps, or any batch that generates private keys:
+
+1. **Never** write keys only to `/tmp` (cleared on reboot / OS cleanup).
+2. **Always** save the full result JSON (addresses + private keys + fund/play txs) under:
+
+   `.local/aptos-seed-wallets/`
+
+   Examples:
+   - `.local/aptos-seed-wallets/play-users-100-YYYYMMDD-HHMMSS.json`
+   - `.local/aptos-seed-wallets/latest.json` (optional copy of most recent batch)
+
+3. That directory is **gitignored** (`.local/`). Do not commit keys. Do not paste full private keys into chat replies.
+4. After each batch finishes, confirm the file exists on disk before telling the user the run succeeded.
+5. For sweeps/recoveries, read keys from `.local/aptos-seed-wallets/`, not from memory or `/tmp`.
