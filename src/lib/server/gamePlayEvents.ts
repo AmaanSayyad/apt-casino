@@ -124,7 +124,9 @@ export async function aggregateGameActivityFromPlayEvents(opts?: {
 }
 
 const ALL_TIME_AGGREGATE_TTL_MS = 5 * 60_000;
-const MAX_AGGREGATE_ROWS = 50_000;
+/** Page size for PostgREST — many Supabase projects cap responses at 1000 even if limit is higher. */
+const AGGREGATE_PAGE_SIZE = 1000;
+const MAX_AGGREGATE_PAGES = 200;
 
 type PlayEventsAggregate = {
   totalBets: number;
@@ -154,50 +156,59 @@ async function aggregatePlayEventsSinceUncached(sinceMs: number | null): Promise
   };
   if (!db) return empty;
 
-  let q = db
-    .from('game_play_events')
-    .select('chain, bet_raw, payout_raw, currency, created_at, wallet')
-    .limit(MAX_AGGREGATE_ROWS);
-  if (sinceMs) {
-    q = q.gte('created_at', new Date(sinceMs).toISOString());
-  }
-  const [{ data, error }, allTimeCount] = await Promise.all([
-    q,
-    sinceMs
-      ? Promise.resolve(null)
-      : db.from('game_play_events').select('*', { count: 'exact', head: true }),
-  ]);
-  if (error || !data) return empty;
-
   const totalWageredByChain: Record<string, number> = {};
   const totalBetsByChain: Record<string, number> = {};
   const maxWinByChain: Record<string, number> = {};
   const playerWinsByChain: Record<string, number> = {};
   const wallets = new Set<string>();
   let playerWins = 0;
+  let scanned = 0;
 
-  for (const row of data) {
-    const chain = String(row.chain);
-    const cfg = getPlayChainConfig(chain);
-    const units = cfg?.units ?? 1e9;
-    const bet = Number(row.bet_raw) / units;
-    const payout = Number(row.payout_raw) / units;
-    totalWageredByChain[chain] = (totalWageredByChain[chain] ?? 0) + bet;
-    totalBetsByChain[chain] = (totalBetsByChain[chain] ?? 0) + 1;
-    const profit = payout - bet;
-    if (profit > 0) {
-      playerWins += 1;
-      playerWinsByChain[chain] = (playerWinsByChain[chain] ?? 0) + 1;
+  for (let page = 0; page < MAX_AGGREGATE_PAGES; page += 1) {
+    const from = page * AGGREGATE_PAGE_SIZE;
+    const to = from + AGGREGATE_PAGE_SIZE - 1;
+    let q = db
+      .from('game_play_events')
+      .select('chain, bet_raw, payout_raw, currency, created_at, wallet')
+      .order('created_at', { ascending: true })
+      .range(from, to);
+    if (sinceMs) {
+      q = q.gte('created_at', new Date(sinceMs).toISOString());
     }
-    const prevMax = maxWinByChain[chain] ?? 0;
-    if (payout > prevMax) maxWinByChain[chain] = payout;
+    const { data, error } = await q;
+    if (error) {
+      console.warn('[gamePlayEvents] aggregate page failed', error.message);
+      break;
+    }
+    if (!data?.length) break;
 
-    const wallet = String(row.wallet || '').trim();
-    if (wallet) wallets.add(`${chain}:${wallet}`);
+    for (const row of data) {
+      const chain = String(row.chain);
+      const cfg = getPlayChainConfig(chain);
+      const units = cfg?.units ?? 1e9;
+      const bet = Number(row.bet_raw) / units;
+      const payout = Number(row.payout_raw) / units;
+      totalWageredByChain[chain] = (totalWageredByChain[chain] ?? 0) + bet;
+      totalBetsByChain[chain] = (totalBetsByChain[chain] ?? 0) + 1;
+      const profit = payout - bet;
+      if (profit > 0) {
+        playerWins += 1;
+        playerWinsByChain[chain] = (playerWinsByChain[chain] ?? 0) + 1;
+      }
+      const prevMax = maxWinByChain[chain] ?? 0;
+      if (payout > prevMax) maxWinByChain[chain] = payout;
+
+      const wallet = String(row.wallet || '').trim();
+      if (wallet) wallets.add(`${chain}:${wallet}`);
+    }
+
+    scanned += data.length;
+    if (data.length < AGGREGATE_PAGE_SIZE) break;
   }
 
   return {
-    totalBets: allTimeCount?.count ?? data.length,
+    // Prefer scanned sum so headline totals always match by-chain panels.
+    totalBets: scanned,
     totalBetsByChain,
     totalWageredByChain,
     maxWinByChain,
