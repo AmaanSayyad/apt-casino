@@ -372,49 +372,62 @@ export async function loadPlayEventsForLeaderboard(opts: {
   const db = getSupabaseAdmin();
   if (!db) return [];
 
-  let q = db
-    .from('game_play_events')
-    .select('chain, game, wallet, bet_raw, payout_raw, created_at')
-    .order('created_at', { ascending: true });
-
-  if (opts.game && opts.game !== 'all') {
-    q = q.eq('game', opts.game);
-  }
-  if (opts.sinceMs != null) {
-    q = q.gte('created_at', new Date(opts.sinceMs).toISOString());
-  }
-
-  const { data, error } = await q;
-  if (error || !data?.length) return [];
-
   const out: LeaderboardPlayEvent[] = [];
-  for (const row of data) {
-    const chain = String(row.chain || '').toLowerCase() as ChainId;
-    const cfg = getPlayChainConfig(chain);
-    if (!cfg) continue;
 
-    const wallet = normalizeWalletForChain(String(row.wallet ?? ''), chain);
-    if (!wallet) continue;
+  for (let page = 0; page < MAX_AGGREGATE_PAGES; page += 1) {
+    const from = page * AGGREGATE_PAGE_SIZE;
+    const to = from + AGGREGATE_PAGE_SIZE - 1;
+    let q = db
+      .from('game_play_events')
+      .select('chain, game, wallet, bet_raw, payout_raw, created_at')
+      .order('created_at', { ascending: true })
+      .range(from, to);
 
-    let betRaw: bigint;
-    let payoutRaw: bigint;
-    try {
-      betRaw = BigInt(String(row.bet_raw ?? '0'));
-      payoutRaw = BigInt(String(row.payout_raw ?? '0'));
-    } catch {
-      continue;
+    if (opts.game && opts.game !== 'all') {
+      q = q.eq('game', opts.game);
+    }
+    if (opts.sinceMs != null) {
+      q = q.gte('created_at', new Date(opts.sinceMs).toISOString());
     }
 
-    const createdAtMs = row.created_at ? new Date(String(row.created_at)).getTime() : Date.now();
-    out.push({
-      chain,
-      game: String(row.game || '').toLowerCase(),
-      wallet,
-      betRaw,
-      payoutRaw,
-      createdAtMs,
-    });
+    const { data, error } = await q;
+    if (error) {
+      console.warn('[gamePlayEvents] leaderboard page failed', error.message);
+      break;
+    }
+    if (!data?.length) break;
+
+    for (const row of data) {
+      const chain = String(row.chain || '').toLowerCase() as ChainId;
+      const cfg = getPlayChainConfig(chain);
+      if (!cfg) continue;
+
+      const wallet = normalizeWalletForChain(String(row.wallet ?? ''), chain);
+      if (!wallet) continue;
+
+      let betRaw: bigint;
+      let payoutRaw: bigint;
+      try {
+        betRaw = BigInt(String(row.bet_raw ?? '0'));
+        payoutRaw = BigInt(String(row.payout_raw ?? '0'));
+      } catch {
+        continue;
+      }
+
+      const createdAtMs = row.created_at ? new Date(String(row.created_at)).getTime() : Date.now();
+      out.push({
+        chain,
+        game: String(row.game || '').toLowerCase(),
+        wallet,
+        betRaw,
+        payoutRaw,
+        createdAtMs,
+      });
+    }
+
+    if (data.length < AGGREGATE_PAGE_SIZE) break;
   }
+
   return out;
 }
 

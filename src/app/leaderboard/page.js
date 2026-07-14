@@ -97,7 +97,7 @@ export default function LeaderboardPage() {
         metric,
         period,
         game,
-        top: '100',
+        top: '2000',
       });
       const r = await fetch(`/api/leaderboard?${params}`);
       const j = await r.json().catch(() => null);

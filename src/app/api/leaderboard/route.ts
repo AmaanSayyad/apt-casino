@@ -196,7 +196,7 @@ async function loadGameHistory(): Promise<RawGame[]> {
  *   - metric:  'biggest' | 'pnl' | 'wagered' | 'bets' | 'winrate'  (default 'biggest')
  *   - period:  '24h' | '7d' | '30d' | 'all'                         (default 'all')
  *   - game:    'all' | 'plinko' | 'mines' | 'roulette' | 'wheel'    (default 'all')
- *   - top:     1..200                                                (default 50)
+ *   - top:     1..2000                                               (default 50)
  *
  * Top wallets are joined against `user_profiles` (single batched query) to surface
  * handles and avatars on the UI. Results are cached on the edge for 30s via the
@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
   const metric = (searchParams.get('metric') || 'biggest').toLowerCase();
   const period = (searchParams.get('period') || 'all').toLowerCase();
   const game = (searchParams.get('game') || 'all').toLowerCase();
-  const top = Math.min(Math.max(parseInt(searchParams.get('top') || '50', 10) || 50, 1), 200);
+  const top = Math.min(Math.max(parseInt(searchParams.get('top') || '50', 10) || 50, 1), 2000);
 
   if (!METRICS.has(metric)) {
     return NextResponse.json({ error: `metric must be one of: ${[...METRICS].join(', ')}` }, { status: 400 });
@@ -307,12 +307,12 @@ export async function GET(request: NextRequest) {
     }
   });
 
-  const top200 = scored.slice(0, top);
+  const ranked = scored.slice(0, top);
 
   // ----- Enrich with profile data -------------------------------------------------
-  const profiles = await fetchProfiles(top200.map((r) => r.wallet));
+  const profiles = await fetchProfiles(ranked.map((r) => r.wallet));
 
-  const leaderboard = top200.map((row, i) => {
+  const leaderboard = ranked.map((row, i) => {
     const profile = profiles.get(row.wallet) || profiles.get(normalizeWallet(row.wallet) ?? '') || null;
     const twitterHandle = resolveLinkedTwitterHandle({
       twitterHandle: profile?.twitter_handle,
