@@ -2,20 +2,19 @@
  * DexScreener helper for SPL APTC (Solana).
  * Pulls the most-liquid pair and exposes price, FDV/market-cap and TVL (= USD liquidity).
  *
- * Defaults to the live Pump.fun mint + pair; env vars override.
+ * APTC mint is read from NEXT_PUBLIC_APTC_SOLANA_MINT. When it is not configured
+ * (pre-launch), fetchers resolve to null without throwing so the UI can render an
+ * indicative "Pre-launch" state.
  */
 
-import { APTC_LIVE_MINT, APTC_LIVE_PAIR } from '@/lib/config/launchStatus';
+export const APTC_SOLANA_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || '';
 
-export const APTC_SOLANA_MINT =
-  process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || APTC_LIVE_MINT;
-
-/** DexScreener pair — preferred for quotes when configured. */
+/** DexScreener pair or token mint — preferred for quotes when configured. */
 const APTC_DEX_PAIR =
   process.env.NEXT_PUBLIC_APTC_DEXSCREENER_PAIR?.trim() ||
   process.env.APTC_DEX_PAIR_ADDRESS?.trim() ||
   process.env.APTC_RAYDIUM_POOL_ADDRESS?.trim() || // legacy env name
-  APTC_LIVE_PAIR;
+  '';
 
 export type DexscreenerStats = {
   priceUsd: number | null;

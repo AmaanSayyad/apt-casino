@@ -25,20 +25,20 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000001',
     title: 'APTC TGE on Pump.fun',
     excerpt:
-      'Live on Pump.fun · mint 4YP8o33P…pump · DexScreener pair indexed · SOL bonding curve · ~1% creator dev buy · creator fees to @aptcasinofun.',
+      'Default Pump.fun launch · SOL bonding curve · ~1% creator dev buy · 1.25% curve trade fee · ~85 SOL graduation → PumpSwap (LP burned) · 100% creator fees to @aptcasinofun.',
     category: 'Platform',
-    status: 'shipped',
-    link: 'https://dexscreener.com/solana/CHeex7ggiPM8j117YDDnLJjJ5njo5XJavoahanWDTrpz',
+    status: 'in_progress',
+    link: getLitepaperUrl('aptc-token'),
     sortOrder: 10,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000037',
     title: 'Tier 1 — DEX & trader listings',
     excerpt:
-      'Pump.fun · DexScreener live chart · Jupiter · Birdeye · GeckoTerminal — bonding curve trading and chart visibility at TGE.',
+      'Pump.fun · PumpSwap · DexScreener Enhanced · Jupiter · Birdeye · GeckoTerminal — bonding curve launch and chart visibility at TGE.',
     category: 'Partnership',
     status: 'in_progress',
-    link: 'https://dexscreener.com/solana/CHeex7ggiPM8j117YDDnLJjJ5njo5XJavoahanWDTrpz',
+    link: 'https://pump.fun/create',
     sortOrder: 21,
   },
   {

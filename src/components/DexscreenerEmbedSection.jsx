@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { isAptcLaunched, getAptcPairAddress, getLaunchStyles } from '@/lib/config/launchStatus';
+import { isAptcLaunched, getLaunchStyles } from '@/lib/config/launchStatus';
 
 const EMBED_PARAMS =
   'embed=1&loadChartSettings=0&chartLeftToolbar=0&chartDefaultOnMobile=1&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15';
@@ -47,14 +47,11 @@ export default function DexscreenerEmbedSection() {
     };
   }, []);
 
-  const configuredPair = getAptcPairAddress();
-  const pairAddress = stats?.pairAddress ?? configuredPair ?? null;
-  const pairUrl =
-    stats?.pairUrl ??
-    (pairAddress ? `https://dexscreener.com/solana/${pairAddress}` : null);
+  const pairUrl = stats?.pairUrl ?? null;
+  const pairAddress = stats?.pairAddress ?? null;
   const embedUrl = buildEmbedUrl(pairUrl, pairAddress);
-  const dexLabel = formatDexLabel(stats?.dexId || (launched ? 'pumpfun' : null));
-  const hasLivePair = Boolean(embedUrl && launched);
+  const dexLabel = formatDexLabel(stats?.dexId);
+  const hasLivePair = Boolean(embedUrl && launched); // Only show embed if launched AND pair exists
 
   return (
     <section className="apt-dex-section border-y border-white/[0.06] bg-[#070005] py-16 md:py-20 site-page-pad-x">

@@ -4,22 +4,14 @@
  *
  * IMPORTANT: A mint address alone does NOT mean launched.
  * "Live" = public trading (DexScreener pair set, or NEXT_PUBLIC_APTC_LAUNCHED=true).
- *
- * Live Pump.fun mint + DexScreener pair (env overrides these defaults).
  */
-
-/** Canonical APTC mint on Solana (Pump.fun) */
-export const APTC_LIVE_MINT = '4YP8o33PXV5TH5TQTTgx3EqPmf1sN2K4VNwgRnt4pump';
-
-/** DexScreener / Pump.fun bonding-curve pair address */
-export const APTC_LIVE_PAIR = 'CHeex7ggiPM8j117YDDnLJjJ5njo5XJavoahanWDTrpz';
 
 /**
  * Mint address configured (treasury / Solscan / post-create prep).
  * Distinct from public trading being live.
  */
 export function hasAptcMintConfigured() {
-  const mint = getAptcMint();
+  const mint = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim();
   return Boolean(mint && mint !== 'Launching soon' && mint.length > 20);
 }
 
@@ -39,8 +31,7 @@ export function isAptcLaunched() {
  */
 export function getAptcMint() {
   const mint = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim();
-  if (mint && mint !== 'Launching soon' && mint.length > 20) return mint;
-  return APTC_LIVE_MINT;
+  return hasAptcMintConfigured() ? mint : 'Launching soon';
 }
 
 /**
@@ -48,8 +39,7 @@ export function getAptcMint() {
  */
 export function getAptcPairAddress() {
   const pair = process.env.NEXT_PUBLIC_APTC_DEXSCREENER_PAIR?.trim();
-  if (pair) return pair;
-  return APTC_LIVE_PAIR;
+  return pair || null;
 }
 
 /**
