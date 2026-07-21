@@ -24,7 +24,9 @@ import { isAptcLaunched } from '@/lib/config/launchStatus';
 
 const STAKING_ENABLED =
   (process.env.NEXT_PUBLIC_APTC_STAKING_ENABLED || 'false').toLowerCase() === 'true';
-const APTC_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT || '';
+const APTC_MINT =
+  process.env.NEXT_PUBLIC_APTC_SOLANA_MINT ||
+  '4YP8o33PXV5TH5TQTTgx3EqPmf1sN2K4VNwgRnt4pump';
 const STAKING_VAULT = process.env.NEXT_PUBLIC_APTC_STAKING_VAULT || '2ei9VY2TtJ6GkvVMs1su5b348p98ajLaU45MzvE6gYaq';
 
 function fmtUsd(n) {

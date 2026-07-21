@@ -116,8 +116,8 @@ export const IPO_APTC_DISTRIBUTOR_DEFAULT = '';
  */
 export const IPO_STAKING_VAULT_DEFAULT = '2ei9VY2TtJ6GkvVMs1su5b348p98ajLaU45MzvE6gYaq';
 
-/** APTC mint — set via NEXT_PUBLIC_APTC_SOLANA_MINT after Pump.fun create. */
-export const IPO_APTC_MINT_DEFAULT = '';
+/** APTC mint — live Pump.fun CA (env can override). */
+export const IPO_APTC_MINT_DEFAULT = '4YP8o33PXV5TH5TQTTgx3EqPmf1sN2K4VNwgRnt4pump';
 
 /** Base IPO price (1×). All round multiples derive from this. */
 export const IPO_BASE_PRICE_USD = 0.0004;

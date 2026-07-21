@@ -36,7 +36,9 @@ export function getSolanaNetwork(): WalletAdapterNetwork {
 }
 
 export function getAptcMintAddress(): string | null {
-  const m = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim();
+  const m =
+    process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() ||
+    '4YP8o33PXV5TH5TQTTgx3EqPmf1sN2K4VNwgRnt4pump';
   return m && !m.includes('<') ? m : null;
 }
 

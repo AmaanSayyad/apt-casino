@@ -12,7 +12,7 @@ import {
   pumpTokenUrl,
   solscanTokenUrl,
 } from '@/lib/config/tokenomics';
-import { isAptcLaunched } from '@/lib/config/launchStatus';
+import { isAptcLaunched, getAptcPairAddress } from '@/lib/config/launchStatus';
 import PumpLaunchPanel from '@/components/PumpLaunchPanel';
 
 const AllocationDonut = dynamic(
@@ -28,13 +28,15 @@ const TraderTransparencyPanel = dynamic(
   { ssr: false, loading: () => <ChartSkeleton height={320} /> },
 );
 
-const _MINT = 'TBD';
-
 /** Get trade tools with conditional URLs based on launch status */
 function getTradeTools() {
   const launched = isAptcLaunched();
   const mint = APTC_TOKENOMICS.mint;
-  
+  const pair = getAptcPairAddress();
+  const dexHref = pair
+    ? `https://dexscreener.com/solana/${pair}`
+    : `https://dexscreener.com/solana/${mint}`;
+
   if (!launched) {
     return [
       { id: 'pumpfun',      label: 'Pump.fun',       logo: PUMP_LOGO_SRC,                  href: 'https://pump.fun/create' },
@@ -55,10 +57,10 @@ function getTradeTools() {
   return [
     { id: 'pumpfun',      label: 'Pump.fun',       logo: PUMP_LOGO_SRC,                  href: pumpTokenUrl(mint) },
     { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/swap/SOL-${mint}` },
-    { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana/${mint}` },
+    { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: dexHref },
     { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: `https://birdeye.so/token/${mint}?chain=solana` },
-    { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/solana/pools/${mint}` },
-    { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/app/en/solana/pair-explorer/${mint}` },
+    { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: pair ? `https://www.geckoterminal.com/solana/pools/${pair}` : `https://www.geckoterminal.com/solana/tokens/${mint}` },
+    { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/app/en/solana/pair-explorer/${pair || mint}` },
     { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: `https://gmgn.ai/sol/token/${mint}` },
     { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: `https://axiom.trade/token/${mint}` },
     { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: `https://photon-sol.tinyastro.io/en/lp/${mint}` },

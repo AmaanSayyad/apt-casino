@@ -9,8 +9,8 @@ Checklist for launching APT Casino on production infrastructure. Solana is the p
 - [ ] Open `/ipo` fixed-price sale — **250M APTC** · **$100K** raise @ **$0.0004**
 - [ ] Confirm SOL collector + APTC distributor wallets (split hot/cold)
 - [ ] Publish transparency pledge: **no wash volume · no fake FDV · no dumps** on site + litepaper
-- [ ] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production
-- [ ] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` once DexScreener indexes the Raydium pair
+- [x] Set `NEXT_PUBLIC_APTC_SOLANA_MINT` in `.env` / Vercel production
+- [x] Set `NEXT_PUBLIC_APTC_DEXSCREENER_PAIR` once DexScreener indexes the Raydium pair
 - [ ] Post-IPO Raydium APTC/SOL pool live
 - [ ] DexScreener Enhanced Token Info submitted
 - [ ] Jupiter routing visible
@@ -94,8 +94,9 @@ SOL_TREASURY_SECRET_KEY=
 NEXT_PUBLIC_APT_CASINO_PROGRAM_ID=
 
 # APTC (public IPO → Raydium)
-NEXT_PUBLIC_APTC_SOLANA_MINT=
-NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=
+NEXT_PUBLIC_APTC_SOLANA_MINT=4YP8o33PXV5TH5TQTTgx3EqPmf1sN2K4VNwgRnt4pump
+NEXT_PUBLIC_APTC_DEXSCREENER_PAIR=CHeex7ggiPM8j117YDDnLJjJ5njo5XJavoahanWDTrpz
+NEXT_PUBLIC_APTC_LAUNCHED=true
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=

@@ -13,10 +13,10 @@ import {
     TransactionExpiredBlockheightExceededError,
     type ParsedTransactionWithMeta,
 } from '@solana/web3.js';
-import { getSolanaConfig, getSolanaRpcEndpoint } from './config';
+import { getSolanaConfig, getSolanaRpcEndpoint, getAptcMintAddress } from './config';
 
 /** Legacy alias — APTC mint when SPL paths are enabled. */
-export const APTC_SPL_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || '';
+export const APTC_SPL_MINT = getAptcMintAddress() || '';
 import bs58 from 'bs58';
 
 /**
