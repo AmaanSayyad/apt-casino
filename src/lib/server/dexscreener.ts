@@ -7,11 +7,17 @@
  * an indicative "Pre-launch" state.
  */
 
+import {
+  APTC_TOKEN_ADDRESS_DEFAULT,
+  APTC_DEXSCREENER_PAIR_DEFAULT,
+} from '@/lib/config/launchStatus';
+
 const DEX_CHAIN = 'robinhood';
 
 export const APTC_SOLANA_MINT =
   process.env.NEXT_PUBLIC_APTC_TOKEN_ADDRESS?.trim() ||
   process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() ||
+  APTC_TOKEN_ADDRESS_DEFAULT ||
   '';
 
 /** DexScreener pair or token address — preferred for quotes when configured. */
@@ -19,6 +25,7 @@ const APTC_DEX_PAIR =
   process.env.NEXT_PUBLIC_APTC_DEXSCREENER_PAIR?.trim() ||
   process.env.APTC_DEX_PAIR_ADDRESS?.trim() ||
   process.env.APTC_RAYDIUM_POOL_ADDRESS?.trim() || // legacy env name
+  APTC_DEXSCREENER_PAIR_DEFAULT ||
   '';
 
 export type DexscreenerStats = {

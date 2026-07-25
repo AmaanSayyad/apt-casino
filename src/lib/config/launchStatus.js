@@ -3,26 +3,35 @@
  * Controls conditional UI across the site for APTC pre-launch vs live trading.
  *
  * Launch venue: Virtuals Protocol on Robinhood Chain (agent token + EconomyOS).
- * IMPORTANT: A token address alone does NOT mean launched.
- * "Live" = public trading (DexScreener pair set, or NEXT_PUBLIC_APTC_LAUNCHED=true).
+ * IMPORTANT: A mint/CA alone does NOT mean trading is live.
+ * "Live" = NEXT_PUBLIC_APTC_LAUNCHED=true (flip at TGE open).
  */
 
-/** Scheduled Virtuals launch window (from create form). Display only — not a hard gate. */
-export const APTC_SCHEDULED_LAUNCH_LABEL = '26 Jul 2026 · 23:30';
+/** Scheduled public launch — 27 Jul 2026 11:30 AM IST (UTC+5:30) = 06:00 UTC */
+export const APTC_SCHEDULED_LAUNCH_LABEL = '27 Jul 2026 · 11:30 AM IST';
+export const APTC_SCHEDULED_LAUNCH_ISO = '2026-07-27T06:00:00.000Z';
 
+/** Published Virtuals agent page */
+export const VIRTUALS_TOKEN_PAGE_URL = 'https://app.virtuals.io/virtuals/122676';
 export const VIRTUALS_CREATE_URL = 'https://app.virtuals.io/create';
 export const VIRTUALS_APP_URL = 'https://app.virtuals.io';
 export const DEXSCREENER_CHAIN_SLUG = 'robinhood';
 
+/** APTC contract on Robinhood Chain (Virtuals TGE) */
+export const APTC_TOKEN_ADDRESS_DEFAULT = '0x11857646a9c3B3272fa03339CC9f1c09D05B00Ae';
+
+/** DexScreener pair on Robinhood */
+export const APTC_DEXSCREENER_PAIR_DEFAULT = '0xAa72A7FA34cF000411cd07aB1370B5235c672131';
+
 /**
  * Prefer NEXT_PUBLIC_APTC_TOKEN_ADDRESS (EVM / Robinhood).
- * Falls back to legacy NEXT_PUBLIC_APTC_SOLANA_MINT for older env files.
+ * Falls back to legacy NEXT_PUBLIC_APTC_SOLANA_MINT, then published default CA.
  */
 function rawTokenAddress() {
   return (
     process.env.NEXT_PUBLIC_APTC_TOKEN_ADDRESS?.trim() ||
     process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() ||
-    ''
+    APTC_TOKEN_ADDRESS_DEFAULT
   );
 }
 
@@ -39,13 +48,15 @@ export function hasAptcMintConfigured() {
 export const hasAptcTokenConfigured = hasAptcMintConfigured;
 
 /**
- * Public trading live (Virtuals token live + indexed pair, or explicit flag).
+ * Public trading live — explicit flag only (pair may exist before countdown ends).
  */
 export function isAptcLaunched() {
   const forced = process.env.NEXT_PUBLIC_APTC_LAUNCHED?.trim().toLowerCase();
   if (forced === 'true' || forced === '1') return true;
   if (forced === 'false' || forced === '0') return false;
-  return Boolean(getAptcPairAddress());
+  // No explicit flag: treat as live once scheduled open time has passed AND pair exists
+  if (!getAptcPairAddress()) return false;
+  return Date.now() >= Date.parse(APTC_SCHEDULED_LAUNCH_ISO);
 }
 
 /**
@@ -66,8 +77,22 @@ export function getAptcTokenAddress() {
  * Get the DexScreener pair address if available
  */
 export function getAptcPairAddress() {
-  const pair = process.env.NEXT_PUBLIC_APTC_DEXSCREENER_PAIR?.trim();
-  return pair || null;
+  return (
+    process.env.NEXT_PUBLIC_APTC_DEXSCREENER_PAIR?.trim() ||
+    APTC_DEXSCREENER_PAIR_DEFAULT ||
+    null
+  );
+}
+
+export function getVirtualsTokenPageUrl() {
+  return (
+    process.env.NEXT_PUBLIC_APTC_VIRTUALS_URL?.trim() || VIRTUALS_TOKEN_PAGE_URL
+  );
+}
+
+export function getDexscreenerPairPageUrl() {
+  const pair = getAptcPairAddress();
+  return pair ? `https://dexscreener.com/${DEXSCREENER_CHAIN_SLUG}/${pair}` : null;
 }
 
 /**
@@ -76,7 +101,7 @@ export function getAptcPairAddress() {
 export function getLaunchStatusText() {
   return isAptcLaunched()
     ? '$APTC is now Live on Robinhood Chain'
-    : '$APTC Launching Soon on Virtuals · Robinhood';
+    : `$APTC Launching ${APTC_SCHEDULED_LAUNCH_LABEL} · Virtuals`;
 }
 
 /**
@@ -152,20 +177,16 @@ export function getHeroImageDimensions() {
  */
 export function getLaunchCtaHref() {
   if (isAptcLaunched()) {
-    const pair = getAptcPairAddress();
-    if (pair) return `https://dexscreener.com/${DEXSCREENER_CHAIN_SLUG}/${pair}`;
-    const mint = getAptcMint();
-    if (hasAptcMintConfigured()) {
-      return `https://dexscreener.com/${DEXSCREENER_CHAIN_SLUG}/${mint}`;
-    }
-    return '/#tokenomics';
+    const pairUrl = getDexscreenerPairPageUrl();
+    if (pairUrl) return pairUrl;
+    return getVirtualsTokenPageUrl();
   }
-  return '/#tokenomics';
+  return getVirtualsTokenPageUrl();
 }
 
 /**
  * Get CTA link text based on launch status
  */
 export function getLaunchCtaText() {
-  return isAptcLaunched() ? 'Trade now →' : 'Virtuals launch →';
+  return isAptcLaunched() ? 'Trade now →' : 'View on Virtuals →';
 }

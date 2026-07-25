@@ -12,8 +12,9 @@ import {
   virtualsTokenUrl,
   explorerTokenUrl,
   dexscreenerTokenUrl,
+  dexscreenerPairUrl,
 } from '@/lib/config/tokenomics';
-import { isAptcLaunched } from '@/lib/config/launchStatus';
+import { isAptcLaunched, hasAptcMintConfigured, getAptcPairAddress } from '@/lib/config/launchStatus';
 import PumpLaunchPanel from '@/components/PumpLaunchPanel';
 
 const AllocationDonut = dynamic(
@@ -37,9 +38,11 @@ function getTradeTools() {
   const mint = APTC_TOKENOMICS.mint;
 
   if (!launched) {
+    const pair = getAptcPairAddress();
+    const dexHref = pair ? dexscreenerPairUrl(pair) : 'https://dexscreener.com/robinhood';
     return [
-      { id: 'virtuals',     label: 'Virtuals',       logo: VIRTUALS_LOGO_SRC,              href: 'https://app.virtuals.io/create' },
-      { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: 'https://dexscreener.com/robinhood' },
+      { id: 'virtuals',     label: 'Virtuals',       logo: VIRTUALS_LOGO_SRC,              href: virtualsTokenUrl(mint) },
+      { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: dexHref },
       { id: 'uniswap',      label: 'Uniswap',        logo: '/logos/uniswap-uni-logo.png', href: 'https://app.uniswap.org/' },
       { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: 'https://www.geckoterminal.com/' },
       { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: 'https://www.dextools.io/' },
@@ -66,6 +69,7 @@ export default function TokenomicsSection() {
   const [market, setMarket] = useState(null);
   const [marketLoading, setMarketLoading] = useState(true);
   const launched = isAptcLaunched();
+  const mintConfigured = hasAptcMintConfigured();
   const mint = APTC_TOKENOMICS.mint;
   const TRADE_TOOLS = getTradeTools(); // Call at render time to get current launch status
 
@@ -187,13 +191,13 @@ export default function TokenomicsSection() {
                 />
               </div>
               <div className={`mt-4 flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-xs ${
-                launched 
-                  ? 'border-emerald-500/30 bg-emerald-500/10' 
+                mintConfigured
+                  ? 'border-emerald-500/30 bg-emerald-500/10'
                   : 'border-amber-500/30 bg-amber-500/10'
               }`}>
-                {launched ? (
+                {mintConfigured ? (
                   <>
-                    <span className="text-emerald-200/90 font-medium truncate flex-1">
+                    <span className="text-emerald-200/90 font-medium truncate flex-1 font-mono">
                       {mint}
                     </span>
                     <a

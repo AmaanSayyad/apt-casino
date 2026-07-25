@@ -11,9 +11,11 @@ Native token for AptCasino.fun — launched via **Virtuals Protocol** on **Robin
 | **Name** | AptCasino.fun by Virtuals |
 | **Symbol** | APTC |
 | **Chain** | Robinhood Chain (Virtuals Protocol · EconomyOS) |
-| **Contract** | Published at Virtuals TGE (`NEXT_PUBLIC_APTC_TOKEN_ADDRESS`) |
+| **Contract** | `0x11857646a9c3B3272fa03339CC9f1c09D05B00Ae` (`NEXT_PUBLIC_APTC_TOKEN_ADDRESS`) |
 | **Max supply** | 1,000,000,000 |
 | **On-chain name suffix** | by Virtuals |
+| **Virtuals page** | https://app.virtuals.io/virtuals/122676 |
+| **DexScreener** | https://dexscreener.com/robinhood/0xAa72A7FA34cF000411cd07aB1370B5235c672131 |
 
 ## Launch (Virtuals · Robinhood)
 
@@ -21,12 +23,12 @@ Native token for AptCasino.fun — launched via **Virtuals Protocol** on **Robin
 |-----------|--------|
 | **Venue** | Virtuals Protocol agent launchpad |
 | **Chain** | Robinhood Chain |
+| **Public launch** | **27 Jul 2026 · 11:30 AM IST** |
 | **Liquidity pool** | **93.5%** (Uniswap) |
 | **veVIRTUAL airdrop** | **5%** |
 | **Team initial buy** | **1.5%** (15M) · 1-month cliff · 6-month vest |
 | **Anti-sniper** | 60 seconds (buy) |
 | **Agent** | EconomyOS (Launch as an Agent) |
-| **Scheduled** | 26 Jul 2026 · 23:30 |
 | **Charts** | DexScreener (`robinhood` slug) |
 
 Canonical constants live in `src/lib/config/tokenomics.js` and `src/lib/config/launchStatus.js`.

@@ -73,7 +73,7 @@ export default function PumpLaunchPanel({ pump, loading = false, compact = false
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={VIRTUALS_LOGO_SRC} alt="" className="w-3.5 h-3.5 rounded object-contain" aria-hidden />
-          {launched ? 'View on Virtuals' : 'Launch on Virtuals'}
+          {launched ? 'View on Virtuals' : 'View on Virtuals'}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M7 17 17 7M7 7h10v10" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

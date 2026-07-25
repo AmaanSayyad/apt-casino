@@ -10,6 +10,7 @@ import {
   getAptcMint,
   isAptcLaunched,
   getAptcPairAddress,
+  getVirtualsTokenPageUrl,
   VIRTUALS_CREATE_URL,
   VIRTUALS_APP_URL,
   DEXSCREENER_CHAIN_SLUG,
@@ -99,11 +100,11 @@ export const APTC_TOKENOMICS = {
     return getAptcMint();
   },
   launchVenue: 'Virtuals Protocol → Robinhood Chain',
-  launchPlatformUrl: VIRTUALS_LAUNCH_MODE.createUrl,
+  launchPlatformUrl: getVirtualsTokenPageUrl(),
   feeMode: 'VIRTUALS_DEFAULT',
   feeModeLabel: 'Virtuals agent launch',
   launch:
-    'Virtuals Protocol agent token on Robinhood Chain · 93.5% Uniswap LP · 5% veVIRTUAL airdrop · 1.5% team pre-buy (1-month cliff · 6-month vest) · EconomyOS agent · anti-sniper 60s · on-chain name “AptCasino.fun by Virtuals”.',
+    'Virtuals Protocol agent token on Robinhood Chain · 93.5% Uniswap LP · 5% veVIRTUAL airdrop · 1.5% team pre-buy (1-month cliff · 6-month vest) · EconomyOS agent · anti-sniper 60s · launches 27 Jul 2026 · 11:30 AM IST · on-chain name “AptCasino.fun by Virtuals”.',
   authorities: {
     mintRevoked: true,
     freezeRevoked: true,
@@ -414,11 +415,8 @@ export function truncateAddress(addr, chars = 4) {
   return `${addr.slice(0, chars)}…${addr.slice(-chars)}`;
 }
 
-export function virtualsTokenUrl(mint = APTC_TOKENOMICS.mint) {
-  if (isAptcLaunched() && mint && mint !== 'Launching soon') {
-    return `https://app.virtuals.io/virtuals/${mint}`;
-  }
-  return VIRTUALS_CREATE_URL;
+export function virtualsTokenUrl(_mint = APTC_TOKENOMICS.mint) {
+  return getVirtualsTokenPageUrl();
 }
 
 /** @deprecated Use virtualsTokenUrl */

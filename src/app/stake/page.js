@@ -347,9 +347,9 @@ export default function StakePage() {
             <div className="flex items-start gap-2">
               <FaHourglassHalf className="mt-0.5 shrink-0" />
               <div>
-                <p className="font-semibold">$APTC Launching Soon on Virtuals · Robinhood</p>
+                <p className="font-semibold">$APTC Launching 27 Jul 2026 · 11:30 AM IST</p>
                 <p className="text-amber-200/80 mt-1">
-                  Staking pools and market data will go live when APTC launches via Virtuals Protocol on Robinhood Chain. All UI elements below show placeholder values until launch.
+                  Virtuals Protocol on Robinhood Chain. Staking pools and market data unlock at TGE. CA is published under Tokenomics.
                 </p>
               </div>
             </div>
