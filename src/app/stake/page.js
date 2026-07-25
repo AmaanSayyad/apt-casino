@@ -335,7 +335,7 @@ export default function StakePage() {
 
   return (
     <PageShell
-      badge="Solana · APTC"
+      badge="Robinhood · APTC"
       title="Stake APTC"
       description="Fixed-term APTC staking pools on Solana. Stake APTC, earn yield at lock, claim principal + rewards at maturity."
       descriptionClassName="max-w-none md:whitespace-nowrap"
@@ -347,9 +347,9 @@ export default function StakePage() {
             <div className="flex items-start gap-2">
               <FaHourglassHalf className="mt-0.5 shrink-0" />
               <div>
-                <p className="font-semibold">$APTC Launching Soon on Pump.fun</p>
+                <p className="font-semibold">$APTC Launching Soon on Virtuals · Robinhood</p>
                 <p className="text-amber-200/80 mt-1">
-                  Staking pools and market data will go live when APTC launches on Pump.fun. All UI elements below show placeholder values until launch.
+                  Staking pools and market data will go live when APTC launches via Virtuals Protocol on Robinhood Chain. All UI elements below show placeholder values until launch.
                 </p>
               </div>
             </div>

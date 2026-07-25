@@ -13,13 +13,13 @@ function buildEmbedUrl(pairUrl, pairAddress) {
     return `${base}?${EMBED_PARAMS}`;
   }
   if (pairAddress) {
-    return `https://dexscreener.com/solana/${pairAddress}?${EMBED_PARAMS}`;
+    return `https://dexscreener.com/robinhood/${pairAddress}?${EMBED_PARAMS}`;
   }
   return null;
 }
 
 function formatDexLabel(dexId) {
-  if (!dexId) return 'Solana';
+  if (!dexId) return 'Robinhood';
   return dexId.charAt(0).toUpperCase() + dexId.slice(1);
 }
 
@@ -65,17 +65,17 @@ export default function DexscreenerEmbedSection() {
               </span>
             </div>
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold font-display text-white tracking-tight">
-              APTC / SOL
+              APTC / VIRTUAL
               {hasLivePair && (
                 <span className="text-base md:text-lg font-semibold text-white/30 uppercase tracking-wider ml-1">
-                  · Solana · {dexLabel}
+                  · Robinhood · {dexLabel}
                 </span>
               )}
             </h2>
             <p className="mt-3 w-full max-w-none text-sm md:text-base text-white/50 md:whitespace-nowrap">
               {hasLivePair
-                ? 'Real-time chart, liquidity, and trade activity for the $APTC pair.'
-                : 'Live chart appears here after Pump.fun launch and DexScreener indexing.'}
+                ? 'Real-time chart, liquidity, and trade activity for the $APTC pair on Robinhood Chain.'
+                : 'Live chart appears here after Virtuals launch and DexScreener indexing on Robinhood.'}
             </p>
           </div>
 
@@ -110,7 +110,7 @@ export default function DexscreenerEmbedSection() {
             <div id="apt-dexscreener-embed" className="apt-dex-embed-frame">
               <iframe
                 src={embedUrl}
-                title="Dexscreener chart: APTC/SOL"
+                title="Dexscreener chart: APTC/VIRTUAL on Robinhood"
                 allow="clipboard-write; fullscreen"
                 loading="lazy"
               />

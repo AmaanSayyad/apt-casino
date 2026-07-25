@@ -1,20 +1,24 @@
 /**
  * OTC vs DEX fee model — sourced wallet/platform rates for calculator UI.
- * Pool fee follows Pump.fun default: 1.25% on bonding curve (0.3% creator + 0.95% protocol).
- * @see https://pump.fun/docs/fees
+ * APTC trades on Virtuals / Uniswap (Robinhood Chain). Model uses a conservative
+ * Uniswap-style pool fee for DEX comparison vs OTC allotments.
  */
 
-/** Pump.fun bonding curve — 1.25% total pre-graduation */
+/** Uniswap-style pool fee (Robinhood / Virtuals trading) */
 export const APTC_DEX_POOL_FEE = {
-  totalBps: 125,
-  totalLabel: '1.25%',
-  venue: 'Pump.fun bonding curve → PumpSwap',
+  totalBps: 30,
+  totalLabel: '0.30%',
+  venue: 'Virtuals Protocol · Uniswap on Robinhood Chain',
   detail:
-    '1.25% trade fee on bonding curve (0.3% creator + 0.95% protocol). Post-graduation PumpSwap canonical pool fees scale down with market cap per pump.fun/docs/fees.',
+    'Estimated Uniswap-style pool fee on Robinhood Chain. Actual fees depend on the live Virtuals / Uniswap pool after TGE.',
   sources: [
     {
-      label: 'Pump.fun — Fees',
-      url: 'https://pump.fun/docs/fees',
+      label: 'Virtuals Protocol',
+      url: 'https://app.virtuals.io/',
+    },
+    {
+      label: 'DexScreener · Robinhood',
+      url: 'https://dexscreener.com/robinhood',
     },
   ],
 };
@@ -54,7 +58,7 @@ export const WALLET_SWAP_FEES = [
     name: 'Solflare',
     swapFeeBps: 0,
     swapFeeLabel: '0% (wallet)',
-    notes: 'In-wallet swaps route via Jupiter; you still pay Solana network fees and DEX pool fees (Pump.fun 1.25% on APTC curve).',
+    notes: 'In-wallet swaps still pay network gas and DEX pool fees (Uniswap-style on Robinhood after APTC TGE).',
     sources: [
       { label: 'Solflare — FAQ', url: 'https://www.solflare.com/faq/' },
       { label: 'Jupiter — Swap fees', url: 'https://docs.jup.ag/user-docs/trade/swap/fees' },
@@ -148,8 +152,8 @@ export const DEX_VALUE_LOSS_SOURCES = [
   },
   {
     id: 'tax',
-    label: 'Pump.fun trade fee (APTC/SOL)',
-    detail: '1.25% on APTC bonding-curve swaps. Post-graduation PumpSwap fees scale down with market cap.',
+    label: 'Uniswap pool fee (APTC)',
+    detail: 'Estimated Uniswap-style fee on Robinhood after Virtuals TGE. Actual pool fee depends on the live pair.',
   },
   {
     id: 'priceImpact',
@@ -227,7 +231,7 @@ export function estimateDexAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd, swa
   };
 }
 
-/** Full APTC if no DEX swap markup and no Pump.fun trade fee (OTC allotment model). */
+/** Full APTC if no DEX swap markup and no Uniswap pool fee (OTC allotment model). */
 export function estimateOtcAptcFromSol(solAmount, solPriceUsd, aptcPriceUsd) {
   if (!solAmount || !solPriceUsd || !aptcPriceUsd) return { aptc: 0, networkFeeUsd: 0 };
   const grossUsd = solAmount * solPriceUsd;
@@ -320,7 +324,7 @@ export function getWalletById(id) {
 }
 
 /**
- * Per DEX purchase: full value loss in SOL — swap fee, market loss (impact/slippage/LP), Pump.fun trade fee.
+ * Per DEX purchase: full value loss — swap fee, market loss (impact/slippage/LP), Uniswap pool fee.
  * @param {number} solIn
  * @param {number} swapFeeBps
  * @param {number} tokenTaxBps

@@ -8,9 +8,9 @@ export const APTC_LISTING_TIERS = [
     tier: 1,
     label: 'Tier 1 — DEX & trader tools',
     status: 'in_progress',
-    venues: ['Pump.fun', 'PumpSwap', 'DexScreener', 'Jupiter', 'Birdeye', 'GeckoTerminal'],
+    venues: ['Virtuals', 'DexScreener', 'Uniswap', 'GeckoTerminal', 'Axiom'],
     summary:
-      'Primary Solana launch at TGE — Pump.fun bonding curve, PumpSwap graduation, DexScreener enhanced info, Jupiter swap routing, Birdeye & GeckoTerminal tracking.',
+      'Primary Robinhood launch at TGE — Virtuals Protocol agent token, Uniswap LP, DexScreener charts, GeckoTerminal & Axiom tracking.',
   },
   {
     tier: 2,

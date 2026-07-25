@@ -248,7 +248,7 @@ export function CreatorBuyUses({ variant = 'default' }) {
 
 const INTEGRITY_GUARANTEES = [
   { label: 'No wash volume', sub: 'Organic casino GGR only' },
-  { label: 'No fake FDV', sub: 'Real curve pricing' },
+  { label: 'No fake FDV', sub: 'Market-priced LP' },
   { label: 'No dumps', sub: 'One public ops wallet' },
 ];
 

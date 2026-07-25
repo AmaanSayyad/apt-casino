@@ -2,21 +2,44 @@
  * Central launch status configuration
  * Controls conditional UI across the site for APTC pre-launch vs live trading.
  *
- * IMPORTANT: A mint address alone does NOT mean launched.
+ * Launch venue: Virtuals Protocol on Robinhood Chain (agent token + EconomyOS).
+ * IMPORTANT: A token address alone does NOT mean launched.
  * "Live" = public trading (DexScreener pair set, or NEXT_PUBLIC_APTC_LAUNCHED=true).
  */
 
+/** Scheduled Virtuals launch window (from create form). Display only — not a hard gate. */
+export const APTC_SCHEDULED_LAUNCH_LABEL = '26 Jul 2026 · 23:30';
+
+export const VIRTUALS_CREATE_URL = 'https://app.virtuals.io/create';
+export const VIRTUALS_APP_URL = 'https://app.virtuals.io';
+export const DEXSCREENER_CHAIN_SLUG = 'robinhood';
+
 /**
- * Mint address configured (treasury / Solscan / post-create prep).
- * Distinct from public trading being live.
+ * Prefer NEXT_PUBLIC_APTC_TOKEN_ADDRESS (EVM / Robinhood).
+ * Falls back to legacy NEXT_PUBLIC_APTC_SOLANA_MINT for older env files.
  */
-export function hasAptcMintConfigured() {
-  const mint = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim();
-  return Boolean(mint && mint !== 'Launching soon' && mint.length > 20);
+function rawTokenAddress() {
+  return (
+    process.env.NEXT_PUBLIC_APTC_TOKEN_ADDRESS?.trim() ||
+    process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() ||
+    ''
+  );
 }
 
 /**
- * Public trading live (Pump.fun coin live + indexed pair, or explicit flag).
+ * Token contract configured (explorer / post-create prep).
+ * Distinct from public trading being live.
+ */
+export function hasAptcMintConfigured() {
+  const mint = rawTokenAddress();
+  return Boolean(mint && mint !== 'Launching soon' && mint.length >= 20);
+}
+
+/** @deprecated Use hasAptcMintConfigured — kept for older imports */
+export const hasAptcTokenConfigured = hasAptcMintConfigured;
+
+/**
+ * Public trading live (Virtuals token live + indexed pair, or explicit flag).
  */
 export function isAptcLaunched() {
   const forced = process.env.NEXT_PUBLIC_APTC_LAUNCHED?.trim().toLowerCase();
@@ -26,12 +49,17 @@ export function isAptcLaunched() {
 }
 
 /**
- * Get the current token mint address for display / links.
- * Returns the mint when configured, otherwise 'Launching soon'.
+ * Get the current token contract address for display / links.
+ * Returns the address when configured, otherwise 'Launching soon'.
  */
 export function getAptcMint() {
-  const mint = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim();
+  const mint = rawTokenAddress();
   return hasAptcMintConfigured() ? mint : 'Launching soon';
+}
+
+/** Alias for EVM-oriented call sites */
+export function getAptcTokenAddress() {
+  return getAptcMint();
 }
 
 /**
@@ -47,8 +75,8 @@ export function getAptcPairAddress() {
  */
 export function getLaunchStatusText() {
   return isAptcLaunched()
-    ? '$APTC is now Live on Solana'
-    : '$APTC Launching Soon on Pump.fun';
+    ? '$APTC is now Live on Robinhood Chain'
+    : '$APTC Launching Soon on Virtuals · Robinhood';
 }
 
 /**
@@ -125,9 +153,11 @@ export function getHeroImageDimensions() {
 export function getLaunchCtaHref() {
   if (isAptcLaunched()) {
     const pair = getAptcPairAddress();
-    if (pair) return `https://dexscreener.com/solana/${pair}`;
+    if (pair) return `https://dexscreener.com/${DEXSCREENER_CHAIN_SLUG}/${pair}`;
     const mint = getAptcMint();
-    if (hasAptcMintConfigured()) return `https://pump.fun/coin/${mint}`;
+    if (hasAptcMintConfigured()) {
+      return `https://dexscreener.com/${DEXSCREENER_CHAIN_SLUG}/${mint}`;
+    }
     return '/#tokenomics';
   }
   return '/#tokenomics';
@@ -137,5 +167,5 @@ export function getLaunchCtaHref() {
  * Get CTA link text based on launch status
  */
 export function getLaunchCtaText() {
-  return isAptcLaunched() ? 'Trade now →' : 'Pump.fun launch →';
+  return isAptcLaunched() ? 'Trade now →' : 'Virtuals launch →';
 }

@@ -127,7 +127,7 @@ export default function ChainConnectModal({ open, onClose }) {
                 <p className="mt-1 text-[11px] text-gray-400 sm:text-sm">
                   {view === 'aptos'
                     ? 'Aptos Mainnet'
-                    : 'Solana & Aptos live on mainnet'}
+                    : 'Solana & Aptos live · Robinhood under construction'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -158,7 +158,12 @@ export default function ChainConnectModal({ open, onClose }) {
                 chains.map((chain) => {
                   const ui = CHAIN_UI[chain.id] || CHAIN_UI.solana;
                   const live = chain.status === 'live';
-                  const badgeLabel = live ? chain.nativeSymbol || ui.badge : 'Soon';
+                  const badgeLabel = live
+                    ? chain.nativeSymbol || ui.badge
+                    : ui.badge || 'Soon';
+                  const badgeClass = live
+                    ? ui.badgeClass
+                    : ui.badgeClass || 'bg-blue-500/20 text-blue-400';
                   return (
                     <button
                       key={chain.id}
@@ -186,9 +191,7 @@ export default function ChainConnectModal({ open, onClose }) {
                           <span className="text-sm font-bold text-white sm:text-base">{chain.label}</span>
                           {badgeLabel && (
                             <span
-                              className={`rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider sm:text-[10px] ${
-                                live ? ui.badgeClass : 'bg-blue-500/20 text-blue-400'
-                              }`}
+                              className={`rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider sm:text-[10px] ${badgeClass}`}
                             >
                               {badgeLabel}
                             </span>

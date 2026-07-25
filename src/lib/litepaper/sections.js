@@ -134,7 +134,7 @@ export const LITEPAPER_SECTIONS = [
       'APT-Casino is a Next.js application with chain-specific API routes under /api/chains/{chainId}/, Supabase for profiles, balances, referrals, and audit logs, and Move contracts on Aptos for core game logic.',
       'Sensitive writes (deposits, withdrawals, referral unlocks, GGR estimates) run server-side with service-role Supabase and validated env economics — never trusted from the client alone.',
       'Live features (streaming, chat) sit beside the gaming core: Livepeer for video, Socket.IO for real-time messages bound to wallet identity.',
-      'APTC lives on Solana (SPL); price and market stats integrate via DexScreener and display automatically when the token launches on Pump.fun.',
+      'APTC launches on Robinhood Chain via Virtuals Protocol; price and market stats integrate via DexScreener and display automatically when the pair is indexed.',
     ],
     mermaid: `flowchart LR
     U[Player Wallet] --> FE[Next.js Client]
@@ -226,10 +226,10 @@ export const LITEPAPER_SECTIONS = [
     body: [
       `Native ecosystem token: ${APTC_TOKENOMICS.name} (${APTC_TOKENOMICS.symbol}) on ${APTC_TOKENOMICS.chain}.`,
       `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint and freeze authorities revoked at creation — fixed metadata, fixed supply.`,
-      `Fair launch on ${APTC_TOKENOMICS.launchVenue}: ${APTC_TOKENOMICS.feeModeLabel} · ~${APTC_LAUNCH_METRICS.devHoldPct}% creator dev buy · ${APTC_LAUNCH_METRICS.tradeFeePreMigrationPct}% curve trade fee · graduates at ~${APTC_LAUNCH_METRICS.graduationSol} SOL into PumpSwap (LP burned).`,
-      `100% of Pump.fun creator fees routed to @aptcasinofun operations wallet. Post-graduation fees on the canonical PumpSwap pool scale down toward ${APTC_LAUNCH_METRICS.tradeFeePostMigrationFloorPct}% total per pump.fun/docs/fees.`,
-      'Transparency pledge: no wash volume, no fake FDV, no dumps. One public ops wallet — no bundled launch clusters, no team/founder allocation, no hidden treasuries.',
-      `Mint: ${APTC_TOKENOMICS.mint}.`,
+      `Fair launch on ${APTC_TOKENOMICS.launchVenue}: ${APTC_TOKENOMICS.feeModeLabel} · ${APTC_LAUNCH_METRICS.liquidityPoolPct}% Uniswap LP · ${APTC_LAUNCH_METRICS.veVirtualAirdropPct}% veVIRTUAL airdrop · ${APTC_LAUNCH_METRICS.teamInitialBuyPct}% team initial buy (1-month cliff · 6-month vest) · anti-sniper ${APTC_LAUNCH_METRICS.antiSniperSeconds}s.`,
+      'EconomyOS agent token with “by Virtuals” on-chain name. Protocol growth capital routed to @aptcasinofun for listings, rewards, and ops.',
+      'Transparency pledge: no wash volume, no fake FDV, no dumps. Disclosed vested team buy — no unlocked founder dump, no bundled launch clusters.',
+      `Contract: ${APTC_TOKENOMICS.mint}.`,
       utilityText,
       'APTC is not required to place bets in native SOL/APT — it is the rewards, staking, referral, and value-accrual layer on top of core casino play.',
     ],
@@ -239,11 +239,11 @@ export const LITEPAPER_SECTIONS = [
     title: '9. APTC Allocation',
     body: [
       `${getAllocationSummary()}`,
-      `Creator dev buy (~${APTC_LAUNCH_METRICS.devHoldPct}% supply / ${APTC_LAUNCH_METRICS.devBuyTokensShort}) at launch — single @aptcasinofun operations wallet. Listings-first: the largest share funds Tier 1 DEX & trader tools, Tier 2 aggregators (CoinGecko, CoinMarketCap), and Tier 3 CEX roadmap. Remaining allocation → community rewards, staking emissions, and protocol ops.`,
+      `Creator / team initial buy (~${APTC_LAUNCH_METRICS.teamInitialBuyPct}% supply / ${APTC_LAUNCH_METRICS.devBuyTokensShort}) at launch — vested 1-month cliff · 6-month. Listings-first: the largest share funds Tier 1 DEX & trader tools, Tier 2 aggregators (CoinGecko, CoinMarketCap), and Tier 3 CEX roadmap. Remaining allocation → community rewards, staking emissions, and protocol ops.`,
       ...getCreatorBuyDeploymentLines(),
       CREATOR_BUY_PURPOSE,
-      `~${APTC_LAUNCH_METRICS.curveSupplyPct}% (${APTC_LAUNCH_METRICS.curveSupplyPct >= 79 ? '793.1M' : 'curve'}) trades on the public Pump.fun bonding curve until ~${APTC_LAUNCH_METRICS.graduationSol} SOL graduation. ~${APTC_LAUNCH_METRICS.migrationLpPct}% seeds PumpSwap LP on migration (burned).`,
-      'Post-graduation, PumpSwap canonical pool fees scale down with market cap per pump.fun/docs/fees.',
+      `${APTC_LAUNCH_METRICS.liquidityPoolPct}% (935M) seeds Uniswap LP on Robinhood Chain at TGE. ${APTC_LAUNCH_METRICS.veVirtualAirdropPct}% (50M) airdrops to veVIRTUAL stakers.`,
+      'Trading discovery via DexScreener on Robinhood · Virtuals Capital Market · Uniswap.',
       APTC_TRANSPARENCY.opsWalletRule,
       ...APTC_LAUNCH_PHASES.map((p) => `${p.title}: ${p.detail}`),
     ],
@@ -257,11 +257,11 @@ export const LITEPAPER_SECTIONS = [
       'Default economics (env): 30% of GGR allocated to APTC buyback (GGR_BUYBACK_BPS_OF_GGR=3000).',
       'Buyback split: 50% burn · 35% stakers · 15% treasury (GGR_BURN/STAKER/TREASURY_BPS_OF_BUYBACK).',
       'Average house edge assumption for estimates: 2.5% (GGR_AVG_HOUSE_EDGE_BPS=250). Actual edge varies per game (~1–4%).',
-      'Dashboard surfaces estimated GGR and buyback from play events — live buybacks execute on Jupiter / PumpSwap when treasury ops run.',
+      'Dashboard surfaces estimated GGR and buyback from play events — live buybacks execute on Robinhood / Uniswap when treasury ops run.',
     ],
     mermaid: `flowchart LR
     PLAY[Player Bets] --> EDGE[House Edge GGR]
-    EDGE --> BUY[Jupiter / PumpSwap Buy]
+    EDGE --> BUY[Uniswap / Robinhood Buy]
     BUY --> BURN[50% Burn]
     BUY --> STAKE[35% Staker Rewards]
     BUY --> TRES[15% Treasury]`,
@@ -335,8 +335,8 @@ export const LITEPAPER_SECTIONS = [
     title: '16. Roadmap',
     body: [
       'Shipped / live: core casino games, Solana + Aptos play, gasless Aptos UX, referrals, Stake UI, GGR dashboard, live streaming shell, ecosystem partners section.',
-      `Near term: APTC TGE on Pump.fun (default launch · ~${APTC_LAUNCH_METRICS.devHoldPct}% dev hold · ~${APTC_LAUNCH_METRICS.graduationSol} SOL graduation → PumpSwap), Tier 1 listings (Pump.fun · DexScreener · Jupiter · Birdeye · GeckoTerminal), Tier 2 (CoinGecko · CoinMarketCap), staking live.`,
-      'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), PumpSwap liquidity growth, Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
+      `Near term: APTC TGE via Virtuals Protocol on Robinhood Chain (${APTC_LAUNCH_METRICS.liquidityPoolPct}% LP · ${APTC_LAUNCH_METRICS.veVirtualAirdropPct}% veVIRTUAL · ${APTC_LAUNCH_METRICS.teamInitialBuyPct}% vested team buy), Tier 1 listings (Virtuals · DexScreener · Uniswap), Tier 2 (CoinGecko · CoinMarketCap), staking live.`,
+      'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), Robinhood LP depth, Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
       'Long term: largest multichain GambleFi hub — transparent game marketplace, creator revenue share, and community governance over APTC parameters.',
       'The homepage Roadmap section lists 30 curated milestones (Platform, Governance, Community, Security, Tournaments, Partnership) via /api/roadmap — editable in Supabase roadmap_items or src/lib/config/publicRoadmap.js.',
     ],

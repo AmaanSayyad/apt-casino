@@ -1,15 +1,20 @@
 /**
- * DexScreener helper for SPL APTC (Solana).
+ * DexScreener helper for APTC on Robinhood Chain (Virtuals Protocol).
  * Pulls the most-liquid pair and exposes price, FDV/market-cap and TVL (= USD liquidity).
  *
- * APTC mint is read from NEXT_PUBLIC_APTC_SOLANA_MINT. When it is not configured
- * (pre-launch), fetchers resolve to null without throwing so the UI can render an
- * indicative "Pre-launch" state.
+ * Token address: NEXT_PUBLIC_APTC_TOKEN_ADDRESS (preferred) or legacy NEXT_PUBLIC_APTC_SOLANA_MINT.
+ * When unset (pre-launch), fetchers resolve to null without throwing so the UI can render
+ * an indicative "Pre-launch" state.
  */
 
-export const APTC_SOLANA_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() || '';
+const DEX_CHAIN = 'robinhood';
 
-/** DexScreener pair or token mint — preferred for quotes when configured. */
+export const APTC_SOLANA_MINT =
+  process.env.NEXT_PUBLIC_APTC_TOKEN_ADDRESS?.trim() ||
+  process.env.NEXT_PUBLIC_APTC_SOLANA_MINT?.trim() ||
+  '';
+
+/** DexScreener pair or token address — preferred for quotes when configured. */
 const APTC_DEX_PAIR =
   process.env.NEXT_PUBLIC_APTC_DEXSCREENER_PAIR?.trim() ||
   process.env.APTC_DEX_PAIR_ADDRESS?.trim() ||
@@ -98,7 +103,7 @@ async function fetchPairDexscreenerStats(
   mint: string | null,
 ): Promise<DexscreenerStats | null> {
   const data = (await fetchDexscreenerJson(
-    `https://api.dexscreener.com/latest/dex/pairs/solana/${pairAddress}`,
+    `https://api.dexscreener.com/latest/dex/pairs/${DEX_CHAIN}/${pairAddress}`,
   )) as { pair?: DexscreenerPair; pairs?: DexscreenerPair[] } | null;
   if (!data) return null;
 

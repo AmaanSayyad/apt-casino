@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     estimate,
     feeExplanation: {
       tokenTradeTax:
-        '1.25% Pump.fun bonding-curve trade fee on APTC/SOL (0.3% creator + 0.95% protocol). Post-graduation PumpSwap fees scale with market cap. See pump.fun/docs/fees.',
+        'Estimated Uniswap-style pool fee on Robinhood after Virtuals TGE. See DexScreener for the live pair.',
       swapPlatformFee:
         'Wallet-specific: Phantom 0.85% on select pairs; Solflare/Glow/Backpack/Jupiter manual often 0% platform fee — network + price impact still apply.',
     },

@@ -8,9 +8,10 @@ import {
   APTC_LAUNCH_STEPS,
   APTC_TOKENOMICS,
   APTC_UTILITY,
-  PUMP_LOGO_SRC,
-  pumpTokenUrl,
-  solscanTokenUrl,
+  VIRTUALS_LOGO_SRC,
+  virtualsTokenUrl,
+  explorerTokenUrl,
+  dexscreenerTokenUrl,
 } from '@/lib/config/tokenomics';
 import { isAptcLaunched } from '@/lib/config/launchStatus';
 import PumpLaunchPanel from '@/components/PumpLaunchPanel';
@@ -34,37 +35,29 @@ const _MINT = 'TBD';
 function getTradeTools() {
   const launched = isAptcLaunched();
   const mint = APTC_TOKENOMICS.mint;
-  
+
   if (!launched) {
     return [
-      { id: 'pumpfun',      label: 'Pump.fun',       logo: PUMP_LOGO_SRC,                  href: 'https://pump.fun/create' },
-      { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: 'https://jup.ag/' },
-      { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: 'https://dexscreener.com/solana' },
-      { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: 'https://birdeye.so/' },
+      { id: 'virtuals',     label: 'Virtuals',       logo: VIRTUALS_LOGO_SRC,              href: 'https://app.virtuals.io/create' },
+      { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: 'https://dexscreener.com/robinhood' },
+      { id: 'uniswap',      label: 'Uniswap',        logo: '/logos/uniswap-uni-logo.png', href: 'https://app.uniswap.org/' },
       { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: 'https://www.geckoterminal.com/' },
       { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: 'https://www.dextools.io/' },
-      { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: 'https://gmgn.ai/' },
       { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: 'https://axiom.trade/' },
-      { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: 'https://photon-sol.tinyastro.io/' },
       { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: 'https://www.coingecko.com/' },
       { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: 'https://coinmarketcap.com/' },
-      { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: 'https://solscan.io/' },
     ];
   }
 
   return [
-    { id: 'pumpfun',      label: 'Pump.fun',       logo: PUMP_LOGO_SRC,                  href: pumpTokenUrl(mint) },
-    { id: 'jupiter',      label: 'Jupiter',        logo: '/logos/jupiter.jpg',           href: `https://jup.ag/swap/SOL-${mint}` },
-    { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: `https://dexscreener.com/solana/${mint}` },
-    { id: 'birdeye',      label: 'Birdeye',        logo: '/logos/birdeye.png',           href: `https://birdeye.so/token/${mint}?chain=solana` },
-    { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/solana/pools/${mint}` },
-    { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/app/en/solana/pair-explorer/${mint}` },
-    { id: 'gmgn',         label: 'GMGN',           logo: '/logos/gmgn.png',              href: `https://gmgn.ai/sol/token/${mint}` },
+    { id: 'virtuals',     label: 'Virtuals',       logo: VIRTUALS_LOGO_SRC,              href: virtualsTokenUrl(mint) },
+    { id: 'dexscreener',  label: 'DexScreener',    logo: '/logos/dexscreener.png',       href: dexscreenerTokenUrl(mint) },
+    { id: 'uniswap',      label: 'Uniswap',        logo: '/logos/uniswap-uni-logo.png', href: `https://app.uniswap.org/explore/tokens/robinhood/${mint}` },
+    { id: 'gecko',        label: 'GeckoTerminal',  logo: '/logos/gecko.png',             href: `https://www.geckoterminal.com/robinhood/tokens/${mint}` },
+    { id: 'dextools',     label: 'DexTools',       logo: '/logos/dextools.png',          href: `https://www.dextools.io/app/en/robinhood/pair-explorer/${mint}` },
     { id: 'axiom',        label: 'Axiom',          logo: '/logos/axiom.jpeg',            href: `https://axiom.trade/token/${mint}` },
-    { id: 'photon',       label: 'Photon',         logo: '/logos/photon.png',            href: `https://photon-sol.tinyastro.io/en/lp/${mint}` },
     { id: 'coingecko',    label: 'CoinGecko',      logo: '/logos/coingecko-logo.png',    href: `https://www.coingecko.com/en/coins/${mint}` },
     { id: 'cmc',          label: 'CMC',            logo: '/logos/cmc.png',               href: `https://coinmarketcap.com/currencies/${mint}/` },
-    { id: 'solscan',      label: 'Solscan',        logo: 'https://solscan.io/favicon.ico', href: solscanTokenUrl(mint) },
   ];
 }
 
@@ -117,8 +110,8 @@ export default function TokenomicsSection() {
   const marketLabel = hasLiveMarket
     ? 'Live market · DexScreener'
     : market?.pump?.source === 'live'
-      ? 'Live · Pump.fun'
-      : 'Pre-launch';
+      ? 'Live · Virtuals'
+      : 'Pre-launch · Virtuals';
 
   return (
     <section id="tokenomics" className="py-16 md:py-24 px-4 md:px-8 lg:px-16 bg-[#070005]">
@@ -133,7 +126,7 @@ export default function TokenomicsSection() {
             Tokenomics
           </h2>
           <p className="mt-3 max-w-full overflow-x-auto text-sm sm:text-base text-white/55 leading-relaxed whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            1B fixed supply · Pump.fun launch · 100% creator fees to ops · 0% team / founder allocation.
+            1B fixed supply · Virtuals on Robinhood · 93.5% LP · 5% veVIRTUAL · 1.5% vested team buy.
           </p>
         </div>
 
@@ -146,9 +139,9 @@ export default function TokenomicsSection() {
             {/* Authority chips + timeline */}
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6">
               <div className="flex flex-wrap gap-2 mb-4">
-                <AuthorityChip label="Mint revoked" />
-                <AuthorityChip label="Freeze revoked" />
-                <AuthorityChip label="Pump.fun curve" />
+                <AuthorityChip label="Robinhood Chain" />
+                <AuthorityChip label="Virtuals agent" />
+                <AuthorityChip label="93.5% LP" />
               </div>
               <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-white/45">
                 {APTC_LAUNCH_STEPS.map((step, i) => (
@@ -204,12 +197,12 @@ export default function TokenomicsSection() {
                       {mint}
                     </span>
                     <a
-                      href={solscanTokenUrl(mint)}
+                      href={explorerTokenUrl(mint)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-emerald-300 hover:text-emerald-100 transition-colors font-medium whitespace-nowrap"
                     >
-                      Solscan →
+                      DexScreener →
                     </a>
                   </>
                 ) : (
@@ -249,7 +242,7 @@ export default function TokenomicsSection() {
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-5 md:p-6">
               <h3 className="text-lg font-semibold text-white mb-1">GGR → buyback</h3>
               <p className="text-sm text-white/50 mb-3">
-                Play → GGR → market buy on Jupiter / PumpSwap → burn · stake · treasury
+                Play → GGR → market buy on Robinhood / Uniswap → burn · stake · treasury
               </p>
               <BuybackSplitDonut config={cfg} />
               {est?.projectedBuybackUsd30d != null && (
@@ -272,7 +265,7 @@ export default function TokenomicsSection() {
             <div className="rounded-2xl border border-white/10 bg-[#1A0015] p-6 md:p-8">
               <h3 className="text-xl font-semibold text-white mb-1">Supply allocation</h3>
               <p className="text-xs text-white/45 mb-5">
-                ~1% dev hold · bonding curve · 0% team
+                93.5% LP · 5% veVIRTUAL · 1.5% vested team buy
               </p>
               <AllocationDonut />
             </div>

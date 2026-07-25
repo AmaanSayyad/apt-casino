@@ -23,6 +23,13 @@ export const CHAIN_UI: Record<ChainId, ChainUiMeta> = {
     badgeClass: 'bg-sky-500/20 text-sky-400',
     hoverGradient: 'from-sky-500/0 via-sky-500/5 to-sky-500/0',
   },
+  robinhood: {
+    logo: '/logos/robinhood.png',
+    walletHint: 'Under construction — APTC launches via Virtuals here',
+    badge: 'Under construction',
+    badgeClass: 'bg-amber-500/20 text-amber-300',
+    hoverGradient: 'from-emerald-500/0 via-emerald-500/5 to-emerald-500/0',
+  },
   sui: {
     logo: '/logos/sui-logo.png',
     walletHint: 'Sui Wallet, Slush, etc.',

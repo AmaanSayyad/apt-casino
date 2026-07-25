@@ -56,8 +56,8 @@ export default function LitepaperTokenomicsBlock() {
           at a glance
         </h2>
         <p className="mx-auto mt-2 max-w-2xl text-sm text-white/55">
-          {APTC_TOKENOMICS.maxSupply} max supply · {APTC_TOKENOMICS.chain} · Pump.fun bonding curve ·
-          mint & freeze revoked
+          {APTC_TOKENOMICS.maxSupply} max supply · {APTC_TOKENOMICS.chain} · Virtuals agent
+          token
         </p>
         <p className="mx-auto mt-2 max-w-2xl text-xs text-white/45">{getAllocationSummary()}</p>
       </div>
@@ -76,16 +76,16 @@ export default function LitepaperTokenomicsBlock() {
 
       <div className="mb-5 grid gap-3 sm:grid-cols-3">
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Dev hold</p>
-          <p className="mt-1 text-xl font-bold text-white">~{m.devHoldPct}%</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">Liquidity</p>
+          <p className="mt-1 text-xl font-bold text-white">{m.liquidityPoolPct ?? m.curveSupplyPct}% LP</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
-          <p className="text-[10px] uppercase tracking-widest text-white/40">Graduation</p>
-          <p className="mt-1 text-xl font-bold text-white">~{m.graduationSol} SOL → PumpSwap</p>
+          <p className="text-[10px] uppercase tracking-widest text-white/40">veVIRTUAL</p>
+          <p className="mt-1 text-xl font-bold text-white">{m.veVirtualAirdropPct ?? m.migrationLpPct}% airdrop</p>
         </div>
         <div className="lp-glass rounded-xl p-4 text-center">
           <p className="text-[10px] uppercase tracking-widest text-white/40">Launch mode</p>
-          <p className="mt-1 text-xl font-bold text-white">Pump.fun default</p>
+          <p className="mt-1 text-xl font-bold text-white">Virtuals · Robinhood</p>
         </div>
       </div>
 
@@ -95,7 +95,7 @@ export default function LitepaperTokenomicsBlock() {
             Full supply allocation
           </p>
           <p className="mb-4 text-xs text-white/40">
-            ~1% dev hold · bonding curve · 0% team / founder · no wash · no fake FDV · no dumps
+            93.5% LP · 5% veVIRTUAL · 1.5% vested team buy · no wash · no fake FDV · no dumps
           </p>
           <AllocationDonut variant="litepaper" />
         </div>
@@ -145,8 +145,8 @@ export default function LitepaperTokenomicsBlock() {
         </table>
         ) : (
           <p className="text-xs leading-6 text-white/55">
-            Single operations wallet receives the ~1% creator dev buy and 100% Pump.fun creator fee
-            claims (@aptcasinofun). Address published at TGE on Solscan and pump.fun.
+            Operations wallet receives the 1.5% vested team initial buy (@aptcasinofun). Address
+            published at TGE on DexScreener and Virtuals.
           </p>
         )}
       </div>

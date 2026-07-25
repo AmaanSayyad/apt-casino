@@ -9,6 +9,7 @@
 export type ChainId =
   | 'solana'
   | 'aptos'
+  | 'robinhood'
   | 'sui'
   | 'near'
   | 'starknet'
@@ -99,12 +100,25 @@ export const PLAY_CHAINS: PlayChainConfig[] = [
     withdrawMinEnv: 'APTOS_MIN_WITHDRAW_APT',
   },
   {
+    id: 'robinhood',
+    label: 'Robinhood Chain',
+    nativeSymbol: 'ETH',
+    units: 1e18,
+    status: 'coming_soon',
+    sortOrder: 2,
+    walletProvider: 'evm',
+    balanceMode: 'server',
+    dbCurrency: 'ETH',
+    treasuryPublicEnv: 'NEXT_PUBLIC_ROBINHOOD_TREASURY_ADDRESS',
+    feeWalletPublicEnv: 'NEXT_PUBLIC_PLATFORM_FEE_WALLET_ROBINHOOD',
+  },
+  {
     id: 'sui',
     label: 'Sui',
     nativeSymbol: 'SUI',
     units: 1_000_000_000,
     status: 'coming_soon',
-    sortOrder: 2,
+    sortOrder: 3,
     walletProvider: 'sui',
     balanceMode: 'server',
     dbCurrency: 'SUI',
@@ -117,7 +131,7 @@ export const PLAY_CHAINS: PlayChainConfig[] = [
     nativeSymbol: 'NEAR',
     units: 1e24,
     status: 'coming_soon',
-    sortOrder: 3,
+    sortOrder: 4,
     walletProvider: 'near',
     balanceMode: 'server',
     dbCurrency: 'NEAR',
@@ -130,7 +144,7 @@ export const PLAY_CHAINS: PlayChainConfig[] = [
     nativeSymbol: 'STRK',
     units: 1e18,
     status: 'coming_soon',
-    sortOrder: 4,
+    sortOrder: 5,
     walletProvider: 'starknet',
     balanceMode: 'server',
     dbCurrency: 'STRK',
@@ -143,7 +157,7 @@ export const PLAY_CHAINS: PlayChainConfig[] = [
     nativeSymbol: 'XLM',
     units: 10_000_000,
     status: 'coming_soon',
-    sortOrder: 5,
+    sortOrder: 6,
     walletProvider: 'stellar',
     balanceMode: 'server',
     dbCurrency: 'XLM',
@@ -156,7 +170,7 @@ export const PLAY_CHAINS: PlayChainConfig[] = [
     nativeSymbol: 'XTZ',
     units: 1_000_000,
     status: 'coming_soon',
-    sortOrder: 6,
+    sortOrder: 7,
     walletProvider: 'tezos',
     balanceMode: 'server',
     dbCurrency: 'XTZ',
@@ -169,7 +183,7 @@ export const PLAY_CHAINS: PlayChainConfig[] = [
     nativeSymbol: 'ETH',
     units: 1e18,
     status: 'coming_soon',
-    sortOrder: 7,
+    sortOrder: 8,
     walletProvider: 'evm',
     balanceMode: 'server',
     dbCurrency: 'ETH',

@@ -3,7 +3,7 @@
  * Logo files live in /public/logos (shared with chain connect modal).
  */
 
-import { PUMP_LOGO_SRC } from './tokenomics';
+import { VIRTUALS_LOGO_SRC } from './tokenomics';
 
 export type EcosystemLogo = {
   key: string;
@@ -17,6 +17,7 @@ export type EcosystemLogo = {
 export const ECOSYSTEM_CHAIN_LOGOS: EcosystemLogo[] = [
   { key: 'solana', src: '/logos/solana-sol-logo.png', alt: 'Solana' },
   { key: 'aptos', src: '/logos/aptos-logo.png', alt: 'Aptos' },
+  { key: 'robinhood', src: '/logos/robinhood.png', alt: 'Robinhood Chain', comingSoon: true },
   { key: 'sui', src: '/logos/sui-logo.png', alt: 'Sui', comingSoon: true },
   { key: 'near', src: '/logos/near.png', alt: 'NEAR', comingSoon: true },
   { key: 'starknet', src: '/logos/starknet-strk-logo.svg', alt: 'Starknet', comingSoon: true },
@@ -29,20 +30,14 @@ export const ECOSYSTEM_CHAIN_LOGOS: EcosystemLogo[] = [
 
 /** DEX, analytics & launch tooling */
 export const ECOSYSTEM_DEX_LOGOS: EcosystemLogo[] = [
-  { key: 'pumpfun', src: PUMP_LOGO_SRC, alt: 'Pump.fun' },
-  { key: 'jupiter', src: '/logos/jupiter.jpg', alt: 'Jupiter' },
-  { key: 'meteora', src: '/logos/meteora-logo.png', alt: 'Meteora' },
-  { key: 'pancakeswap', src: '/logos/pancakeswap-logo.png', alt: 'PancakeSwap' },
+  { key: 'virtuals', src: VIRTUALS_LOGO_SRC, alt: 'Virtuals Protocol' },
+  { key: 'uniswap', src: '/logos/uniswap-uni-logo.png', alt: 'Uniswap' },
   { key: 'dexscreener', src: '/logos/dexscreener.png', alt: 'DexScreener' },
   { key: 'dextools', src: '/logos/dextools.png', alt: 'DexTools' },
-  { key: 'birdeye', src: '/logos/birdeye.png', alt: 'Birdeye' },
   { key: 'coingecko', src: '/logos/coingecko-logo.png', alt: 'CoinGecko' },
   { key: 'cmc', src: '/logos/cmc.png', alt: 'CoinMarketCap' },
   { key: 'gecko', src: '/logos/gecko.png', alt: 'GeckoTerminal' },
-  { key: 'pumpfun', src: '/logos/pumpfun-logo.png', alt: 'Pump.fun' },
   { key: 'axiom', src: '/logos/axiom.jpeg', alt: 'Axiom' },
-  { key: 'photon', src: '/logos/photon.png', alt: 'Photon' },
-  { key: 'gmgn', src: '/logos/gmgn.png', alt: 'GMGN' },
+  { key: 'jupiter', src: '/logos/jupiter.jpg', alt: 'Jupiter' },
   { key: 'bubblemaps', src: '/logos/bubblemaps.png', alt: 'Bubblemaps' },
-  { key: 'rugcheck', src: '/logos/rugcheck.jpg', alt: 'RugCheck' },
 ];

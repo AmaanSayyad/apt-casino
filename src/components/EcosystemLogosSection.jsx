@@ -24,7 +24,11 @@ function PartnerLogoGrid({ items, listLabel }) {
         <li key={logo.key}>
           <div
             className={`ecosystem-marquee-tile ${logo.comingSoon ? 'ecosystem-marquee-tile--soon' : ''}`}
-            title={logo.comingSoon ? `${logo.alt} — coming soon` : logo.alt}
+            title={
+              logo.comingSoon
+                ? `${logo.alt} — ${logo.key === 'robinhood' ? 'under construction' : 'coming soon'}`
+                : logo.alt
+            }
           >
             <Image
               src={logo.src}
@@ -33,7 +37,11 @@ function PartnerLogoGrid({ items, listLabel }) {
               height={72}
               className="ecosystem-marquee-img object-contain"
             />
-            {logo.comingSoon && <span className="ecosystem-marquee-soon">Soon</span>}
+            {logo.comingSoon && (
+              <span className="ecosystem-marquee-soon">
+                {logo.key === 'robinhood' ? 'Building' : 'Soon'}
+              </span>
+            )}
           </div>
         </li>
       ))}
@@ -75,7 +83,7 @@ function MarqueeRow({ items, durationSeconds, reverse = false }) {
             />
             {logo.comingSoon && (
               <span className="ecosystem-marquee-soon" aria-hidden>
-                Soon
+                {logo.key === 'robinhood' ? 'Building' : 'Soon'}
               </span>
             )}
           </div>

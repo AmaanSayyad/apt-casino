@@ -102,7 +102,7 @@ export const IPO_STACK = [
 
 /**
  * IPO SOL collector — set via NEXT_PUBLIC_IPO_SOL_TREASURY when IPO is enabled.
- * No hardcoded address (Pump.fun launch path; IPO dormant).
+ * No hardcoded address (Virtuals is the launch path; IPO dormant).
  */
 export const IPO_SOL_TREASURY_DEFAULT = '';
 
@@ -116,7 +116,7 @@ export const IPO_APTC_DISTRIBUTOR_DEFAULT = '';
  */
 export const IPO_STAKING_VAULT_DEFAULT = '2ei9VY2TtJ6GkvVMs1su5b348p98ajLaU45MzvE6gYaq';
 
-/** APTC mint — set via NEXT_PUBLIC_APTC_SOLANA_MINT after Pump.fun create. */
+/** APTC token — set via NEXT_PUBLIC_APTC_TOKEN_ADDRESS after Virtuals create. */
 export const IPO_APTC_MINT_DEFAULT = '';
 
 /** Base IPO price (1×). All round multiples derive from this. */

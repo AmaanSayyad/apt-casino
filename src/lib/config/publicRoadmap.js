@@ -23,9 +23,9 @@ import { getLitepaperUrl } from '../siteMetadata.js';
 export const PUBLIC_ROADMAP_ITEMS = [
   {
     id: 'a1000001-0001-4001-8001-000000000001',
-    title: 'APTC TGE on Pump.fun',
+    title: 'APTC TGE on Virtuals · Robinhood',
     excerpt:
-      'Default Pump.fun launch · SOL bonding curve · ~1% creator dev buy · 1.25% curve trade fee · ~85 SOL graduation → PumpSwap (LP burned) · 100% creator fees to @aptcasinofun.',
+      'Virtuals Protocol agent token on Robinhood Chain · 93.5% Uniswap LP · 5% veVIRTUAL airdrop · 1.5% team pre-buy (1-month cliff · 6-month vest) · anti-sniper 60s · EconomyOS agent · AptCasino.fun by Virtuals.',
     category: 'Platform',
     status: 'in_progress',
     link: getLitepaperUrl('aptc-token'),
@@ -35,10 +35,10 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000037',
     title: 'Tier 1 — DEX & trader listings',
     excerpt:
-      'Pump.fun · PumpSwap · DexScreener Enhanced · Jupiter · Birdeye · GeckoTerminal — bonding curve launch and chart visibility at TGE.',
+      'Virtuals · DexScreener (Robinhood) · Uniswap — agent launchpad, chart visibility, and LP trading at TGE.',
     category: 'Partnership',
     status: 'in_progress',
-    link: 'https://pump.fun/create',
+    link: 'https://app.virtuals.io/create',
     sortOrder: 21,
   },
   {
@@ -103,19 +103,19 @@ export const PUBLIC_ROADMAP_ITEMS = [
   },
   {
     id: 'a1000001-0001-4001-8001-000000000008',
-    title: 'PumpSwap post-graduation trading',
+    title: 'Uniswap LP trading on Robinhood',
     excerpt:
-      'Post-graduation canonical pool depth on PumpSwap — LP burned at migration, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
+      'Post-TGE Uniswap pool depth on Robinhood Chain — 93.5% LP at launch, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
     category: 'Partnership',
     status: 'planned',
-    link: 'https://pump.fun/docs/fees',
+    link: 'https://dexscreener.com/robinhood',
     sortOrder: 35,
   },
   {
     id: 'a1000001-0001-4001-8001-000000000009',
     title: 'Automated GGR → APTC buyback pipeline',
     excerpt:
-      'Scheduled open-market buys on Jupiter & PumpSwap from gross gaming revenue — burn, staker, treasury splits published live.',
+      'Scheduled open-market buys on Robinhood / Uniswap from gross gaming revenue — burn, staker, treasury splits published live.',
     category: 'Platform',
     status: 'planned',
     link: getLitepaperUrl('ggr-flywheel'),
@@ -325,7 +325,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000030',
     title: 'Ecosystem wallet & data partners',
     excerpt:
-      'Deeper integrations with Pump.fun, PumpSwap, DexScreener, Jupiter, CoinGecko, and major wallets — co-marketing with Aptos & Solana ecosystems.',
+      'Deeper integrations with Virtuals Protocol, DexScreener, Uniswap, CoinGecko, and major wallets — co-marketing with Robinhood Chain, Aptos & Solana ecosystems.',
     category: 'Partnership',
     status: 'planned',
     link: null,
