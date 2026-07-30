@@ -1,24 +1,19 @@
 /**
  * OTC vs DEX fee model — sourced wallet/platform rates for calculator UI.
- * APTC trades on Virtuals / Uniswap (Robinhood Chain). Model uses a conservative
- * Uniswap-style pool fee for DEX comparison vs OTC allotments.
+ * Model uses a conservative Uniswap-style pool fee for DEX comparison vs OTC allotments.
  */
 
-/** Uniswap-style pool fee (Robinhood / Virtuals trading) */
+/** Uniswap-style pool fee estimate */
 export const APTC_DEX_POOL_FEE = {
   totalBps: 30,
   totalLabel: '0.30%',
-  venue: 'Virtuals Protocol · Uniswap on Robinhood Chain',
+  venue: 'DEX pool (Uniswap-style)',
   detail:
-    'Estimated Uniswap-style pool fee on Robinhood Chain. Actual fees depend on the live Virtuals / Uniswap pool after TGE.',
+    'Estimated Uniswap-style pool fee for DEX comparison. Actual fees depend on the live trading pool when published.',
   sources: [
     {
-      label: 'Virtuals Protocol',
-      url: 'https://app.virtuals.io/',
-    },
-    {
-      label: 'DexScreener · Robinhood',
-      url: 'https://dexscreener.com/robinhood',
+      label: 'DexScreener',
+      url: 'https://dexscreener.com/',
     },
   ],
 };
@@ -58,7 +53,7 @@ export const WALLET_SWAP_FEES = [
     name: 'Solflare',
     swapFeeBps: 0,
     swapFeeLabel: '0% (wallet)',
-    notes: 'In-wallet swaps still pay network gas and DEX pool fees (Uniswap-style on Robinhood after APTC TGE).',
+    notes: 'In-wallet swaps still pay network gas and DEX pool fees.',
     sources: [
       { label: 'Solflare — FAQ', url: 'https://www.solflare.com/faq/' },
       { label: 'Jupiter — Swap fees', url: 'https://docs.jup.ag/user-docs/trade/swap/fees' },
@@ -153,7 +148,7 @@ export const DEX_VALUE_LOSS_SOURCES = [
   {
     id: 'tax',
     label: 'Uniswap pool fee (APTC)',
-    detail: 'Estimated Uniswap-style fee on Robinhood after Virtuals TGE. Actual pool fee depends on the live pair.',
+    detail: 'Estimated Uniswap-style DEX pool fee. Actual pool fee depends on the live pair when published.',
   },
   {
     id: 'priceImpact',

@@ -5,9 +5,7 @@ import FeatureSection from '@/components/FeatureSection';
 import GameCarousel from '@/components/GameCarousel';
 import LetsPlaySection from '@/components/LetsPlaySection';
 import PlatformIntelligenceSection from '@/components/PlatformIntelligenceSection';
-import TokenomicsSection from '@/components/TokenomicsSection';
 import EcosystemLogosSection from '@/components/EcosystemLogosSection';
-import DexscreenerEmbedSection from '@/components/DexscreenerEmbedSection';
 import AdvisoryPartnershipsSection from '@/components/AdvisoryPartnershipsSection';
 import TestimonialsSection from '@/components/TestimonialsSection';
 import UpcomingTournaments from '@/components/UpcomingTournaments';
@@ -23,8 +21,6 @@ export default function Home() {
       <PlatformIntelligenceSection />
       <ProvablyFairSection />
       <EcosystemLogosSection />
-      <DexscreenerEmbedSection />
-      <TokenomicsSection />
       <AdvisoryPartnershipsSection />
       <UpcomingTournaments />
       <TestimonialsSection />

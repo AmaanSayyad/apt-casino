@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     estimate,
     feeExplanation: {
       tokenTradeTax:
-        'Estimated Uniswap-style pool fee on Robinhood after Virtuals TGE. See DexScreener for the live pair.',
+        'Estimated Uniswap-style DEX pool fee. See DexScreener for the live pair when published.',
       swapPlatformFee:
         'Wallet-specific: Phantom 0.85% on select pairs; Solflare/Glow/Backpack/Jupiter manual often 0% platform fee — network + price impact still apply.',
     },

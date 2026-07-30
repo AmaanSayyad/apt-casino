@@ -1,15 +1,9 @@
 import {
-  APTC_LAUNCH_METRICS,
-  APTC_LAUNCH_PHASES,
   APTC_TOKENOMICS,
   APTC_TRANSPARENCY,
   APTC_UTILITY,
-  APTC_WALLETS,
-  CREATOR_BUY_PURPOSE,
   GGR_FLYWHEEL_STEPS,
   getAllocationSummary,
-  getCreatorBuyDeploymentLines,
-  truncateAddress,
 } from '@/lib/config/tokenomics';
 
 export { PITCH_DECK_EMBED, PITCH_DECK_URL } from '@/lib/pitchDeck';
@@ -134,7 +128,7 @@ export const LITEPAPER_SECTIONS = [
       'APT-Casino is a Next.js application with chain-specific API routes under /api/chains/{chainId}/, Supabase for profiles, balances, referrals, and audit logs, and Move contracts on Aptos for core game logic.',
       'Sensitive writes (deposits, withdrawals, referral unlocks, GGR estimates) run server-side with service-role Supabase and validated env economics — never trusted from the client alone.',
       'Live features (streaming, chat) sit beside the gaming core: Livepeer for video, Socket.IO for real-time messages bound to wallet identity.',
-      'APTC launches on Robinhood Chain via Virtuals Protocol; price and market stats integrate via DexScreener and display automatically when the pair is indexed.',
+      'Price and market stats integrate via DexScreener when a public pair is published.',
     ],
     mermaid: `flowchart LR
     U[Player Wallet] --> FE[Next.js Client]
@@ -224,14 +218,12 @@ export const LITEPAPER_SECTIONS = [
     id: 'aptc-token',
     title: '8. APTC Token',
     body: [
-      `Native ecosystem token: ${APTC_TOKENOMICS.name} (${APTC_TOKENOMICS.symbol}) on ${APTC_TOKENOMICS.chain}.`,
-      `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Mint and freeze authorities revoked at creation — fixed metadata, fixed supply.`,
-      `Fair launch on ${APTC_TOKENOMICS.launchVenue}: ${APTC_TOKENOMICS.feeModeLabel} · ${APTC_LAUNCH_METRICS.liquidityPoolPct}% Uniswap LP · ${APTC_LAUNCH_METRICS.veVirtualAirdropPct}% veVIRTUAL airdrop · ${APTC_LAUNCH_METRICS.teamInitialBuyPct}% team initial buy (1-month cliff · 6-month vest) · anti-sniper ${APTC_LAUNCH_METRICS.antiSniperSeconds}s.`,
-      'EconomyOS agent token with “by Virtuals” on-chain name. Protocol growth capital routed to @aptcasinofun for listings, rewards, and ops.',
-      'Transparency pledge: no wash volume, no fake FDV, no dumps. Disclosed vested team buy — no unlocked founder dump, no bundled launch clusters.',
-      `Contract: ${APTC_TOKENOMICS.mint}.`,
+      `Native ecosystem token: ${APTC_TOKENOMICS.name} (${APTC_TOKENOMICS.symbol}).`,
+      `Max supply: ${APTC_TOKENOMICS.maxSupply} (${APTC_TOKENOMICS.decimals} decimals). Fixed supply design with revoked mint / freeze authorities when published.`,
+      'APTC is the rewards, staking, referral, and value-accrual layer on top of core casino play.',
+      'Transparency pledge: no wash volume, no fake FDV, no dumps.',
       utilityText,
-      'APTC is not required to place bets in native SOL/APT — it is the rewards, staking, referral, and value-accrual layer on top of core casino play.',
+      'APTC is not required to place bets in native SOL/APT — it is the rewards layer on top of core casino play.',
     ],
   },
   {
@@ -239,13 +231,8 @@ export const LITEPAPER_SECTIONS = [
     title: '9. APTC Allocation',
     body: [
       `${getAllocationSummary()}`,
-      `Creator / team initial buy (~${APTC_LAUNCH_METRICS.teamInitialBuyPct}% supply / ${APTC_LAUNCH_METRICS.devBuyTokensShort}) at launch — vested 1-month cliff · 6-month. Listings-first: the largest share funds Tier 1 DEX & trader tools, Tier 2 aggregators (CoinGecko, CoinMarketCap), and Tier 3 CEX roadmap. Remaining allocation → community rewards, staking emissions, and protocol ops.`,
-      ...getCreatorBuyDeploymentLines(),
-      CREATOR_BUY_PURPOSE,
-      `${APTC_LAUNCH_METRICS.liquidityPoolPct}% (935M) seeds Uniswap LP on Robinhood Chain at TGE. ${APTC_LAUNCH_METRICS.veVirtualAirdropPct}% (50M) airdrops to veVIRTUAL stakers.`,
-      'Trading discovery via DexScreener on Robinhood · Virtuals Capital Market · Uniswap.',
+      'Allocation prioritizes liquidity, community rewards, staking emissions, and protocol growth — details published with the public token release.',
       APTC_TRANSPARENCY.opsWalletRule,
-      ...APTC_LAUNCH_PHASES.map((p) => `${p.title}: ${p.detail}`),
     ],
     chart: 'allocation-donut',
   },
@@ -335,10 +322,10 @@ export const LITEPAPER_SECTIONS = [
     title: '16. Roadmap',
     body: [
       'Shipped / live: core casino games, Solana + Aptos play, gasless Aptos UX, referrals, Stake UI, GGR dashboard, live streaming shell, ecosystem partners section.',
-      `Near term: APTC TGE via Virtuals Protocol on Robinhood Chain (${APTC_LAUNCH_METRICS.liquidityPoolPct}% LP · ${APTC_LAUNCH_METRICS.veVirtualAirdropPct}% veVIRTUAL · ${APTC_LAUNCH_METRICS.teamInitialBuyPct}% vested team buy), Tier 1 listings (Virtuals · DexScreener · Uniswap), Tier 2 (CoinGecko · CoinMarketCap), staking live.`,
-      'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), Robinhood LP depth, Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
+      'Near term: staking live, buyback rails, Tier 2 aggregator listings (CoinGecko · CoinMarketCap).',
+      'Mid term: Tier 3 CEX roadmap (MEXC · Gate.io · KuCoin · Bybit · OKX · Binance), Sui + EVM chain adapters, developer SDK for third-party provably-fair games on the hub.',
       'Long term: largest multichain GambleFi hub — transparent game marketplace, creator revenue share, and community governance over APTC parameters.',
-      'The homepage Roadmap section lists 30 curated milestones (Platform, Governance, Community, Security, Tournaments, Partnership) via /api/roadmap — editable in Supabase roadmap_items or src/lib/config/publicRoadmap.js.',
+      'The homepage Roadmap section lists curated milestones via /api/roadmap — editable in Supabase roadmap_items or src/lib/config/publicRoadmap.js.',
     ],
   },
 ];

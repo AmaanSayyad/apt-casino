@@ -25,7 +25,7 @@ export const CHAIN_UI: Record<ChainId, ChainUiMeta> = {
   },
   robinhood: {
     logo: '/logos/robinhood.png',
-    walletHint: 'Under construction — APTC launches via Virtuals here',
+    walletHint: 'Under construction',
     badge: 'Under construction',
     badgeClass: 'bg-amber-500/20 text-amber-300',
     hoverGradient: 'from-emerald-500/0 via-emerald-500/5 to-emerald-500/0',

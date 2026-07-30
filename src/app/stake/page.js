@@ -18,10 +18,7 @@ import {
   FaCalculator,
   FaExternalLinkAlt,
   FaInfoCircle,
-  FaHourglassHalf,
 } from 'react-icons/fa';
-import { isAptcLaunched } from '@/lib/config/launchStatus';
-
 const STAKING_ENABLED =
   (process.env.NEXT_PUBLIC_APTC_STAKING_ENABLED || 'false').toLowerCase() === 'true';
 const APTC_MINT = process.env.NEXT_PUBLIC_APTC_SOLANA_MINT || '';
@@ -217,7 +214,7 @@ export default function StakePage() {
         return;
       }
       if (!STAKING_ENABLED) {
-        setError('APTC staking unlocks at TGE — please check back soon.');
+        setError('APTC staking is not available yet — please check back soon.');
         return;
       }
       if (!STAKING_VAULT) {
@@ -335,27 +332,13 @@ export default function StakePage() {
 
   return (
     <PageShell
-      badge="Robinhood · APTC"
+      badge="APTC"
       title="Stake APTC"
       description="Fixed-term APTC staking pools on Solana. Stake APTC, earn yield at lock, claim principal + rewards at maturity."
       descriptionClassName="max-w-none md:whitespace-nowrap"
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Stake' }]}
       maxWidth="7xl"
     >
-        {!isAptcLaunched() && (
-          <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-900/20 px-4 py-3 text-sm text-amber-200">
-            <div className="flex items-start gap-2">
-              <FaHourglassHalf className="mt-0.5 shrink-0" />
-              <div>
-                <p className="font-semibold">$APTC Launching 27 Jul 2026 · 11:30 AM IST</p>
-                <p className="text-amber-200/80 mt-1">
-                  Virtuals Protocol on Robinhood Chain. Staking pools and market data unlock at TGE. CA is published under Tokenomics.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* APTC market trends */}
         <section className="mb-10 p-[1px] bg-gradient-to-r from-red-magic/50 to-blue-magic/50 rounded-xl">
           <div className="bg-[#1A0015] rounded-xl p-6">
@@ -569,7 +552,7 @@ export default function StakePage() {
 
                     {!STAKING_ENABLED && (
                       <p className="mt-2 text-[11px] text-amber-300/80 flex items-center gap-1">
-                        <FaClock className="text-[10px]" /> Opens at TGE
+                        <FaClock className="text-[10px]" /> Coming soon
                       </p>
                     )}
                     {!connected && STAKING_ENABLED && (

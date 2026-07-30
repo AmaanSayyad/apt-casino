@@ -1,9 +1,6 @@
 /**
- * APTC tokenomics — public-facing constants for landing + litepaper + docs.
- * Launch: Virtuals Protocol on Robinhood Chain (agent token · EconomyOS · Uniswap LP).
- * @see https://app.virtuals.io/create
- * @see https://os.virtuals.io/
- * @see https://dexscreener.com/robinhood
+ * APTC tokenomics — public-facing constants for litepaper + docs.
+ * Public token-launch marketing has been removed from the site.
  */
 
 import {
@@ -14,57 +11,44 @@ import {
   VIRTUALS_CREATE_URL,
   VIRTUALS_APP_URL,
   DEXSCREENER_CHAIN_SLUG,
-  APTC_SCHEDULED_LAUNCH_LABEL,
 } from './launchStatus';
 
-/** Virtuals Protocol brand asset (local) */
+/** @deprecated Launch schedule removed from public site */
+const APTC_SCHEDULED_LAUNCH_LABEL = '';
+
 export const VIRTUALS_LOGO_SRC = '/logos/virtuals-protocol.png';
-
-/** Robinhood Chain brand asset (local) */
 export const ROBINHOOD_CHAIN_LOGO_SRC = '/logos/robinhood.png';
-
 /** @deprecated Prefer VIRTUALS_LOGO_SRC */
 export const PUMP_LOGO_SRC = VIRTUALS_LOGO_SRC;
-
-/** @deprecated Legacy Pump program id — unused for Virtuals launch */
+/** @deprecated */
 export const PUMP_PROGRAM_ID = '';
 
-/**
- * Virtuals Protocol launch mode — Robinhood Chain agent token.
- * Matches create-form: LP 93.5% · veVIRTUAL airdrop 5% · team pre-buy 1.5% (vested).
- */
+/** Kept for legacy PumpLaunchPanel / unused launch tooling imports */
 export const VIRTUALS_LAUNCH_MODE = {
-  label: 'Virtuals · Robinhood',
-  tagline: 'Agent token on EconomyOS · Uniswap LP on Robinhood Chain',
-  quotePair: 'VIRTUAL',
+  label: 'TBA',
+  tagline: 'Protocol token · rewards & staking',
+  quotePair: 'USD',
   createUrl: VIRTUALS_CREATE_URL,
   appUrl: VIRTUALS_APP_URL,
-  osUrl: 'https://os.virtuals.io/',
+  osUrl: '',
   chainSlug: DEXSCREENER_CHAIN_SLUG,
-  chainLabel: 'Robinhood Chain',
-  onChainNameSuffix: 'by Virtuals',
+  chainLabel: 'Multichain',
+  onChainNameSuffix: '',
   scheduledLaunchLabel: APTC_SCHEDULED_LAUNCH_LABEL,
-  /** Anti-sniper window from Advanced Config */
-  antiSniperSeconds: 60,
-  /** veVIRTUAL staker airdrop (fixed) */
+  antiSniperSeconds: 0,
   veVirtualAirdropPct: 5,
-  /** Seeded Uniswap liquidity */
   liquidityPoolPct: 93.5,
-  /** Team / creator pre-buy at TGE */
   teamInitialBuyPct: 1.5,
   teamInitialBuyTokens: 15_000_000,
   teamInitialBuyTokensShort: '15M',
-  /** Pre-buy cost on Virtuals form */
-  preBuyVirtualAmount: 138,
-  launchFeeVirtual: 138,
-  /** Illustrative FDV at pre-buy (from create UI — not a price guarantee) */
-  launchFdvUsdApprox: 5379.67,
-  /** Vesting on team initial buy */
+  preBuyVirtualAmount: 0,
+  launchFeeVirtual: 0,
+  launchFdvUsdApprox: null,
   teamCliffMonths: 1,
   teamVestMonths: 6,
-  launchAsAgent: true,
-  byVirtualsSuffix: true,
-  airdropEnabled: true,
+  launchAsAgent: false,
+  byVirtualsSuffix: false,
+  airdropEnabled: false,
 };
 
 /** @deprecated Alias — older call sites */
@@ -91,26 +75,26 @@ export const PUMP_LAUNCH_MODE = {
 
 export const APTC_TOKENOMICS = {
   name: 'AptCasino.fun',
-  displayName: 'AptCasino.fun by Virtuals',
+  displayName: 'AptCasino.fun',
   symbol: 'APTC',
-  chain: 'Robinhood Chain (Virtuals Protocol · EconomyOS)',
+  chain: 'Multichain (Solana · Aptos · EVM)',
   maxSupply: '1,000,000,000',
   decimals: 18,
   get mint() {
     return getAptcMint();
   },
-  launchVenue: 'Virtuals Protocol → Robinhood Chain',
-  launchPlatformUrl: getVirtualsTokenPageUrl(),
-  feeMode: 'VIRTUALS_DEFAULT',
-  feeModeLabel: 'Virtuals agent launch',
+  launchVenue: 'TBA',
+  launchPlatformUrl: getVirtualsTokenPageUrl() || '/',
+  feeMode: 'DEFAULT',
+  feeModeLabel: 'Protocol token',
   launch:
-    'Virtuals Protocol agent token on Robinhood Chain · 93.5% Uniswap LP · 5% veVIRTUAL airdrop · 1.5% team pre-buy (1-month cliff · 6-month vest) · EconomyOS agent · anti-sniper 60s · launches 27 Jul 2026 · 11:30 AM IST · on-chain name “AptCasino.fun by Virtuals”.',
+    'APTC is the rewards, staking, referral, and value-accrual layer for APT-Casino. Public launch details will be published when ready.',
   authorities: {
     mintRevoked: true,
     freezeRevoked: true,
     updateRevoked: true,
     pumpBondingCurve: false,
-    virtualsAgent: true,
+    virtualsAgent: false,
   },
   feeShare: {
     enabled: true,
@@ -120,17 +104,16 @@ export const APTC_TOKENOMICS = {
   },
 };
 
-/** Virtuals / Robinhood launch parameters */
+/** Launch metrics — kept for legacy imports; not marketed on-site */
 export const APTC_LAUNCH_METRICS = {
-  pair: 'APTC/VIRTUAL',
-  dex: 'Virtuals Protocol · Uniswap on Robinhood Chain',
-  launchPlatform: 'Virtuals Protocol',
+  pair: 'APTC',
+  dex: 'DEX (when published)',
+  launchPlatform: 'TBA',
   chain: VIRTUALS_LAUNCH_MODE.chainLabel,
   totalSupplyShort: '1B',
   liquidityPoolPct: VIRTUALS_LAUNCH_MODE.liquidityPoolPct,
   veVirtualAirdropPct: VIRTUALS_LAUNCH_MODE.veVirtualAirdropPct,
   teamInitialBuyPct: VIRTUALS_LAUNCH_MODE.teamInitialBuyPct,
-  /** Alias used by older PumpLaunchPanel fields */
   devHoldPct: VIRTUALS_LAUNCH_MODE.teamInitialBuyPct,
   curveSupplyPct: VIRTUALS_LAUNCH_MODE.liquidityPoolPct,
   migrationLpPct: VIRTUALS_LAUNCH_MODE.veVirtualAirdropPct,
@@ -160,7 +143,7 @@ export const APTC_LAUNCH_METRICS = {
   },
 };
 
-/** Supply at TGE — Virtuals create-form distribution */
+/** Illustrative supply allocation (charts / litepaper) */
 export const APTC_ALLOCATION = [
   {
     label: 'Liquidity pool',
@@ -168,26 +151,23 @@ export const APTC_ALLOCATION = [
     tokensShort: '935M',
     fill: '#2dd4bf',
     color: 'from-teal-400 to-cyan-500',
-    detail:
-      'Fixed 93.5% seeds the Uniswap liquidity pool on Robinhood Chain at Virtuals launch — public float for trading.',
+    detail: 'Majority of supply reserved for public liquidity when trading is published.',
   },
   {
-    label: 'veVIRTUAL airdrop',
+    label: 'Community & ecosystem',
     pct: VIRTUALS_LAUNCH_MODE.veVirtualAirdropPct,
     tokensShort: '50M',
     fill: '#f59e0b',
     color: 'from-amber-500 to-orange-500',
-    detail:
-      'Fixed 5% distributed to veVIRTUAL stakers — aligns long-term Virtuals ecosystem holders with APTC.',
+    detail: 'Community, ecosystem, and partner distribution — details at public release.',
   },
   {
-    label: 'Team initial buy',
+    label: 'Team / ops (vested)',
     pct: VIRTUALS_LAUNCH_MODE.teamInitialBuyPct,
     tokensShort: VIRTUALS_LAUNCH_MODE.teamInitialBuyTokensShort,
     fill: '#a78bfa',
     color: 'from-violet-400 to-purple-500',
-    detail:
-      '1.5% (15M APTC) creator pre-buy at TGE for ~138 VIRTUAL. Defaults to 1-month cliff and 6-month vesting — growth / ops only, not an unlocked dump.',
+    detail: 'Vested team / ops allocation for growth — listings, rewards, and protocol ops.',
   },
 ];
 
@@ -198,7 +178,7 @@ export const CREATOR_BUY_DEPLOYMENT = [
     pct: 50,
     fill: '#c084fc',
     detail:
-      'Largest share — Tier 1 DEX & trader tools (Virtuals, DexScreener, Uniswap), Tier 2 aggregators (CoinGecko, CMC), Tier 3 CEX roadmap',
+      'Largest share — DEX & trader tools, aggregators (CoinGecko, CMC), CEX roadmap',
     highlight: true,
   },
   {
@@ -229,51 +209,41 @@ export const APTC_TRANSPARENCY = {
   subhead:
     'What snipers, bots, agents, and degens scan before they buy — and how APTC answers each one.',
   pledge:
-    'We are not hiding supply behind clusters, bundles, or fake metrics. No wash volume. No fake FDV. No dumps. APTC is a live GambleFi product launching via Virtuals Protocol on Robinhood Chain, with 93.5% LP, a disclosed 1.5% vested team buy, a 5% veVIRTUAL airdrop, and on-chain casino revenue. Every ops-wallet token exists to grow the platform — not to extract from it.',
+    'We are not hiding supply behind clusters, bundles, or fake metrics. No wash volume. No fake FDV. No dumps. APTC is the rewards and value-accrual layer for a live GambleFi product with on-chain casino revenue. Every ops-wallet token exists to grow the platform — not to extract from it.',
   opsWalletRule:
-    'Team initial buy (vested) → @aptcasinofun · listings-first deployment · no wash · no fake FDV · no dumps',
+    'Ops / treasury wallets · listings-first deployment · no wash · no fake FDV · no dumps',
 };
 
 export const APTC_TRADER_GREEN_FLAGS = [
   {
-    term: 'Launch venue',
-    status: 'Virtuals Protocol',
-    detail: 'Agent token on Robinhood Chain · EconomyOS · “by Virtuals” on-chain name.',
+    term: 'Product',
+    status: 'Live casino',
+    detail: 'Provably fair games shipping on Solana + Aptos today.',
   },
   {
-    term: 'Chain',
-    status: 'Robinhood Chain',
-    detail: 'Arbitrum Orbit L2 purpose-built for tokenized markets + AI agents.',
+    term: 'Supply',
+    status: '1B fixed',
+    detail: 'Fixed max supply design with revoked mint/freeze when published.',
   },
   {
     term: 'Liquidity',
-    status: '93.5% LP',
-    detail: 'Fixed supply seeded into the Uniswap pool at launch — public float.',
+    status: 'Majority LP',
+    detail: 'Majority of supply reserved for public liquidity at release.',
   },
   {
-    term: 'veVIRTUAL airdrop',
-    status: '5%',
-    detail: 'Distributed to veVIRTUAL stakers — ecosystem-aligned, not a stealth team wallet.',
+    term: 'Community',
+    status: 'Aligned',
+    detail: 'Community / ecosystem allocation — not a stealth dump wallet.',
   },
   {
     term: 'Team / founder allocation',
-    status: '1.5% vested',
-    detail: 'Team initial buy only — 1-month cliff · 6-month vest. No unlocked founder dump.',
+    status: 'Vested',
+    detail: 'Vested team / ops allocation for growth — no unlocked founder dump.',
   },
   {
-    term: 'Anti-sniper',
-    status: '60 seconds',
-    detail: 'Basic anti-sniper protection on buys for the first minute after launch.',
-  },
-  {
-    term: 'Agent',
-    status: 'EconomyOS',
-    detail: 'Launches as an AI agent on Virtuals EconomyOS with identity + wallet primitives.',
-  },
-  {
-    term: 'Bundled wallets',
-    status: 'None',
-    detail: 'No launch-day wallet clusters or same-block insider snipes from us.',
+    term: 'Utility',
+    status: 'GGR flywheel',
+    detail: 'Casino GGR funds open-market buybacks · burn · stakers · treasury.',
   },
   {
     term: 'Volume & metrics',
@@ -281,19 +251,9 @@ export const APTC_TRADER_GREEN_FLAGS = [
     detail: 'Real casino GGR & wallets on-chain — no wash volume, no bot-inflated stats.',
   },
   {
-    term: 'FDV / market cap',
-    status: 'Market-priced',
-    detail: 'Illustrative launch FDV from Virtuals pre-buy UI · live price after TGE.',
-  },
-  {
     term: 'Supply dumps',
     status: 'No dumps',
-    detail: 'Team buy is vested; LP is fixed; airdrop goes to veVIRTUAL holders.',
-  },
-  {
-    term: 'Hidden wallets',
-    status: 'None claimed',
-    detail: 'One disclosed ops identity (@aptcasinofun) — no shadow treasuries.',
+    detail: 'Team / ops allocation is vested; liquidity is public float.',
   },
   {
     term: 'Live product',
@@ -315,19 +275,19 @@ export const APTC_WALLETS = [
   {
     id: 1,
     label: 'Operations & treasury',
-    amount: 'TGE',
+    amount: 'Ops',
     amountShort: 'Ops',
     pct: VIRTUALS_LAUNCH_MODE.teamInitialBuyPct,
     address: null,
     purpose:
-      '1.5% team initial buy (vested 1-month cliff · 6-month) — largest allocation to Tier 1–3 listings (DEX → CEX), then community rewards, staking, and protocol ops. Platform growth only.',
-    purposeShort: 'Vested team buy · growth only',
+      'Vested team / ops allocation — listings, community rewards, staking, and protocol growth. Platform growth only.',
+    purposeShort: 'Vested · growth only',
   },
 ];
 
 export const APTC_LAUNCH_STEPS = [
-  'Virtuals live',
-  'Robinhood LP',
+  'Token published',
+  'Liquidity live',
   'DexScreener',
   'GGR flywheel',
 ];
@@ -335,23 +295,23 @@ export const APTC_LAUNCH_STEPS = [
 export const APTC_LAUNCH_PHASES = [
   {
     step: '1',
-    title: 'Virtuals TGE',
-    detail: '1B supply · agent token · anti-sniper 60s · ~138 VIRTUAL launch / pre-buy',
+    title: 'Product live',
+    detail: 'Casino games shipping · GGR accruing · referrals & stake UI ready',
   },
   {
     step: '2',
-    title: 'Liquidity live',
-    detail: '93.5% Uniswap LP on Robinhood · 5% veVIRTUAL airdrop · 1.5% vested team buy',
+    title: 'Token published',
+    detail: 'Public mint + liquidity when ready · majority float for trading',
   },
   {
     step: '3',
     title: 'Discovery',
-    detail: 'DexScreener · Virtuals Capital Market · aggregators',
+    detail: 'DexScreener · aggregators · trader tooling',
   },
   {
     step: '4',
     title: 'Flywheel on',
-    detail: 'Casino GGR buybacks · staking · listings · EconomyOS agent utility',
+    detail: 'Casino GGR buybacks · staking · listings',
   },
 ];
 
@@ -372,11 +332,11 @@ export const GGR_FLYWHEEL_STEPS = [
 export const APTC_UTILITY = [
   {
     title: 'Casino flywheel',
-    body: 'Live GGR from Plinko, Mines, Wheel & Roulette → open-market APTC buybacks on Robinhood / Uniswap rails.',
+    body: 'Live GGR from Plinko, Mines, Wheel & Roulette → open-market APTC buybacks.',
   },
   {
-    title: 'Virtuals agent',
-    body: 'APTC launches as an EconomyOS agent — identity, wallet, and agentic commerce primitives on Virtuals.',
+    title: 'Rewards layer',
+    body: 'APTC accrues value from real play — not a memo with no shipping product.',
   },
   {
     title: 'Staking',
@@ -388,22 +348,19 @@ export const APTC_UTILITY = [
   },
 ];
 
-/** Copy for Virtuals create-form Advanced Details (≤500 / free text) */
+/** @deprecated Create-form copy — unused on public site */
 export const VIRTUALS_FORM_COPY = {
-  description:
-    'AptCasino.fun ($APTC) is live GambleFi — Plinko, Mines, Roulette & Wheel with on-chain play across Solana, Aptos & EVM. Casino GGR funds open-market APTC buybacks. Launching as a Virtuals agent token on Robinhood Chain.',
+  description: 'AptCasino.fun ($APTC) is live GambleFi — Plinko, Mines, Roulette & Wheel with on-chain play.',
   howItWorks:
-    'Play on aptcasino.fun → house edge (GGR) accrues → protocol buys APTC on the open market → burn, stake rewards, and treasury. Token launches via Virtuals Protocol on Robinhood with Uniswap LP, a veVIRTUAL airdrop, and a vested team pre-buy for growth.',
-  roadmap:
-    'TGE on Virtuals · Robinhood → DexScreener indexing → stake & buyback rails live → Tier 1–2 listings → EconomyOS agent utility → CEX expansion. Product is already shipping; token aligns capital with real GGR.',
-  additionalDetails:
-    'CEO @AptCasinofun. Website aptcasino.fun. Pitch: x.com/AptCasinofun. No wash volume, no fake FDV, no dumps. 93.5% LP · 5% veVIRTUAL · 1.5% vested team buy.',
+    'Play on aptcasino.fun → house edge (GGR) accrues → protocol buys APTC on the open market → burn, stake rewards, and treasury.',
+  roadmap: 'Product shipping → stake & buyback rails → listings → CEX expansion.',
+  additionalDetails: 'CEO @AptCasinofun. Website aptcasino.fun. No wash volume, no fake FDV, no dumps.',
   tokenUtility:
-    'APTC powers the casino flywheel (GGR buybacks), staking rewards, referrals/Volume Cup prizes, and Virtuals EconomyOS agent identity — a live product token, not a memo with no utility.',
+    'APTC powers the casino flywheel (GGR buybacks), staking rewards, and referrals/Volume Cup prizes.',
 };
 
 export function getAllocationSummary() {
-  return '1B APTC fixed supply · Virtuals Protocol on Robinhood Chain · 93.5% Uniswap LP · 5% veVIRTUAL airdrop · 1.5% vested team initial buy · EconomyOS agent · no wash · no fake FDV · no dumps.';
+  return '1B APTC fixed supply · majority liquidity · community · vested ops · no wash · no fake FDV · no dumps.';
 }
 
 export function getCreatorBuyDeploymentLines() {
@@ -468,23 +425,14 @@ export function getAptcTradeLinks(options = {}) {
     options.pairUrl ||
     (APTC_LAUNCH_METRICS.dexscreenerPairUrl ?? null) ||
     (launched ? dexscreenerTokenUrl(mint) : null);
-  const virtualsHref = virtualsTokenUrl(mint);
   const explorerHref = launched ? explorerTokenUrl(mint) : `https://dexscreener.com/${DEXSCREENER_CHAIN_SLUG}`;
   const dexscreenerHref = pairUrl || `https://dexscreener.com/${DEXSCREENER_CHAIN_SLUG}`;
 
   return [
     {
-      id: 'virtuals',
-      label: 'Virtuals',
-      sub: launched ? 'Token page' : 'Launchpad',
-      href: virtualsHref,
-      external: true,
-      logo: VIRTUALS_LOGO_SRC,
-    },
-    {
       id: 'dexscreener',
       label: 'DexScreener',
-      sub: launched ? 'Live chart' : 'Robinhood',
+      sub: launched ? 'Live chart' : 'Charts',
       href: dexscreenerHref,
       external: true,
       logo: '/logos/dexscreener.png',

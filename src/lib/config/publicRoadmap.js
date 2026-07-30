@@ -22,26 +22,6 @@ import { getLitepaperUrl } from '../siteMetadata.js';
  */
 export const PUBLIC_ROADMAP_ITEMS = [
   {
-    id: 'a1000001-0001-4001-8001-000000000001',
-    title: 'APTC TGE on Virtuals · Robinhood',
-    excerpt:
-      'Virtuals Protocol agent token on Robinhood Chain · CA 0x1185…80Ae · launches 27 Jul 2026 · 11:30 AM IST · 93.5% Uniswap LP · 5% veVIRTUAL airdrop · 1.5% team pre-buy (vested) · EconomyOS agent.',
-    category: 'Platform',
-    status: 'in_progress',
-    link: 'https://app.virtuals.io/virtuals/122676',
-    sortOrder: 10,
-  },
-  {
-    id: 'a1000001-0001-4001-8001-000000000037',
-    title: 'Tier 1 — DEX & trader listings',
-    excerpt:
-      'Virtuals · DexScreener (Robinhood) · Uniswap — agent launchpad, chart visibility, and LP trading at TGE.',
-    category: 'Partnership',
-    status: 'in_progress',
-    link: 'https://dexscreener.com/robinhood/0xAa72A7FA34cF000411cd07aB1370B5235c672131',
-    sortOrder: 21,
-  },
-  {
     id: 'a1000001-0001-4001-8001-000000000038',
     title: 'Tier 2 — CoinGecko & CoinMarketCap',
     excerpt:
@@ -93,7 +73,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
   },
   {
     id: 'a1000001-0001-4001-8001-000000000007',
-    title: 'APTC staking deposits live at TGE',
+    title: 'APTC staking deposits',
     excerpt:
       'Fixed-term stake pools on /stake — 30/60/90/180-day locks, on-chain SPL deposits, APY from GGR buyback staker share.',
     category: 'Platform',
@@ -102,20 +82,10 @@ export const PUBLIC_ROADMAP_ITEMS = [
     sortOrder: 30,
   },
   {
-    id: 'a1000001-0001-4001-8001-000000000008',
-    title: 'Uniswap LP trading on Robinhood',
-    excerpt:
-      'Post-TGE Uniswap pool depth on Robinhood Chain — 93.5% LP at launch, treasury support buys, and MM coordination so size doesn’t nuke the chart.',
-    category: 'Partnership',
-    status: 'planned',
-    link: 'https://dexscreener.com/robinhood',
-    sortOrder: 35,
-  },
-  {
     id: 'a1000001-0001-4001-8001-000000000009',
     title: 'Automated GGR → APTC buyback pipeline',
     excerpt:
-      'Scheduled open-market buys on Robinhood / Uniswap from gross gaming revenue — burn, staker, treasury splits published live.',
+      'Scheduled open-market buys from gross gaming revenue — burn, staker, treasury splits published live.',
     category: 'Platform',
     status: 'planned',
     link: getLitepaperUrl('ggr-flywheel'),
@@ -325,7 +295,7 @@ export const PUBLIC_ROADMAP_ITEMS = [
     id: 'a1000001-0001-4001-8001-000000000030',
     title: 'Ecosystem wallet & data partners',
     excerpt:
-      'Deeper integrations with Virtuals Protocol, DexScreener, Uniswap, CoinGecko, and major wallets — co-marketing with Robinhood Chain, Aptos & Solana ecosystems.',
+      'Deeper integrations with DexScreener, Uniswap, CoinGecko, and major wallets — co-marketing with Aptos & Solana ecosystems.',
     category: 'Partnership',
     status: 'planned',
     link: null,

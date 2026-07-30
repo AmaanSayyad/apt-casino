@@ -3,8 +3,6 @@
  * Logo files live in /public/logos (shared with chain connect modal).
  */
 
-import { VIRTUALS_LOGO_SRC } from './tokenomics';
-
 export type EcosystemLogo = {
   key: string;
   src: string;
@@ -28,9 +26,8 @@ export const ECOSYSTEM_CHAIN_LOGOS: EcosystemLogo[] = [
   { key: 'push', src: '/logos/push-logo.png', alt: 'Push Chain', comingSoon: true },
 ];
 
-/** DEX, analytics & launch tooling */
+/** DEX & analytics partners */
 export const ECOSYSTEM_DEX_LOGOS: EcosystemLogo[] = [
-  { key: 'virtuals', src: VIRTUALS_LOGO_SRC, alt: 'Virtuals Protocol' },
   { key: 'uniswap', src: '/logos/uniswap-uni-logo.png', alt: 'Uniswap' },
   { key: 'dexscreener', src: '/logos/dexscreener.png', alt: 'DexScreener' },
   { key: 'dextools', src: '/logos/dextools.png', alt: 'DexTools' },

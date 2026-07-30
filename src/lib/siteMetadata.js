@@ -130,7 +130,4 @@ export function buildPageMetadata(opts = {}) {
 
 export const rootMetadata = {
   ...buildPageMetadata({ ogImagePath: '/Linkshare.jpg' }),
-  other: {
-    'virtual-protocol-site-verification': 'acd2a2d7aef4970a849c31fb49be51ab',
-  },
 };

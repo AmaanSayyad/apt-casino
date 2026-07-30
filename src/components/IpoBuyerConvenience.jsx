@@ -234,7 +234,7 @@ export function IpoVerifyWallets({
           </p>
         ) : null}
         <p className="text-[11px] text-white/45 leading-relaxed">
-          IPO wallets and mint are not published. Launch path is Virtuals Protocol on Robinhood — addresses appear here only when configured.
+          IPO wallets and mint are not published. Addresses appear here only when configured.
         </p>
       </div>
     );
