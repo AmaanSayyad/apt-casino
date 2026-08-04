@@ -76,7 +76,7 @@
     "lucide-react": "^0.469.0",
     "matter-js": "^0.20.0",
     "mermaid": "^11.15.0",
-    "next": "15.5.18",
+    "next": "16.3.0",
     "next-themes": "^0.4.6",
     "react": "18.3.1",
     "react-confetti": "^6.4.0",
@@ -111,7 +111,7 @@
     "protobufjs": "^7.5.9",
     "lodash": "^4.17.23",
     "js-cookie": "^3.0.7",
-    "postcss": "^8.5.15",
+    "postcss": "^8.5.25",
     "ws": "^8.21.0",
     "uuid": "^11.1.0",
     "tmp": "^0.2.7"
