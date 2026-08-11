@@ -70,7 +70,7 @@
     "eslint": "8.57.0",
     "eslint-config-next": "15.5.18",
     "framer-motion": "^12.40.0",
-    "got": "^11.8.6",
+    "got": "^15.0.7",
     "livepeer": "^3.5.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.469.0",
