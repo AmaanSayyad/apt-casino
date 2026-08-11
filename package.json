@@ -98,7 +98,7 @@
     "@metaplex-foundation/mpl-token-metadata": "^2.13.0",
     "@types/node": "25.9.1",
     "patch-package": "^8.0.1",
-    "tailwind-scrollbar": "^3.0.4",
+    "tailwind-scrollbar": "^4.0.2",
     "typescript": "5.8.3"
   },
   "overrides": {
