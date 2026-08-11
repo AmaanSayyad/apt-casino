@@ -67,7 +67,7 @@
     "clsx": "^2.1.1",
     "currency.js": "^2.0.4",
     "dotenv": "^17.4.2",
-    "eslint": "8.57.0",
+    "eslint": "10.6.0",
     "eslint-config-next": "15.5.18",
     "framer-motion": "^12.40.0",
     "got": "^11.8.6",
